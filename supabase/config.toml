@@ -1,0 +1,83 @@
+project_id = "xjnffvqtqxnqobqezouv"
+
+[functions.generate-flashcards-ai]
+verify_jwt = true
+
+[functions.create-checkout-session]
+verify_jwt = true
+
+[functions.create-portal-session]
+verify_jwt = true
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.improve-notes]
+verify_jwt = true
+
+[functions.generate-flashcards]
+verify_jwt = true
+
+[functions.generate-notes]
+verify_jwt = true
+
+[functions.cancel-subscription]
+verify_jwt = true
+
+[functions.complete-bookings]
+verify_jwt = true
+
+[functions.create-connect-account]
+verify_jwt = true
+
+[functions.create-tutoring-payment]
+verify_jwt = true
+
+[functions.stripe-tutoring-webhook]
+verify_jwt = false
+
+[functions.generate-quiz]
+verify_jwt = true
+
+[functions.generate-summary]
+verify_jwt = true
+
+[functions.generate-step-by-step]
+verify_jwt = true
+
+[functions.check-work]
+verify_jwt = true
+
+[functions.ai-chat]
+verify_jwt = false
+
+[functions.create-note-checkout]
+verify_jwt = true
+
+[functions.note-purchase-webhook]
+verify_jwt = false
+
+[functions.get-signed-url]
+verify_jwt = true
+
+[functions.stripe-connect-onboarding]
+enabled = true
+verify_jwt = true
+import_map = "./functions/stripe-connect-onboarding/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/stripe-connect-onboarding/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/stripe-connect-onboarding/*.html" ]
+
+[functions.create-portal-link]
+enabled = true
+verify_jwt = true
+import_map = "./functions/create-portal-link/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/create-portal-link/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/create-portal-link/*.html" ]

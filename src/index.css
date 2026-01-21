@@ -1,0 +1,164 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 15%;
+
+    /* Blue-purple gradient colors */
+    --primary: 249 100% 65%;
+    --primary-foreground: 0 0% 100%;
+    --primary-dark: 249 100% 55%;
+    --primary-light: 265 100% 70%;
+    
+    --secondary: 250 45% 97%;
+    --secondary-foreground: 249 100% 55%;
+
+    --muted: 250 30% 96%;
+    --muted-foreground: 240 5% 45%;
+
+    --accent: 265 100% 75%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 250 30% 90%;
+    --input: 250 30% 92%;
+    --ring: 249 100% 65%;
+
+    --radius: 1rem;
+
+    /* Gradient definitions */
+    --gradient-primary: linear-gradient(135deg, hsl(249, 100%, 65%) 0%, hsl(265, 100%, 75%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(249, 100%, 65%) 0%, hsl(265, 100%, 70%) 50%, hsl(280, 100%, 75%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(0, 0%, 100%) 0%, hsl(250, 45%, 98%) 100%);
+    
+    /* Glow effects */
+    --glow-primary: 0 8px 32px hsla(249, 100%, 65%, 0.4);
+    --glow-accent: 0 8px 32px hsla(265, 100%, 75%, 0.4);
+
+    /* Note preview blur */
+    --note-blur: 8px;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 249 100% 65%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 250 45% 97%;
+    --sidebar-accent-foreground: 249 100% 55%;
+    --sidebar-border: 250 30% 90%;
+    --sidebar-ring: 249 100% 65%;
+  }
+
+  .dark {
+    --background: 240 10% 8%;
+    --foreground: 0 0% 98%;
+
+    --card: 240 10% 10%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 240 10% 10%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 249 100% 65%;
+    --primary-foreground: 0 0% 100%;
+    --primary-dark: 249 100% 55%;
+    --primary-light: 265 100% 70%;
+
+    --secondary: 240 10% 15%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 240 10% 15%;
+    --muted-foreground: 240 5% 65%;
+
+    --accent: 265 100% 70%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 63% 45%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 10% 20%;
+    --input: 240 10% 20%;
+    --ring: 249 100% 65%;
+    
+    --gradient-primary: linear-gradient(135deg, hsl(249, 100%, 65%) 0%, hsl(265, 100%, 75%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(249, 100%, 65%) 0%, hsl(265, 100%, 70%) 50%, hsl(280, 100%, 75%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(240, 10%, 12%) 0%, hsl(240, 10%, 15%) 100%);
+    
+    --glow-primary: 0 8px 32px hsla(249, 100%, 65%, 0.5);
+    --glow-accent: 0 8px 32px hsla(265, 100%, 75%, 0.5);
+
+    /* Note preview blur */
+    --note-blur: 8px;
+
+    --sidebar-background: 240 10% 10%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 249 100% 65%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 10% 15%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 240 10% 20%;
+    --sidebar-ring: 249 100% 65%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Flashcard flip animation */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.transform-style-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+
+/* Markdown styling for flashcards */
+.prose {
+  max-width: none;
+}
+
+.prose strong {
+  @apply text-primary font-bold;
+}
+
+.prose ul {
+  @apply list-disc list-inside space-y-1;
+}
+
+.prose ol {
+  @apply list-decimal list-inside space-y-1;
+}
+
+.prose p {
+  @apply mb-2;
+}
