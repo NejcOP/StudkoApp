@@ -96,7 +96,9 @@ export const ReferralDropdown = ({ userName, hasProAccess, isMobile = false }: {
   }, [user, fetchReferralStats]);
 
   const getReferralLink = () => {
-    return `${window.location.origin}/register?ref=${stats.referralCode}`;
+    // Use production URL for referral links
+    const baseUrl = import.meta.env.VITE_APP_URL || window.location.origin;
+    return `${baseUrl}/register?ref=${stats.referralCode}`;
   };
 
   const copyReferralLink = async () => {
