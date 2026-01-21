@@ -487,7 +487,7 @@ const Notes = () => {
               </div>
               <div className="flex flex-col sm:flex-row gap-3">
                 <Button 
-                  onClick={() => navigate("/profile")}
+                  onClick={() => navigate("/ai")}
                   variant="hero" 
                   size="lg" 
                   className="flex-1 shadow-glow-primary transition-all duration-300 hover:scale-105 min-h-[48px] text-sm sm:text-base"
@@ -496,7 +496,7 @@ const Notes = () => {
                   Nadgradi na PRO
                 </Button>
                 <Button 
-                  onClick={() => navigate("/ai")}
+                  onClick={() => navigate("/profile")}
                   variant="outline" 
                   size="lg" 
                   className="transition-all duration-300 min-h-[48px] text-sm sm:text-base"
