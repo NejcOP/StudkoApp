@@ -228,7 +228,7 @@ const Navigation = () => {
 
         {/* Mobile Menu Dropdown */}
         {mobileMenuOpen && (
-          <div className="md:hidden py-4 space-y-2 border-t border-border animate-in slide-in-from-top-5 duration-200">
+          <div className="md:hidden py-4 space-y-2 border-t border-border animate-in slide-in-from-top-5 duration-200 max-h-[calc(100vh-4rem)] overflow-y-auto">
             {user && (
               <>
                 {/* User info with referral system */}
@@ -252,36 +252,39 @@ const Navigation = () => {
                   </Link>
                   <ReferralDropdown userName={userName || "Uporabnik"} hasProAccess={hasProAccess} isMobile={true} />
                 </div>
+                
                 <div className="border-t border-border my-2"></div>
+                
                 {navLinks.map((link) => {
-              const Icon = link.icon;
-              return (
-                <Link
-                  key={link.path}
-                  to={link.path}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all min-h-[48px] ${
-                    isActive(link.path)
-                      ? "bg-primary/10 text-primary font-semibold"
-                      : "text-muted-foreground hover:bg-muted active:bg-muted/80"
-                  }`}
-                >
-                  <Icon className="w-5 h-5" />
-                  <span className="text-base">{link.label}</span>
-                </Link>
-              );
-            })}
-            <div className="border-t border-border mt-2 pt-2">
-              <Button 
-                variant="ghost" 
-                className="w-full gap-2 min-h-[48px] text-base justify-start px-4" 
-                onClick={handleSignOut}
-              >
-                <LogOut className="w-5 h-5" />
-                Odjava
-              </Button>
-            </div>
-          </>
+                  const Icon = link.icon;
+                  return (
+                    <Link
+                      key={link.path}
+                      to={link.path}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all min-h-[48px] ${
+                        isActive(link.path)
+                          ? "bg-primary/10 text-primary font-semibold"
+                          : "text-muted-foreground hover:bg-muted active:bg-muted/80"
+                      }`}
+                    >
+                      <Icon className="w-5 h-5" />
+                      <span className="text-base">{link.label}</span>
+                    </Link>
+                  );
+                })}
+                
+                <div className="border-t border-border mt-2 pt-2">
+                  <Button 
+                    variant="ghost" 
+                    className="w-full gap-2 min-h-[48px] text-base justify-start px-4" 
+                    onClick={handleSignOut}
+                  >
+                    <LogOut className="w-5 h-5" />
+                    Odjava
+                  </Button>
+                </div>
+              </>
             )}
             {!user && (
               <div className="flex flex-col gap-3 pt-2">
