@@ -47,34 +47,39 @@ const TutorDashboard = () => {
   const [updating, setUpdating] = useState<string | null>(null);
   const [hasPayoutSetup, setHasPayoutSetup] = useState(false);
   const [accessDenied, setAccessDenied] = useState(false);
-  const dataLoadedRef = useRef(false);
 
   useEffect(() => {
     if (!user) {
       navigate('/login');
       return;
     }
-    if (!dataLoadedRef.current) {
-      loadData();
-      dataLoadedRef.current = true;
-    }
+    
+    loadData();
   }, [user?.id]);
 
   // Reload data when app becomes visible
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && user && !loading) {
+      if (document.visibilityState === 'visible' && user) {
         console.log('🔄 App visible - reloading tutor dashboard');
-        refreshBookings();
+        loadData();
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [user, loading]);
+  }, [user]);
 
   const loadData = async () => {
     if (!user) return;
+    
+    setLoading(true);
+    
+    // Safety timeout - max 10s loading
+    const loadingTimeout = setTimeout(() => {
+      console.warn('⚠️ Loading timeout - forcing loading to false');
+      setLoading(false);
+    }, 10000);
 
     try {
       // Load tutor profile - first check if user is tutor with service role workaround
@@ -88,6 +93,7 @@ const TutorDashboard = () => {
       if (!profileData?.is_instructor) {
         toast.error('Nimaš profila inštruktorja');
         navigate('/tutors/apply');
+        clearTimeout(loadingTimeout);
         return;
       }
 
@@ -102,6 +108,7 @@ const TutorDashboard = () => {
         console.error('Error loading tutor:', tutorError);
         setAccessDenied(true);
         setLoading(false);
+        clearTimeout(loadingTimeout);
         return;
       }
 
@@ -109,12 +116,14 @@ const TutorDashboard = () => {
         // User is tutor but status not approved (RLS blocks it)
         setAccessDenied(true);
         setLoading(false);
+        clearTimeout(loadingTimeout);
         return;
       }
 
       if (tutorData.status !== 'approved') {
         setAccessDenied(true);
         setLoading(false);
+        clearTimeout(loadingTimeout);
         return;
       }
 
@@ -157,6 +166,7 @@ const TutorDashboard = () => {
       console.error('Error loading data:', error);
       toast.error('Napaka pri nalaganju podatkov');
     } finally {
+      clearTimeout(loadingTimeout);
       setLoading(false);
     }
   };
