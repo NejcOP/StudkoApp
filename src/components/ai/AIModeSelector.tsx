@@ -16,9 +16,9 @@ interface AIModeSelectorProps {
 }
 
 const modes: { id: AIMode; label: string; icon: React.ReactNode }[] = [
-  { id: "chat", label: "Chat", icon: <MessageSquare className="w-4 h-4" /> },
-  { id: "flashcards", label: "Flashcards", icon: <Layers className="w-4 h-4" /> },
-  { id: "quiz", label: "Quiz", icon: <HelpCircle className="w-4 h-4" /> },
+  { id: "chat", label: "Klepet", icon: <MessageSquare className="w-4 h-4" /> },
+  { id: "flashcards", label: "Kartice", icon: <Layers className="w-4 h-4" /> },
+  { id: "quiz", label: "Kviz", icon: <HelpCircle className="w-4 h-4" /> },
   { id: "summary", label: "Povzetek", icon: <FileText className="w-4 h-4" /> },
 ];
 
