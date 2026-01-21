@@ -121,22 +121,6 @@ const NoteDetail = () => {
     }
   }, [id, user]);
 
-  // Reload data when app becomes visible again (user returns from minimize/background)
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && id && !loading) {
-        fetchNote();
-        if (user) {
-          checkPurchaseStatus();
-        }
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, user, loading]);
-
   const fetchNote = async () => {
     setLoading(true);
     try {

@@ -103,51 +103,6 @@ export default function TutorDetail() {
     loadTutor();
   }, [id, user]);
 
-  // Reload data when app becomes visible again
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && id && !loading) {
-        console.log('🔄 App visible - reloading tutor data');
-        const loadTutor = async () => {
-          setLoading(true);
-          try {
-            const { data, error } = await supabase
-              .from('tutors')
-              .select('*')
-              .eq('id', id)
-              .maybeSingle();
-
-            if (error) throw error;
-            if (!data) {
-              setTutor(null);
-              setLoading(false);
-              return;
-            }
-            
-            setTutor(data as PublicTutor);
-
-            if (user) {
-              const { data: contact } = await supabase.rpc('get_tutor_contact_info', {
-                tutor_id_param: id
-              });
-              if (contact && (contact as TutorContactInfo[]).length > 0) {
-                setContactInfo((contact as TutorContactInfo[])[0]);
-              }
-            }
-          } catch (error) {
-            console.error('Error reloading tutor:', error);
-          } finally {
-            setLoading(false);
-          }
-        };
-        loadTutor();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [id, user, loading]);
-
   const handleReviewSubmitted = () => {
     // Force re-render of ProfileReviews component
     setReviewsKey(prev => prev + 1);

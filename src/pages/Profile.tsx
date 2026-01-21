@@ -311,20 +311,6 @@ const Profile = () => {
     }
   }, [user]);
 
-  // Reload data when app becomes visible again
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && user && !loading) {
-
-        loadProfileData(false);
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, loading]);
-
   // Real-time subscription to profile changes for PRO status
   useEffect(() => {
     if (!user?.id) return;

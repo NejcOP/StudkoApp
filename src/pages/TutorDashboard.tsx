@@ -60,19 +60,6 @@ const TutorDashboard = () => {
     }
   }, [user?.id]);
 
-  // Reload data when app becomes visible
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && user && !loading) {
-        console.log('🔄 App visible - reloading tutor dashboard');
-        refreshBookings();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [user, loading]);
-
   const loadData = async () => {
     if (!user) return;
 

@@ -75,20 +75,6 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
     }
   }, [hasProAccess]);
 
-  // Reload bookings when app becomes visible
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && tutorId && !loading) {
-        console.log('🔄 App visible - reloading instructor bookings');
-        loadBookings(true); // Silent reload
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tutorId, loading]);
-
   const generateDailyTip = async () => {
     // Simulate AI-generated tip based on instructor profile
     const tips = [

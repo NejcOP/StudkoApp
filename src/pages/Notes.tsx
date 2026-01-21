@@ -104,23 +104,6 @@ const Notes = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  // Reload notes when app becomes visible
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && !loading) {
-        console.log('🔄 App visible - reloading notes');
-        fetchNotes();
-        if (user) {
-          fetchPurchasedNotes();
-        }
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, user]);
-
   const fetchPurchasedNotes = async () => {
     if (!user) return;
     

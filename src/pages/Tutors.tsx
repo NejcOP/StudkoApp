@@ -122,40 +122,6 @@ export default function Tutors() {
     fetchTutors();
   }, []);
 
-  // Reload tutors when app becomes visible
-  useEffect(() => {
-    const handleVisibilityChange = async () => {
-      if (document.visibilityState === 'visible' && !loading) {
-        console.log('🔄 App visible - reloading tutors');
-        setLoading(true);
-        try {
-          const { data, error } = await supabase.rpc('get_public_tutors');
-          
-          if (error) throw error;
-          
-          const tutorsData = (data as Tutor[]) || [];
-          setTutors(tutorsData);
-          
-          try {
-            sessionStorage.setItem('tutors_cache', JSON.stringify({
-              data: tutorsData,
-              timestamp: Date.now()
-            }));
-          } catch (err) {
-            console.error('Error caching tutors:', err);
-          }
-        } catch (error) {
-          console.error('Error reloading tutors:', error);
-        } finally {
-          setLoading(false);
-        }
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [loading]);
-
   const filteredTutors = (aiSearchResults || tutors).filter((tutor) => {
     // If AI search is active, don't apply manual filters
     if (aiSearchResults) return true;
