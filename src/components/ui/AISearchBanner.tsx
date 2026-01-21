@@ -8,6 +8,13 @@ interface AISearchBannerProps {
 
 export const AISearchBanner: React.FC<AISearchBannerProps> = ({ isPro, onUpgradeClick }) => {
   const navigate = useNavigate();
+  
+  // Handler for clicking the button
+  const handleButtonClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate("/ai");
+  };
+  
   // Handler for all clicks if not PRO
   const handleNonProClick = (e: React.MouseEvent) => {
     if (!isPro) {
@@ -41,11 +48,10 @@ export const AISearchBanner: React.FC<AISearchBannerProps> = ({ isPro, onUpgrade
           onClick={handleNonProClick}
         />
         <button
-          className="mt-2 md:mt-0 px-6 py-3 rounded-xl bg-gradient-to-r from-[#7c3aed] to-[#a855f7] text-white font-semibold text-lg shadow-md hover:opacity-90 transition disabled:opacity-60 disabled:cursor-not-allowed"
-          disabled={!isPro}
-          onClick={handleNonProClick}
+          className="mt-2 md:mt-0 px-6 py-3 rounded-xl bg-gradient-to-r from-[#7c3aed] to-[#a855f7] text-white font-semibold text-base md:text-lg shadow-md hover:opacity-90 transition whitespace-nowrap"
+          onClick={handleButtonClick}
         >
-          ✨ Poglej več
+          ✨ Poišči inštruktorja z AI
         </button>
       </div>
       {!isPro && (
