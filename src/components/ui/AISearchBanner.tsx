@@ -50,7 +50,10 @@ export const AISearchBanner: React.FC<AISearchBannerProps> = ({ isPro, onUpgrade
       const scoredTutors = tutors.map(tutor => {
         let score = 0;
         
-        // Match subjects (highest priority)
+        // Match name (very high priority)
+        if (tutor.full_name && tutor.full_name.toLowerCase().includes(query)) score += 15;
+        
+        // Match subjects (high priority)
         if (tutor.subjects) {
           const subjects = Array.isArray(tutor.subjects) ? tutor.subjects : [tutor.subjects];
           subjects.forEach((subject: string) => {
@@ -66,6 +69,9 @@ export const AISearchBanner: React.FC<AISearchBannerProps> = ({ isPro, onUpgrade
         
         // Match education level
         if (tutor.education_level && tutor.education_level.toLowerCase().includes(query)) score += 2;
+        
+        // Match school type
+        if (tutor.school_type && tutor.school_type.toLowerCase().includes(query)) score += 2;
         
         return { ...tutor, score };
       });
