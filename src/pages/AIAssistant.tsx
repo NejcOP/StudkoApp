@@ -136,12 +136,6 @@ const AIAssistant = () => {
     if (!user?.id) return;
     setLoadingConversations(true);
     
-    // Safety timeout - max 8s loading
-    const loadingTimeout = setTimeout(() => {
-      console.warn('⚠️ Conversations loading timeout');
-      setLoadingConversations(false);
-    }, 8000);
-    
     try {
       const { data, error } = await supabase
         .from("ai_conversations")
@@ -153,9 +147,8 @@ const AIAssistant = () => {
       if (error) throw error;
       setConversations(data || []);
     } catch (error) {
-      console.error('Error loading conversations:', error);
+      // Error handled silently
     } finally {
-      clearTimeout(loadingTimeout);
       setLoadingConversations(false);
     }
   }, [user?.id]);
@@ -214,20 +207,6 @@ const AIAssistant = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
-
-  // Reload data when app becomes visible
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && user?.id) {
-        console.log('🔄 App visible - reloading AI assistant data');
-        loadConversations();
-        loadUserNotes();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [user?.id, loadConversations, loadUserNotes]);
 
   // Auto-scroll chat on new messages
   useEffect(() => {
