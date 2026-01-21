@@ -52,6 +52,23 @@ export default function Tutors() {
   const [selectedMode, setSelectedMode] = useState<string>("all");
   const [selectedPrice, setSelectedPrice] = useState<string>("all");
   const [selectedRating, setSelectedRating] = useState<string>("all");
+  const [aiSearchResults, setAiSearchResults] = useState<PublicTutor[] | null>(null);
+
+  // Handler for AI search results
+  const handleAISearchResults = (results: PublicTutor[]) => {
+    setAiSearchResults(results);
+    // Reset filters when AI search is used
+    setSelectedSubject("all");
+    setSelectedLevel("all");
+    setSelectedMode("all");
+    setSelectedPrice("all");
+    setSelectedRating("all");
+  };
+  
+  // Handler to clear AI search
+  const clearAISearch = () => {
+    setAiSearchResults(null);
+  };
 
   // Fetch tutors using secure RPC function (excludes PII)
   useEffect(() => {
@@ -139,7 +156,10 @@ export default function Tutors() {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [loading]);
 
-  const filteredTutors = tutors.filter((tutor) => {
+  const filteredTutors = (aiSearchResults || tutors).filter((tutor) => {
+    // If AI search is active, don't apply manual filters
+    if (aiSearchResults) return true;
+    
     // Subject filter - tutor.subjects is an array
     if (selectedSubject !== "all" && !tutor.subjects?.includes(selectedSubject)) return false;
     // Level filter
@@ -171,6 +191,7 @@ export default function Tutors() {
     setSelectedLevel("all");
     setSelectedMode("all");
     setSelectedPrice("all");
+    clearAISearch();
     setSelectedRating("all");
   };
 
@@ -207,6 +228,7 @@ export default function Tutors() {
         <div className="mb-8">
           <AISearchBanner
             isPro={hasProAccess}
+            onSearchResults={handleAISearchResults}
             onUpgradeClick={() =>
               toast({
                 title: "PRO funkcija",
@@ -215,6 +237,21 @@ export default function Tutors() {
               })
             }
           />
+          {aiSearchResults && (
+            <div className="mt-4 flex items-center gap-2">
+              <Badge variant="secondary" className="text-sm">
+                AI rezultati: {aiSearchResults.length} inštruktorjev
+              </Badge>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={clearAISearch}
+                className="text-xs"
+              >
+                Počisti AI iskanje
+              </Button>
+            </div>
+          )}
         </div>
         {/* Background decoration */}
         <div className="absolute top-20 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl -z-10" />

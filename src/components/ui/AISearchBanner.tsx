@@ -1,18 +1,94 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface AISearchBannerProps {
   isPro: boolean;
   onUpgradeClick?: () => void;
+  onSearchResults?: (tutors: any[]) => void;
 }
 
-export const AISearchBanner: React.FC<AISearchBannerProps> = ({ isPro, onUpgradeClick }) => {
+export const AISearchBanner: React.FC<AISearchBannerProps> = ({ isPro, onUpgradeClick, onSearchResults }) => {
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
   
-  // Handler for clicking the button
-  const handleButtonClick = (e: React.MouseEvent) => {
+  // Handler for AI search
+  const handleAISearch = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    navigate("/ai");
+    
+    if (!isPro) {
+      if (onUpgradeClick) onUpgradeClick();
+      return;
+    }
+    
+    if (!searchQuery.trim()) {
+      toast.error("Vpiši, kaj iščeš");
+      return;
+    }
+    
+    setIsSearching(true);
+    
+    try {
+      // Fetch all tutors
+      const { data: tutors, error } = await supabase
+        .from("tutors")
+        .select("*")
+        .eq("status", "approved");
+      
+      if (error) throw error;
+      
+      if (!tutors || tutors.length === 0) {
+        toast.info("Ni najdenih inštruktorjev");
+        setIsSearching(false);
+        return;
+      }
+      
+      // Simple AI-like search - match query with subjects, bio, experience
+      const query = searchQuery.toLowerCase();
+      const scoredTutors = tutors.map(tutor => {
+        let score = 0;
+        
+        // Match subjects (highest priority)
+        if (tutor.subjects) {
+          const subjects = Array.isArray(tutor.subjects) ? tutor.subjects : [tutor.subjects];
+          subjects.forEach((subject: string) => {
+            if (subject.toLowerCase().includes(query)) score += 10;
+          });
+        }
+        
+        // Match bio
+        if (tutor.bio && tutor.bio.toLowerCase().includes(query)) score += 5;
+        
+        // Match experience
+        if (tutor.experience && tutor.experience.toLowerCase().includes(query)) score += 3;
+        
+        // Match education level
+        if (tutor.education_level && tutor.education_level.toLowerCase().includes(query)) score += 2;
+        
+        return { ...tutor, score };
+      });
+      
+      // Filter and sort by score
+      const results = scoredTutors
+        .filter(t => t.score > 0)
+        .sort((a, b) => b.score - a.score);
+      
+      if (results.length === 0) {
+        toast.info("Ni najdenih inštruktorjev za ta iskalni niz");
+      } else {
+        toast.success(`Najdenih ${results.length} inštruktorjev`);
+        if (onSearchResults) {
+          onSearchResults(results);
+        }
+      }
+    } catch (error) {
+      console.error("AI search error:", error);
+      toast.error("Napaka pri iskanju");
+    } finally {
+      setIsSearching(false);
+    }
   };
   
   // Handler for all clicks if not PRO
@@ -42,16 +118,24 @@ export const AISearchBanner: React.FC<AISearchBannerProps> = ({ isPro, onUpgrade
       <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto items-center mt-4 md:mt-0">
         <input
           type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && isPro) {
+              handleAISearch(e as any);
+            }
+          }}
           className="w-full md:w-[400px] px-5 py-4 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/40 text-lg focus:outline-none focus:ring-2 focus:ring-[#7c3aed] transition disabled:opacity-60 disabled:cursor-not-allowed"
           placeholder="Napiši, kakšnega inštruktorja iščeš..."
-          disabled={!isPro}
+          disabled={!isPro || isSearching}
           onClick={handleNonProClick}
         />
         <button
-          className="mt-2 md:mt-0 px-6 py-3 rounded-xl bg-gradient-to-r from-[#7c3aed] to-[#a855f7] text-white font-semibold text-base md:text-lg shadow-md hover:opacity-90 transition whitespace-nowrap"
-          onClick={handleButtonClick}
+          className="mt-2 md:mt-0 px-6 py-3 rounded-xl bg-gradient-to-r from-[#7c3aed] to-[#a855f7] text-white font-semibold text-base md:text-lg shadow-md hover:opacity-90 transition whitespace-nowrap disabled:opacity-60"
+          onClick={handleAISearch}
+          disabled={isSearching}
         >
-          ✨ Poišči inštruktorja z AI
+          {isSearching ? "Iščem..." : "✨ Poišči inštruktorja z AI"}
         </button>
       </div>
       {!isPro && (
