@@ -14,18 +14,19 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
 const APP_URL = Deno.env.get('VITE_APP_URL') || 'https://studko.si'
 
-interface AuthEmailRequest {
-  type: 'signup' | 'recovery' | 'email_change' | 'magic_link' | 'invite'
-  email: string
-  token?: string
-  token_hash?: string
-  redirect_to?: string
-  user?: {
+interface SupabaseAuthHookPayload {
+  user: {
     id: string
     email: string
     user_metadata?: {
       name?: string
     }
+  }
+  email_data: {
+    token: string
+    token_hash: string
+    redirect_to?: string
+    email_action_type: 'signup' | 'recovery' | 'magic_link' | 'email_change' | 'invite'
   }
 }
 
@@ -38,11 +39,25 @@ serve(async (req) => {
   }
 
   try {
-    const body: AuthEmailRequest = await req.json()
-    const { type, email, token, token_hash, redirect_to, user } = body
+    const body: SupabaseAuthHookPayload = await req.json()
+    console.log('Received hook payload:', JSON.stringify(body, null, 2))
+    
+    const { user, email_data } = body
+    const email = user.email
+    const type = email_data.email_action_type
+    const token = email_data.token
+    const token_hash = email_data.token_hash
+    const redirect_to = email_data.redirect_to
+
+    const { user, email_data } = body
+    const email = user.email
+    const type = email_data.email_action_type
+    const token = email_data.token
+    const token_hash = email_data.token_hash
+    const redirect_to = email_data.redirect_to
 
     // Build confirmation link based on email type
-    const tokenValue = token_hash || token || ''
+    const tokenValue = token_hash || token
     let confirmLink = ''
     let subject = ''
     let userName = user?.user_metadata?.name || 'Študent'
