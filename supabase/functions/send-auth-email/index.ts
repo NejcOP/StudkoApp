@@ -42,13 +42,15 @@ serve(async (req) => {
     const body: SupabaseAuthHookPayload = await req.json()
     console.log('Received hook payload:', JSON.stringify(body, null, 2))
     
-    const { user, email_data } = body
-    const email = user.email
-    const type = email_data.email_action_type
-    const token = email_data.token
-    const token_hash = email_data.token_hash
-    const redirect_to = email_data.redirect_to
-
+    // Validate RESEND_API_KEY exists
+    if (!RESEND_API_KEY) {
+      console.error('RESEND_API_KEY is not set!')
+      return new Response(
+        JSON.stringify({ error: 'RESEND_API_KEY not configured' }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
+    
     const { user, email_data } = body
     const email = user.email
     const type = email_data.email_action_type
