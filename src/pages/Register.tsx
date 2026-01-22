@@ -136,60 +136,60 @@ const Register = () => {
               <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
                 <BookOpen className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
               </div>
-              <span className="text-2xl sm:text-3xl font-bold">Študko</span>
+              <span className="text-2xl sm:text-3xl font-bold text-white">Študko</span>
             </div>
 
             {/* Welcome message */}
             <div className="space-y-2 sm:space-y-3">
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight text-white">
                 Ustvari svoj Študko račun
               </h1>
-              <p className="text-xl text-white/90">
+              <p className="text-xl text-white">
                 Shrani svoje zapiske, zasluži z njimi in uporabi AI za učenje.
               </p>
             </div>
 
             {/* Benefits cards */}
             <div className="space-y-4 mt-8">
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20">
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20 hover:bg-white/15 transition-colors">
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
                     <Upload className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <p className="font-semibold text-lg mb-1">Naloži PDF ali fotografije</p>
-                    <p className="text-white/80 text-sm">Shrani svoje zapiske v PDF ali fotografiraj zvezek</p>
+                    <p className="font-semibold text-lg mb-1 text-white">Naloži PDF ali fotografije</p>
+                    <p className="text-white/90 text-sm">Shrani svoje zapiske v PDF ali fotografiraj zvezek</p>
                   </div>
                 </div>
               </div>
               
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20">
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20 hover:bg-white/15 transition-colors">
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
                     <Award className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <p className="font-semibold text-lg mb-1">Dostop do najboljših zapiskov</p>
-                    <p className="text-white/80 text-sm">Brskaj med zapiske drugih dijakov in študentov</p>
+                    <p className="font-semibold text-lg mb-1 text-white">Dostop do najboljših zapiskov</p>
+                    <p className="text-white/90 text-sm">Brskaj med zapiske drugih dijakov in študentov</p>
                   </div>
                 </div>
               </div>
               
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20">
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20 hover:bg-white/15 transition-colors">
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
                     <Brain className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <p className="font-semibold text-lg mb-1">AI razlaga nalog in snovi</p>
-                    <p className="text-white/80 text-sm">Študko AI ti pomaga razumeti težke koncepte</p>
+                    <p className="font-semibold text-lg mb-1 text-white">AI razlaga nalog in snovi</p>
+                    <p className="text-white/90 text-sm">Študko AI ti pomaga razumeti težke koncepte</p>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-sm">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-sm text-white">
               <span className="inline-block px-2 py-0.5 bg-gradient-to-r from-green-400 to-blue-400 rounded text-xs font-bold text-white">
                 BETA
               </span>
@@ -200,13 +200,13 @@ const Register = () => {
           {/* RIGHT SIDE - Register Form Card (order-1 on mobile, order-2 on desktop) */}
           <div className="bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl p-6 sm:p-8 md:p-10 order-1 md:order-2">
             <div className="mb-6 sm:mb-8">
-              <h2 className="text-3xl font-bold text-foreground mb-2">Registracija</h2>
-              <p className="text-muted-foreground">Ustvari svoj brezplačen račun</p>
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">Registracija</h2>
+              <p className="text-gray-600">Ustvari svoj brezplačen račun</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-sm font-medium">
+                <Label htmlFor="name" className="text-sm font-medium text-gray-900">
                   Ime in priimek
                 </Label>
                 <Input
@@ -216,13 +216,13 @@ const Register = () => {
                   placeholder="Janez Novak"
                   value={formData.name}
                   onChange={handleChange}
-                  className="h-12 rounded-xl border-2 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                  className="h-12 rounded-xl border-2 bg-white text-gray-900 placeholder:text-gray-500 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium">
+                <Label htmlFor="email" className="text-sm font-medium text-gray-900">
                   E-pošta
                 </Label>
                 <Input
@@ -232,13 +232,13 @@ const Register = () => {
                   placeholder="tvoj.email@primer.si"
                   value={formData.email}
                   onChange={handleChange}
-                  className="h-12 rounded-xl border-2 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                  className="h-12 rounded-xl border-2 bg-white text-gray-900 placeholder:text-gray-500 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium">
+                <Label htmlFor="password" className="text-sm font-medium text-gray-900">
                   Geslo
                 </Label>
                 <Input
@@ -248,14 +248,14 @@ const Register = () => {
                   placeholder="••••••••"
                   value={formData.password}
                   onChange={handleChange}
-                  className="h-12 rounded-xl border-2 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                  className="h-12 rounded-xl border-2 bg-white text-gray-900 placeholder:text-gray-500 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                   required
                 />
-                <p className="text-xs text-muted-foreground">Geslo mora biti dolgo vsaj 6 znakov</p>
+                <p className="text-xs text-gray-600">Geslo mora biti dolgo vsaj 6 znakov</p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-sm font-medium">
+                <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-900">
                   Potrdi geslo
                 </Label>
                 <Input
@@ -265,14 +265,14 @@ const Register = () => {
                   placeholder="••••••••"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className="h-12 rounded-xl border-2 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                  className="h-12 rounded-xl border-2 bg-white text-gray-900 placeholder:text-gray-500 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                   required
                 />
               </div>
 
               <div className="flex items-start gap-2 text-sm pt-2">
-                <input type="checkbox" className="mt-1 rounded border-border" required />
-                <span className="text-muted-foreground">
+                <input type="checkbox" className="mt-1 rounded border-gray-300" required />
+                <span className="text-gray-600">
                   Strinjam se s{" "}
                   <Link to="/terms" className="text-primary hover:underline font-medium">
                     pogoji uporabe
@@ -296,7 +296,7 @@ const Register = () => {
             </form>
 
             <div className="mt-6 text-center">
-              <p className="text-muted-foreground">
+              <p className="text-gray-600">
                 Že imaš račun?{" "}
                 <Link to="/login" className="text-primary font-semibold hover:underline">
                   Prijavi se

@@ -63,15 +63,15 @@ const Login = () => {
               <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
                 <BookOpen className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
               </div>
-              <span className="text-2xl sm:text-3xl font-bold">Študko</span>
+              <span className="text-2xl sm:text-3xl font-bold text-white">Študko</span>
             </div>
 
             {/* Welcome message */}
             <div className="space-y-2 sm:space-y-3">
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight text-white">
                 Dobrodošel nazaj 👋
               </h1>
-              <p className="text-xl text-white/90">
+              <p className="text-xl text-white">
                 Prijavi se in dostopaj do svojih zapiskov, AI pomoči in tutorjev.
               </p>
             </div>
@@ -83,8 +83,8 @@ const Login = () => {
                   <CheckCircle2 className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <p className="font-medium text-lg">Prodajaj svoje zapiske</p>
-                  <p className="text-white/80 text-sm">Naloži svoje zapiske in zasluži z njimi</p>
+                  <p className="font-medium text-lg text-white">Prodajaj svoje zapiske</p>
+                  <p className="text-white/90 text-sm">Naloži svoje zapiske in zasluži z njimi</p>
                 </div>
               </div>
               
@@ -93,8 +93,8 @@ const Login = () => {
                   <Sparkles className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <p className="font-medium text-lg">Uporabi AI za razlago snovi</p>
-                  <p className="text-white/80 text-sm">Študko AI ti pomaga razumeti snov</p>
+                  <p className="font-medium text-lg text-white">Uporabi AI za razlago snovi</p>
+                  <p className="text-white/90 text-sm">Študko AI ti pomaga razumeti snov</p>
                 </div>
               </div>
               
@@ -103,14 +103,14 @@ const Login = () => {
                   <Users className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <p className="font-medium text-lg">Najdi tutorja v nekaj klikih</p>
-                  <p className="text-white/80 text-sm">Poišči pravega tutorja za svoj predmet</p>
+                  <p className="font-medium text-lg text-white">Najdi tutorja v nekaj klikih</p>
+                  <p className="text-white/90 text-sm">Poišči pravega tutorja za svoj predmet</p>
                 </div>
               </div>
             </div>
 
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-sm">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-sm text-white">
               <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
               Slovenska študentska platforma
             </div>
@@ -119,13 +119,13 @@ const Login = () => {
           {/* RIGHT SIDE - Login Form Card (order-1 on mobile, order-2 on desktop) */}
           <div className="bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl p-6 sm:p-8 md:p-10 order-1 md:order-2">
             <div className="mb-6 sm:mb-8">
-              <h2 className="text-3xl font-bold text-foreground mb-2">Prijava</h2>
-              <p className="text-muted-foreground">Vpiši svoje podatke za prijavo</p>
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">Prijava</h2>
+              <p className="text-gray-600">Vpiši svoje podatke za prijavo</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium">
+                <Label htmlFor="email" className="text-sm font-medium text-gray-900">
                   E-pošta
                 </Label>
                 <Input
@@ -134,13 +134,13 @@ const Login = () => {
                   placeholder="tvoj.email@primer.si"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="h-12 rounded-xl border-2 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                  className="h-12 rounded-xl border-2 bg-white text-gray-900 placeholder:text-gray-500 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium">
+                <Label htmlFor="password" className="text-sm font-medium text-gray-900">
                   Geslo
                 </Label>
                 <Input
@@ -149,7 +149,7 @@ const Login = () => {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="h-12 rounded-xl border-2 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                  className="h-12 rounded-xl border-2 bg-white text-gray-900 placeholder:text-gray-500 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                   required
                 />
               </div>
@@ -158,11 +158,11 @@ const Login = () => {
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input 
                     type="checkbox" 
-                    className="rounded border-border"
+                    className="rounded border-gray-300"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
                   />
-                  <span className="text-muted-foreground">Zapomni si me</span>
+                  <span className="text-gray-600">Zapomni si me</span>
                 </label>
                 <Link to="/forgot-password" className="text-primary hover:underline font-medium">
                   Pozabljeno geslo?
@@ -181,7 +181,7 @@ const Login = () => {
             </form>
 
             <div className="mt-6 text-center">
-              <p className="text-muted-foreground">
+              <p className="text-gray-600">
                 Nimaš računa?{" "}
                 <Link to="/register" className="text-primary font-semibold hover:underline">
                   Registriraj se
