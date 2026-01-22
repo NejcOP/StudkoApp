@@ -50,7 +50,7 @@ const AddNote = () => {
         const { data: schools, error: schoolsError } = await supabase
           .from('schools')
           .select('name')
-          .eq('type', formData.schoolType.toLowerCase())
+          .eq('type', formData.schoolType)
           .order('name');
         if (schoolsError) {
           console.error('Supabase schools error:', schoolsError);
@@ -453,9 +453,9 @@ const AddNote = () => {
                     <SelectContent className="bg-popover">
                       {/* Osnovna šola removed */}
                       <SelectItem value="Gimnazija">Gimnazija</SelectItem>
-                      <SelectItem value="Srednja strokovna">Srednja strokovna</SelectItem>
-                      <SelectItem value="Poklicna">Poklicna</SelectItem>
-                      <SelectItem value="Fakulteta">Fakulteta</SelectItem>
+                      <SelectItem value="srednja strokovna">Srednja strokovna</SelectItem>
+                      <SelectItem value="poklicna">Poklicna</SelectItem>
+                      <SelectItem value="fakulteta">Fakulteta</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
