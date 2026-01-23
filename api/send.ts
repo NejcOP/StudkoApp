@@ -16,11 +16,11 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { render } from '@react-email/render';
 
 // Import email templates
-import WelcomeEmail from '../../emails/welcome';
-import ResetPasswordEmail from '../../emails/reset-password';
-import ProActivationEmail from '../../emails/pro-activation';
-import PayoutConfirmationEmail from '../../emails/payout-confirmation';
-import EmailChangeEmail from '../../emails/email-change';
+import WelcomeEmail from '../../emails/welcome.js';
+import ResetPasswordEmail from '../../emails/reset-password.js';
+import ProActivationEmail from '../../emails/pro-activation.js';
+import PayoutConfirmationEmail from '../../emails/payout-confirmation.js';
+import EmailChangeEmail from '../../emails/email-change.js';
 
 interface SendEmailRequest {
   type: 'welcome' | 'reset-password' | 'pro-activation' | 'payout' | 'email-change';
