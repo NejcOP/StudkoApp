@@ -1,3 +1,4 @@
+import ConfirmEmail from "./pages/ConfirmEmail";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -65,6 +66,7 @@ const App = () => (
               <Route path="/my-tutor-bookings" element={<ProtectedRoute><MyTutorBookings /></ProtectedRoute>} />
               <Route path="/call/:bookingId" element={<ProtectedRoute><VideoCall /></ProtectedRoute>} />
               <Route path="/admin/notes" element={<ProtectedRoute><AdminNotes /></ProtectedRoute>} />
+              <Route path="/auth/confirm" element={<ConfirmEmail />} />
               <Route path="/about" element={<About />} />
               <Route path="/terms" element={<Terms />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

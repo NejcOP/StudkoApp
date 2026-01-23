@@ -51,7 +51,7 @@ export default async function handler(
       case 'signup': {
         // Email confirmation
         const token = body.token_hash || body.token;
-        confirmLink = `${appUrl}/auth/confirm?token=${token}&type=signup&redirect_to=${encodeURIComponent(body.redirect_to || '/dashboard')}`;
+        confirmLink = `${appUrl}/auth/confirm?token=${token}&type=signup&redirect_to=${encodeURIComponent('/login')}`;
         
         subject = 'Potrdi svoj e-naslov - Študko';
         emailHtml = confirmEmailTemplate(confirmLink);
