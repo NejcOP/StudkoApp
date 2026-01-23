@@ -37,7 +37,7 @@ interface NotificationRequest {
   actionText?: string;
 }
 
-export default withAuth(async (req, res, user) {
+export default withAuth(async (req, res, user) => {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }

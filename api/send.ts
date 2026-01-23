@@ -16,11 +16,11 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { render } from '@react-email/render';
 
 // Import email templates
-import WelcomeEmail from '../../emails/welcome';
-import ResetPasswordEmail from '../../emails/reset-password';
-import ProActivationEmail from '../../emails/pro-activation';
-import PayoutConfirmationEmail from '../../emails/payout-confirmation';
-import EmailChangeEmail from '../../emails/email-change';
+import WelcomeEmail from '../../emails/welcome.js';
+import ResetPasswordEmail from '../../emails/reset-password.js';
+import ProActivationEmail from '../../emails/pro-activation.js';
+import PayoutConfirmationEmail from '../../emails/payout-confirmation.js';
+import EmailChangeEmail from '../../emails/email-change.js';
 
 interface SendEmailRequest {
   type: 'welcome' | 'reset-password' | 'pro-activation' | 'payout' | 'email-change';
@@ -60,7 +60,7 @@ export default async function handler(
     switch (body.type) {
       case 'welcome':
         subject = 'Dobrodošel/a na Študku! 📚 Potrdi svoj e-mail';
-        emailHtml = render(
+        emailHtml = await render(
           WelcomeEmail({
             userName: body.data.userName,
             confirmLink: body.data.confirmLink,
@@ -70,7 +70,7 @@ export default async function handler(
 
       case 'reset-password':
         subject = 'Navodila za ponastavitev gesla 🔑';
-        emailHtml = render(
+        emailHtml = await render(
           ResetPasswordEmail({
             userName: body.data.userName,
             resetLink: body.data.resetLink,
@@ -80,7 +80,7 @@ export default async function handler(
 
       case 'pro-activation':
         subject = 'Tvoj Študko PRO je tu! 🔥';
-        emailHtml = render(
+        emailHtml = await render(
           ProActivationEmail({
             userName: body.data.userName,
           })
@@ -89,7 +89,7 @@ export default async function handler(
 
       case 'payout':
         subject = 'Tvoj zahtevek za izplačilo je prejet! 💸';
-        emailHtml = render(
+        emailHtml = await render(
           PayoutConfirmationEmail({
             userName: body.data.userName,
             amount: body.data.amount,
@@ -100,7 +100,7 @@ export default async function handler(
 
       case 'email-change':
         subject = 'Potrdi spremembo e-poštnega naslova 📧';
-        emailHtml = render(
+        emailHtml = await render(
           EmailChangeEmail({
             userName: body.data.userName,
             newEmail: body.data.newEmail,
