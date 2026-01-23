@@ -1194,10 +1194,24 @@ const Profile = () => {
                     <Button 
                       variant="outline" 
                       className="w-full text-foreground"
-                      disabled
+                      onClick={async () => {
+                        if (!profile?.stripe_connect_id) return;
+                        try {
+                          const { data, error } = await supabase.functions.invoke('stripe-connect-dashboard', {
+                            body: { accountId: profile.stripe_connect_id }
+                          });
+                          if (error || !data?.url) {
+                            toast.error('Napaka pri odpiranju Stripe dashboarda');
+                            return;
+                          }
+                          window.open(data.url, '_blank');
+                        } catch (err) {
+                          toast.error('Napaka pri odpiranju Stripe dashboarda');
+                        }
+                      }}
                     >
                       <Wallet className="w-4 h-4 mr-2" />
-                      Upravljaj Stripe račun (kmalu)
+                      Upravljaj Stripe račun
                     </Button>
                   </div>
                 ) : (
