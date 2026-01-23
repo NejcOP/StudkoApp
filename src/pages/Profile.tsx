@@ -156,7 +156,36 @@ const Profile = () => {
     if (urlParams.get('tab') === 'purchased') {
       setMainTab('purchases');
     }
-    
+
+    // Handle payment success (force refetch purchased notes)
+    if (urlParams.get('payment') === 'success' && user) {
+      (async () => {
+        setLoading(true);
+        // Fetch purchased notes from Supabase (ignore cache)
+        const { data: purchasesData, error: purchasesError } = await supabase
+          .from('note_purchases')
+          .select('*, notes(*)')
+          .eq('buyer_id', user.id)
+          .order('purchased_at', { ascending: false });
+        if (!purchasesError && purchasesData) {
+          setPurchasedNotes(purchasesData);
+          try {
+            sessionStorage.setItem(`purchased_notes_${user.id}`, JSON.stringify({
+              data: purchasesData,
+              timestamp: Date.now()
+            }));
+          } catch (err) {
+            console.error('Error caching purchases:', err);
+          }
+        }
+        setLoading(false);
+        toast.success('Nakup uspešen! Zapisek je na voljo med kupljenimi.');
+        // Remove payment=success from URL
+        urlParams.delete('payment');
+        window.history.replaceState({}, '', `${window.location.pathname}?${urlParams.toString()}`);
+      })();
+    }
+
     // Handle email update success
     if (urlParams.get('email_updated') === 'true') {
       // Open settings dialog and show success message
@@ -169,21 +198,21 @@ const Profile = () => {
       // Remove query parameter from URL
       window.history.replaceState({}, '', '/profile');
     }
-    
+
     // Handle password reset from email link
     if (urlParams.get('type') === 'recovery' || urlParams.get('tab') === 'password') {
       // Open settings dialog and show password tab
       setIsSettingsOpen(true);
       setSettingsTab('password');
-      
+
       // Če je confirmed=true, uporabnik se vrača po kliku na povezavo v e-pošti
       if (urlParams.get('confirmed') === 'true' && urlParams.get('type') === 'recovery') {
         const pendingPassword = localStorage.getItem('pendingPassword');
-        
+
         if (pendingPassword) {
           // Zdaj dejansko posodobi geslo
           toast.info('Potrjujem spremembo...');
-          
+
           supabase.auth.updateUser({
             password: pendingPassword,
           }).then(({ error }) => {
