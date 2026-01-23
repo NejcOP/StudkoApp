@@ -30,8 +30,13 @@ interface CheckoutSession {
   id: string;
   customer: string;
   subscription: string;
+  amount_total?: number;
+  payment_intent?: string;
   metadata: {
-    userId: string;
+    userId?: string;
+    note_id?: string;
+    user_id?: string;
+    // Dodaj še ostala polja, če jih uporabljaš
   };
 }
 
@@ -192,8 +197,8 @@ export default async function handler(
 
         // Send welcome email
         try {
-          const { sendEmail } = await import('./lib/emails/resend-client');
-          const { welcomeToProTemplate } = await import('./lib/emails/templates');
+          const { sendEmail } = await import('./lib/emails/resend-client.js');
+          const { welcomeToProTemplate } = await import('./lib/emails/templates.js');
 
           const emailHtml = welcomeToProTemplate(userName).replace('{{email}}', updatedProfile[0]?.email || '');
           
