@@ -96,7 +96,38 @@ export default async function handler(
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as CheckoutSession;
-        
+        // Nakup zapiska (note purchase)
+        if (session.metadata?.note_id && session.metadata?.user_id) {
+          // Zapiši nakup v note_purchases
+          const purchaseData = {
+            buyer_id: session.metadata.user_id,
+            note_id: session.metadata.note_id,
+            purchased_at: new Date().toISOString(),
+            price: session.amount_total ? session.amount_total / 100 : null,
+            stripe_payment_intent_id: session.payment_intent || null,
+          };
+          const response = await fetch(
+            `${supabaseUrl}/rest/v1/note_purchases`,
+            {
+              method: 'POST',
+              headers: {
+                'apikey': serviceRoleKey,
+                'Authorization': `Bearer ${serviceRoleKey}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=representation',
+              },
+              body: JSON.stringify(purchaseData),
+            }
+          );
+          if (!response.ok) {
+            const error = await response.text();
+            console.error('Supabase insert error:', error);
+            return res.status(500).json({ error: 'Database insert failed' });
+          }
+          console.log('Note purchase zapisano za user:', session.metadata.user_id, 'note:', session.metadata.note_id);
+          break;
+        }
+        // PRO naročnina (subscription)
         if (!session.metadata?.userId) {
           console.error('No userId in session metadata');
           return res.status(400).json({ error: 'Missing userId' });

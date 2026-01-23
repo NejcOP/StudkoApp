@@ -1358,12 +1358,24 @@ const Profile = () => {
 
               {/* Purchased Notes Tab */}
               <TabsContent value="purchases" className="space-y-4">
-                {(() => {
-                  console.log('🛒 Rendering purchases tab - count:', purchasedNotes.length);
-                  console.log('🛒 Purchase data:', purchasedNotes);
-                  return null;
-                })()}
-                {purchasedNotes.length > 0 ? (
+                {loading && mainTab === 'purchases' ? (
+                  <div className="flex flex-col items-center justify-center min-h-[30vh]">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mb-4" />
+                    <p>Nalaganje kupljenih zapiskov ...</p>
+                    {purchaseTimeout && (
+                      <div className="mt-6 flex flex-col items-center">
+                        <p className="text-red-500 mb-2">Nakup je bil uspešen, vendar zapisek še ni na voljo.</p>
+                        <button
+                          className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
+                          onClick={() => window.location.reload()}
+                        >
+                          Osveži stran
+                        </button>
+                        <p className="text-xs text-muted-foreground mt-2">Če zapiska še vedno ni, počakaj nekaj minut ali kontaktiraj podporo.</p>
+                      </div>
+                    )}
+                  </div>
+                ) : purchasedNotes.length > 0 ? (
                   <div className="grid gap-4">
                     {purchasedNotes.map((purchase) => {
                       // Defensive: handle missing or malformed notes relation
