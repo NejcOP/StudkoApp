@@ -1,5 +1,5 @@
-export { default as WelcomeEmail } from './welcome';
-export { default as ResetPasswordEmail } from './reset-password';
-export { default as ProActivationEmail } from './pro-activation';
-export { default as PayoutConfirmationEmail } from './payout-confirmation';
-export { default as EmailChangeEmail } from './email-change';
+export { WelcomeEmail } from './welcome.js';
+export { ResetPasswordEmail } from './reset-password.js';
+export { ProActivationEmail } from './pro-activation.js';
+export { PayoutConfirmationEmail } from './payout-confirmation.js';
+export { EmailChangeEmail } from './email-change.js';
