@@ -22,12 +22,17 @@ export default async function handler(req, res) {
       const session = event.data.object;
       console.log('Prejeti metadata:', session.metadata);
       console.log('Poskušam vpisati v tabelo note_purchases...');
+      // Stripe znesek je v centih (npr. 500 = 5.00€)
+      const price = session.amount_total ? session.amount_total / 100 : 0;
+      console.log(`Poskušam vpisati: Buyer: ${session.metadata.user_id}, Note: ${session.metadata.note_id}, Price: ${price}`);
+
       const { data, error } = await supabase
         .from('note_purchases')
         .insert([
           {
-            buyer_id: session.metadata.user_id, // Mapiramo user_id iz Stripa na buyer_id v bazi
-            note_id: session.metadata.note_id
+            buyer_id: session.metadata.user_id,
+            note_id: session.metadata.note_id,
+            price: price // Dodajamo ceno, da zadostimo bazi
           }
         ])
         .select();
