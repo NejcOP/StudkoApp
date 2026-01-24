@@ -375,6 +375,11 @@ try {
     );
   }
 
+  // Debug: izpiši URL datoteke
+  if (note) {
+    console.log('URL datoteke:', note.file_url);
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -406,6 +411,15 @@ try {
                     Izbriši
                   </Button>
                 </div>
+                {/* Gumb za prenos PDF */}
+                {note.file_url && (
+                  <button
+                    onClick={() => window.open(note.file_url, '_blank')}
+                    className="mt-4 px-6 py-3 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-700 transition"
+                  >
+                    Prenesi PDF zapisek
+                  </button>
+                )}
               </div>
             )}
 
