@@ -1,3 +1,58 @@
+import Stripe from 'stripe';
+import { createClient } from '@supabase/supabase-js';
+import { Buffer } from 'node:buffer';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
+  // @ts-ignore
+  apiVersion: '2023-10-16',
+const supabase = createClient(
+  process.env.SUPABASE_URL as string,
+  process.env.SUPABASE_SERVICE_ROLE_KEY as string
+);
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== 'POST') {
+    return res.status(405).send('Method Not Allowed');
+  }
+  const sig = req.headers['stripe-signature'] as string;
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET as string;
+
+  let rawBody: Buffer;
+  try {
+    const chunks = [];
+    for await (const chunk of req) {
+      chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
+    }
+    rawBody = Buffer.concat(chunks);
+  } catch (err: any) {
+    return res.status(400).send('Error reading request');
+  }
+  let event: Stripe.Event;
+  try {
+    event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
+  } catch (err: any) {
+    console.error('❌ Webhook Signature napaka');
+    return res.status(400).send('Webhook Error');
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object as Stripe.Checkout.Session;
+    const userId = session.metadata?.userId;
+  const noteId = session.metadata?.noteId;
+
+  if (userId && noteId) {
+      await supabase
+        .from('note_purchases')
+        .insert([{ user_id: userId, note_id: noteId }]);
+      console.log('✅ Nakup uspesno zapisan.');
+    }
+  }
+
+  return res.status(200).json({ received: true });
+}
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
