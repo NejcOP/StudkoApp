@@ -82,25 +82,23 @@ const NoteDetail = () => {
   };
 
   useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
     if (id) {
       fetchNote();
-    // Unified handleDownload for all file downloads (owner and file list)
-      window.history.replaceState({}, '', `/notes/${id}`);
-      // Refresh purchase status
       if (user) {
         setTimeout(() => checkPurchaseStatus(), 1000);
       }
     }
-
-    // Handle payment success
+    // Handle checkout/payment success
+    if (urlParams.get('checkout') === 'success') {
+      toast.success("Nakup uspešen! Zapisek je zdaj tvoj.");
+      window.history.replaceState({}, '', `/notes/${id}`);
+      if (user) setTimeout(() => checkPurchaseStatus(), 1000);
+    }
     if (urlParams.get('payment') === 'success') {
       toast.success("Plačilo uspešno! Zapisek je zdaj tvoj.");
-      // Remove query param from URL
-      const urlParams = new window.URLSearchParams(window.location.search);
-      // Refresh purchase status
-      if (user) {
-        setTimeout(() => checkPurchaseStatus(), 1000);
-      }
+      window.history.replaceState({}, '', `/notes/${id}`);
+      if (user) setTimeout(() => checkPurchaseStatus(), 1000);
     }
   }, [id, user]);
 
@@ -135,16 +133,7 @@ const NoteDetail = () => {
         }
       }
 
-      // Fetch seller stats
-      if (data?.author_id) {
-        const { data: statsData } = await supabase.rpc('get_seller_stats', {
-          p_user_id: data.author_id
-        });
-        
-        if (statsData && statsData.length > 0) {
-          setSellerStats(statsData[0]);
-        }
-      }
+      // (Odstranjeno: fetch seller stats / get_seller_stats RPC)
     } catch (error) {
       console.error("Error fetching note:", error);
     } finally {
