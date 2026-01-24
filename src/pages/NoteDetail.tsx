@@ -622,7 +622,6 @@ try {
                       )}
                       {improving ? "Izboljšujem..." : "AI izboljšaj zapiske"}
                     </Button>
-
                     <Button
                       variant="outline"
                       size="lg"
@@ -637,54 +636,6 @@ try {
                       )}
                       {generatingFlashcards ? "Generiram..." : "Ustvari flashcards"}
                     </Button>
-
-                    {flashcards.length > 0 && (
-                      <Button
-                        variant="secondary"
-                        size="lg"
-                        className="w-full"
-                        onClick={() => setShowFlashcards(true)}
-                      >
-                        <Zap className="w-5 h-5 mr-2" />
-                        Ponovi flashcards ({flashcards.length})
-                      </Button>
-                    )}
-                  </div>
-                )}
-
-                {/* AI Features for owners and purchasers */}
-                {(isOwner || hasPurchased) && note.file_url && (
-                  <div className="space-y-3 mb-6">
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      className="w-full"
-                      onClick={handleImproveNotes}
-                      disabled={improving}
-                    >
-                      {improving ? (
-                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                      ) : (
-                        <Sparkles className="w-5 h-5 mr-2" />
-                      )}
-                      {improving ? "Izboljšujem..." : "AI izboljšaj zapiske"}
-                    </Button>
-
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      className="w-full"
-                      onClick={handleGenerateFlashcards}
-                      disabled={generatingFlashcards}
-                    >
-                      {generatingFlashcards ? (
-                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                      ) : (
-                        <Brain className="w-5 h-5 mr-2" />
-                      )}
-                      {generatingFlashcards ? "Generiram..." : "Ustvari flashcards"}
-                    </Button>
-
                     {flashcards.length > 0 && (
                       <Button
                         variant="secondary"
