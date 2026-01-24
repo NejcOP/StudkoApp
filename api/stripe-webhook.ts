@@ -55,6 +55,7 @@ export default async function handler(
   req: VercelRequest,
   res: VercelResponse
 ) {
+  console.log('Stripe webhook poklican');
   // Only accept POST requests
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -103,6 +104,8 @@ export default async function handler(
         const session = event.data.object as CheckoutSession;
         // Nakup zapiska (note purchase)
         if (session.metadata?.note_id && session.metadata?.user_id) {
+          console.log('Metadata iz Stripa:', session.metadata);
+          console.log('Vpisujem v bazo za user_id:', session.metadata.user_id, 'note_id:', session.metadata.note_id);
           // Zapiši nakup v note_purchases
           const purchaseData = {
             buyer_id: session.metadata.user_id,
