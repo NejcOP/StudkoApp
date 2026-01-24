@@ -1,14 +1,14 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+
+// @ts-ignore
 import Stripe from 'stripe';
 
-export const config = {
   api: {
     bodyParser: false,
   },
 };
 
-function buffer(req: VercelRequest): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
     req.on('data', (chunk) => chunks.push(Buffer.from(chunk)));
@@ -17,9 +17,10 @@ function buffer(req: VercelRequest): Promise<Buffer> {
   });
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+
   console.log('Stripe webhook poklican');
   if (req.method !== 'POST') {
+    console.log('Napaka: Method Not Allowed');
     res.status(405).send('Method Not Allowed');
     return;
   }
@@ -30,6 +31,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
   const resendApiKey = process.env.RESEND_API_KEY!;
 
+  // @ts-ignore
   const stripe = new Stripe(stripeSecretKey, { apiVersion: '2023-10-16' });
 
   let event: Stripe.Event;
@@ -38,6 +40,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     buf = await buffer(req);
+    console.log('Raw body prebran, dolžina:', buf.length);
     event = stripe.webhooks.constructEvent(buf, sig, webhookSecret);
     console.log('Webhook prejet:', event.type);
   } catch (err: any) {
@@ -82,9 +85,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       res.status(500).json({ error: 'Supabase insert error', details: errorText });
       return;
     }
+    console.log('Vpis v Supabase OK za user_id:', userId, 'note_id:', noteId);
 
     // 2. Pošlji e-mail prek Resend (če je e-mail na voljo)
     if (email) {
+      console.log('Pošiljam potrditveni e-mail na:', email);
       await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
@@ -98,6 +103,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           html: `<p>Pozdravljeni,<br>uspešno ste kupili zapisek na Študko.<br>Hvala za zaupanje!</p>`,
         }),
       });
+      console.log('E-mail poslan na:', email);
     }
   }
 
