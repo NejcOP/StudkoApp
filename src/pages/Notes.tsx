@@ -31,6 +31,7 @@ import { format } from "date-fns";
 import { useAuth } from "@/hooks/useAuth";
 import { useProAccess } from "@/hooks/useProAccess";
 import { toast } from "sonner";
+import { SCHOOL_TYPES } from "@/constants/schoolTypes";
 
 interface Note {
   id: string;
@@ -526,11 +527,9 @@ const Notes = () => {
                   <SelectValue placeholder="Vse šole" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover">
-                  {/* Osnovna šola removed */}
-                  <SelectItem value="Gimnazija">Gimnazija</SelectItem>
-                  <SelectItem value="srednja strokovna">Srednja strokovna</SelectItem>
-                  <SelectItem value="poklicna">Srednja poklicna</SelectItem>
-                  <SelectItem value="fakulteta">Fakulteta</SelectItem>
+                  {SCHOOL_TYPES.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

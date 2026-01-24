@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { SCHOOL_TYPES } from "@/constants/schoolTypes";
 import { useToast } from "@/hooks/use-toast";
 
 const AddNote = () => {
@@ -451,11 +452,9 @@ const AddNote = () => {
                       <SelectValue placeholder="Izberi vrsto šole" />
                     </SelectTrigger>
                     <SelectContent className="bg-popover">
-                      {/* Osnovna šola removed */}
-                      <SelectItem value="Gimnazija">Gimnazija</SelectItem>
-                      <SelectItem value="srednja strokovna">Srednja strokovna</SelectItem>
-                      <SelectItem value="poklicna">Poklicna</SelectItem>
-                      <SelectItem value="fakulteta">Fakulteta</SelectItem>
+                      {SCHOOL_TYPES.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
