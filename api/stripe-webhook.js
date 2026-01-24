@@ -26,7 +26,7 @@ export default async function handler(req, res) {
         .from('note_purchases')
         .insert([
           {
-            user_id: session.metadata.user_id,
+            buyer_id: session.metadata.user_id, // Mapiramo user_id iz Stripa na buyer_id v bazi
             note_id: session.metadata.note_id
           }
         ])
