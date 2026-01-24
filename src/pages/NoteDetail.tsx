@@ -371,14 +371,13 @@ try {
           {isOwner && (
             <div className="mt-4 p-4 bg-green-900/20 border border-green-500 rounded-lg">
               <p className="text-green-500 font-bold">Ta zapisek je v tvoji lasti</p>
-              {note.file_url && (
-                <button
-                  onClick={e => { e.preventDefault(); handleDownload(); }}
-                  className="mt-2 w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-md transition"
-                >
-                  Prenesi PDF zapisek
-                </button>
-              )}
+              <button
+                onClick={e => { e.preventDefault(); if (note.file_url) handleDownload(); }}
+                className={`mt-2 w-full py-2 rounded-md transition ${note.file_url ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-gray-400 text-gray-100 cursor-not-allowed'}`}
+                disabled={!note.file_url}
+              >
+                {note.file_url ? 'Prenesi PDF zapisek' : 'Datoteka se pripravlja'}
+              </button>
             </div>
           )}
 
