@@ -21,14 +21,21 @@ export default async function handler(req, res) {
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object;
       console.log('Prejeti metadata:', session.metadata);
-      const { userId, noteId } = session.metadata;
+      console.log('Poskušam vpisati v tabelo note_purchases...');
+      const { data, error } = await supabase
+        .from('note_purchases')
+        .insert([
+          {
+            user_id: session.metadata.user_id,
+            note_id: session.metadata.note_id
+          }
+        ])
+        .select();
 
-      if (userId && noteId) {
-        const { data, error } = await supabase
-          .from('note_purchases')
-          .insert([{ user_id: userId, note_id: noteId }]);
-        if (error) console.error('Supabase Error:', error);
-        else console.log('Uspeh v bazi:', data);
+      if (error) {
+        console.error('❌ SUPABASE NAPAKA PRI VPISU:', JSON.stringify(error));
+      } else {
+        console.log('✅ SUPABASE USPEH. Vpisani podatki:', JSON.stringify(data));
       }
     }
     return res.status(200).json({ received: true });
