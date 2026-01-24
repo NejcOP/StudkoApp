@@ -11,6 +11,12 @@
     "skipLibCheck": true,
     "allowJs": true,
     "noUnusedLocals": false,
-    "strictNullChecks": false
-  }
+    "strictNullChecks": false,
+    "jsx": "react-jsx"
+  },
+  "include": [
+    "src",
+    "api/**/*.ts",
+    "emails/**/*.tsx"
+  ]
 }
