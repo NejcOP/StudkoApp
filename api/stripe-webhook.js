@@ -20,11 +20,15 @@ export default async function handler(req, res) {
 
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object;
+      console.log('Prejeti metadata:', session.metadata);
       const { userId, noteId } = session.metadata;
 
       if (userId && noteId) {
-        await supabase.from('note_purchases').insert([{ user_id: userId, note_id: noteId }]);
-        console.log('✅ Nakup uspesno zapisan.');
+        const { data, error } = await supabase
+          .from('note_purchases')
+          .insert([{ user_id: userId, note_id: noteId }]);
+        if (error) console.error('Supabase Error:', error);
+        else console.log('Uspeh v bazi:', data);
       }
     }
     return res.status(200).json({ received: true });
