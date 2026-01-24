@@ -1,5 +1,6 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import Navigation from "@/components/Navigation";
@@ -380,6 +381,17 @@ try {
     console.log('URL datoteke:', note.file_url);
   }
 
+  // Prenos PDF iz Supabase Storage
+  const handleDownload = () => {
+    if (!note?.file_url) return;
+    const { data } = supabase.storage.from('notes').getPublicUrl(note.file_url);
+    if (data?.publicUrl) {
+      window.open(data.publicUrl, '_blank');
+    } else {
+      toast.error('Napaka pri pridobivanju povezave do datoteke.');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -396,26 +408,12 @@ try {
           <div className="max-w-5xl mx-auto">
             {/* Owner Actions */}
             {isOwner && (
-              <div className="bg-gradient-to-r from-primary/10 to-accent/10 backdrop-blur rounded-2xl p-4 shadow-lg border border-primary/20 mb-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-foreground">To so tvoji zapiski</p>
-                    <p className="text-xs text-muted-foreground mt-1">Vidiš preview kot ga vidijo drugi - 25% vsebine</p>
-                  </div>
-                  <Button
-                    variant="outline"
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
-                    onClick={() => setShowDeleteDialog(true)}
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Izbriši
-                  </Button>
-                </div>
-                {/* Gumb za prenos PDF */}
+              <div className="mt-4 p-4 bg-green-900/20 border border-green-500 rounded-lg">
+                <p className="text-green-500 font-bold">Ta zapisek je v tvoji lasti</p>
                 {note.file_url && (
                   <button
-                    onClick={() => window.open(note.file_url, '_blank')}
-                    className="mt-4 px-6 py-3 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-700 transition"
+                    onClick={handleDownload}
+                    className="mt-2 w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-md transition"
                   >
                     Prenesi PDF zapisek
                   </button>
