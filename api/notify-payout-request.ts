@@ -22,7 +22,7 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { withAuth } from './lib/auth-middleware';
+import { withAuth } from './lib/auth-middleware.js';
 import { sendEmail } from './lib/emails/resend-client.js';
 import { payoutRequestTemplate } from './lib/emails/templates.js';
 
