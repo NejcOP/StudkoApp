@@ -11,12 +11,12 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { sendEmail } from './lib/emails/resend-client';
+import { sendEmail } from './lib/emails/resend-client.js';
 import {
   confirmEmailTemplate,
   resetPasswordTemplate,
   changeEmailTemplate,
-} from './lib/emails/templates';
+} from './lib/emails/templates.js';
 
 interface AuthEmailRequest {
   type: 'signup' | 'recovery' | 'email_change' | 'magic_link';

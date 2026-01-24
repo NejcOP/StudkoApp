@@ -23,15 +23,15 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { withAuth } from './lib/auth-middleware';
-import { sendEmail } from './lib/emails/resend-client';
-import { payoutRequestTemplate } from './lib/emails/templates';
+import { sendEmail } from './lib/emails/resend-client.js';
+import { payoutRequestTemplate } from './lib/emails/templates.js';
 
 interface PayoutRequest {
   amount: number;
   method: string;
 }
 
-export default withAuth(async (req, res, user) {
+export default withAuth(async (req, res, user) => {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
