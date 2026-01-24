@@ -6,7 +6,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { ArrowLeft, Download, BookOpen, User, Loader2, Calendar, Trash2, ExternalLink, ShoppingCart, Sparkles, Zap, Brain, CheckCircle2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+// Duplicate import removed
 import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -51,58 +51,40 @@ const NoteDetail = () => {
   } | null>(null);
   const [improving, setImproving] = useState(false);
   const [generatingFlashcards, setGeneratingFlashcards] = useState(false);
-  const [flashcards, setFlashcards] = useState<any[]>([]);
+  const [flashcards, setFlashcards] = useState<unknown[]>([]);
   const [showFlashcards, setShowFlashcards] = useState(false);
 
-  const handleDownload = async (url: string, index: number) => {
-    try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      
-      // Determine file extension
-      const isPdf = url.toLowerCase().includes('.pdf');
-      const extension = isPdf ? 'pdf' : 'jpg';
-      link.download = `${note?.title || 'zapisek'}_${index + 1}.${extension}`;
-      
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(blobUrl);
-      
-      toast.success('Datoteka se prenaša!');
-    } catch (error) {
-      console.error('Download error:', error);
-      toast.error('Napaka pri prenosu datoteke');
-    }
-  };
+  // Unified handleDownload for all file downloads (owner and file list)
+   const handleDownload = (url?: string, index?: number) => {
+     // If called from owner button, use note.file_url
+     const filePath = url || note?.file_url;
+     if (!filePath) {
+       console.error("URL datoteke ni najden!");
+       toast.error("URL datoteke ni najden!");
+       return;
+     }
+     // Pridobimo javni URL iz bucket-a 'notes'
+     const { data } = supabase.storage.from('notes').getPublicUrl(filePath);
+     if (data?.publicUrl) {
+       window.open(data.publicUrl, '_blank');
+       toast.success('Datoteka se prenaša!');
+     } else {
+       console.error("Napaka pri pridobivanju URL-ja");
+       toast.error('Napaka pri pridobivanju povezave do datoteke.');
+     }
+   };
 
-  const handleDownloadAll = async () => {
+  const handleDownloadAll = () => {
     toast.info(`Prenašam ${fileUrls.length} datotek...`);
-    for (let i = 0; i < fileUrls.length; i++) {
-      await handleDownload(fileUrls[i], i);
-      // Small delay between downloads
-      if (i < fileUrls.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
-    }
+    fileUrls.forEach((url, i) => {
+      handleDownload(url, i);
+    });
   };
 
   useEffect(() => {
     if (id) {
       fetchNote();
-      if (user) {
-        checkPurchaseStatus();
-      }
-    }
-    
-    // Handle checkout success
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('checkout') === 'success') {
-      toast.success("Nakup uspešen! Zapisek je zdaj tvoj.");
-      // Remove query param from URL
+    // Unified handleDownload for all file downloads (owner and file list)
       window.history.replaceState({}, '', `/notes/${id}`);
       // Refresh purchase status
       if (user) {
@@ -114,7 +96,7 @@ const NoteDetail = () => {
     if (urlParams.get('payment') === 'success') {
       toast.success("Plačilo uspešno! Zapisek je zdaj tvoj.");
       // Remove query param from URL
-      window.history.replaceState({}, '', `/notes/${id}`);
+      const urlParams = new window.URLSearchParams(window.location.search);
       // Refresh purchase status
       if (user) {
         setTimeout(() => checkPurchaseStatus(), 1000);
@@ -381,16 +363,7 @@ try {
     console.log('URL datoteke:', note.file_url);
   }
 
-  // Prenos PDF iz Supabase Storage
-  const handleDownload = () => {
-    if (!note?.file_url) return;
-    const { data } = supabase.storage.from('notes').getPublicUrl(note.file_url);
-    if (data?.publicUrl) {
-      window.open(data.publicUrl, '_blank');
-    } else {
-      toast.error('Napaka pri pridobivanju povezave do datoteke.');
-    }
-  };
+  // ...existing code...
 
   return (
     <div className="min-h-screen bg-background">
@@ -404,22 +377,21 @@ try {
           <ArrowLeft className="w-4 h-4" />
           Nazaj
         </button>
-
-          <div className="max-w-5xl mx-auto">
-            {/* Owner Actions */}
-            {isOwner && (
-              <div className="mt-4 p-4 bg-green-900/20 border border-green-500 rounded-lg">
-                <p className="text-green-500 font-bold">Ta zapisek je v tvoji lasti</p>
-                {note.file_url && (
-                  <button
-                    onClick={handleDownload}
-                    className="mt-2 w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-md transition"
-                  >
-                    Prenesi PDF zapisek
-                  </button>
-                )}
-              </div>
-            )}
+        <div className="max-w-5xl mx-auto">
+          {/* Owner Actions */}
+          {isOwner && (
+            <div className="mt-4 p-4 bg-green-900/20 border border-green-500 rounded-lg">
+              <p className="text-green-500 font-bold">Ta zapisek je v tvoji lasti</p>
+              {note.file_url && (
+                <button
+                  onClick={e => { e.preventDefault(); handleDownload(); }}
+                  className="mt-2 w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-md transition"
+                >
+                  Prenesi PDF zapisek
+                </button>
+              )}
+            </div>
+          )}
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Main Content */}
@@ -544,7 +516,7 @@ try {
                             Datoteka {index + 1} od {fileUrls.length}
                           </p>
                           <Button
-                            onClick={() => handleDownload(url, index)}
+                            onClick={e => { e.preventDefault(); handleDownload(url, index); }}
                             variant="outline"
                             size="sm"
                             className="gap-2"
@@ -566,7 +538,7 @@ try {
                           </div>
                           {fileUrls.length === 1 && (
                             <Button
-                              onClick={() => handleDownload(url, index)}
+                              onClick={e => { e.preventDefault(); handleDownload(url, index); }}
                               variant="outline"
                               size="sm"
                               className="w-full gap-2"
@@ -587,7 +559,7 @@ try {
                           </div>
                           {fileUrls.length === 1 && (
                             <Button
-                              onClick={() => handleDownload(url, index)}
+                              onClick={e => { e.preventDefault(); handleDownload(url, index); }}
                               variant="outline"
                               size="sm"
                               className="w-full gap-2"
