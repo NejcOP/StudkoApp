@@ -1326,7 +1326,7 @@ const Profile = () => {
                           </div>
                         </div>
                         <div className="flex items-center gap-2 mt-4">
-                          <Link to={`/notes/${note.id}`} className="flex-1">
+                          <Link to={`/notes/${purchase.note_id}`} className="flex-1">
                             <Button variant="outline" className="w-full text-foreground">
                               <ExternalLink className="w-4 h-4 mr-2" />
                               Odpri
@@ -1393,7 +1393,7 @@ const Profile = () => {
                       return (
                         <Link
                           key={purchase.id}
-                          to={`/notes/${note.id}`}
+                          to={`/notes/${purchase.note_id}`}
                           className="block bg-card dark:bg-card backdrop-blur rounded-2xl p-6 shadow-lg border border-border hover:shadow-xl hover:border-purple-300 dark:hover:border-purple-700 transition-all"
                         >
                           <div className="flex justify-between items-start mb-3">
