@@ -151,53 +151,51 @@ const Profile = () => {
     if (user) {
       loadProfileData();
     }
-    // Check for URL parameters
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('tab') === 'purchased') {
       setMainTab('purchases');
     }
 
-    // Handle payment success (force refetch purchased notes)
+    // Polling for payment success
+    let pollingInterval: NodeJS.Timeout | null = null;
     if (urlParams.get('payment') === 'success' && user) {
-      (async () => {
-        setLoading(true);
-        // Fetch purchased notes from Supabase (ignore cache)
+      setLoading(true);
+      let pollCount = 0;
+      pollingInterval = setInterval(async () => {
+        pollCount++;
         const { data: purchasesData, error: purchasesError } = await supabase
           .from('note_purchases')
           .select('*, notes(*)')
           .eq('buyer_id', user.id)
           .order('purchased_at', { ascending: false });
-        if (!purchasesError && purchasesData) {
+        if (!purchasesError && purchasesData && purchasesData.length > 0) {
           setPurchasedNotes(purchasesData);
-          try {
-            sessionStorage.setItem(`purchased_notes_${user.id}`, JSON.stringify({
-              data: purchasesData,
-              timestamp: Date.now()
-            }));
-          } catch (err) {
-            console.error('Error caching purchases:', err);
-          }
+          setLoading(false);
+          toast.success('Nakup uspešen! Zapisek je na voljo med kupljenimi.');
+          urlParams.delete('payment');
+          window.history.replaceState({}, '', `${window.location.pathname}?${urlParams.toString()}`);
+          if (pollingInterval) clearInterval(pollingInterval);
+        } else if (pollCount >= 30) { // 1 minuta polling
+          setLoading(false);
+          if (pollingInterval) clearInterval(pollingInterval);
         }
-        setLoading(false);
-        toast.success('Nakup uspešen! Zapisek je na voljo med kupljenimi.');
-        // Remove payment=success from URL
-        urlParams.delete('payment');
-        window.history.replaceState({}, '', `${window.location.pathname}?${urlParams.toString()}`);
-      })();
+      }, 2000);
     }
 
     // Handle email update success
     if (urlParams.get('email_updated') === 'true') {
-      // Open settings dialog and show success message
       setIsSettingsOpen(true);
       setSettingsTab('password');
       toast.success('E-pošta uspešno posodobljena!', {
         description: 'Zdaj lahko po želji spremeniš še geslo.',
         duration: 6000,
       });
-      // Remove query parameter from URL
       window.history.replaceState({}, '', '/profile');
     }
+
+    return () => {
+      if (pollingInterval) clearInterval(pollingInterval);
+    };
 
     // Handle password reset from email link
     if (urlParams.get('type') === 'recovery' || urlParams.get('tab') === 'password') {
@@ -1359,22 +1357,24 @@ const Profile = () => {
               {/* Purchased Notes Tab */}
               <TabsContent value="purchases" className="space-y-4">
                 {loading && mainTab === 'purchases' ? (
-                  <div className="flex flex-col items-center justify-center min-h-[30vh]">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mb-4" />
-                    <p>Nalaganje kupljenih zapiskov ...</p>
-                    {purchaseTimeout && (
-                      <div className="mt-6 flex flex-col items-center">
-                        <p className="text-red-500 mb-2">Nakup je bil uspešen, vendar zapisek še ni na voljo.</p>
-                        <button
-                          className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
-                          onClick={() => window.location.reload()}
-                        >
-                          Osveži stran
-                        </button>
-                        <p className="text-xs text-muted-foreground mt-2">Če zapiska še vedno ni, počakaj nekaj minut ali kontaktiraj podporo.</p>
+                  (() => {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    if (urlParams.get('payment') === 'success') {
+                      return (
+                        <div className="flex flex-col items-center justify-center min-h-[30vh]">
+                          <Loader2 className="animate-spin w-12 h-12 text-purple-500 mb-4" />
+                          <p className="text-lg font-semibold mb-2">Obdelujemo tvoj nakup ...</p>
+                          <p className="text-sm text-muted-foreground">Zapisek bo na voljo v nekaj sekundah po potrditvi plačila.</p>
+                        </div>
+                      );
+                    }
+                    return (
+                      <div className="flex flex-col items-center justify-center min-h-[30vh]">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mb-4" />
+                        <p>Nalaganje kupljenih zapiskov ...</p>
                       </div>
-                    )}
-                  </div>
+                    );
+                  })()
                 ) : purchasedNotes.length > 0 ? (
                   <div className="grid gap-4">
                     {purchasedNotes.map((purchase) => {
