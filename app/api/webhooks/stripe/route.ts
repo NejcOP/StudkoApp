@@ -9,6 +9,7 @@ import Stripe from "stripe";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2023-10-16" });
 
 export async function POST(req: NextRequest) {
+  console.log('Stripe webhook endpoint poklican');
   // Stripe zahteva raw body!
   const sig = req.headers.get("stripe-signature");
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
@@ -18,6 +19,7 @@ export async function POST(req: NextRequest) {
 
   try {
     event = stripe.webhooks.constructEvent(body, sig!, webhookSecret);
+    console.log('Webhook prejet:', event.type);
   } catch (err: any) {
     console.error('Webhook signature verification failed:', err?.message || err);
     return NextResponse.json({ error: `Webhook signature verification failed: ${err?.message || err}` }, { status: 400 });
@@ -26,6 +28,7 @@ export async function POST(req: NextRequest) {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
+    console.log('Metadata iz Stripa:', session.metadata);
     const noteId = session.metadata?.note_id;
     const userId = session.metadata?.user_id;
     const email = session.customer_details?.email;
@@ -35,6 +38,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing note_id or user_id in Stripe metadata.' }, { status: 400 });
     }
 
+    console.log('Vpisujem v bazo za user_id:', userId, 'note_id:', noteId);
     // 1. Vpiši v Supabase
     const supabaseRes = await fetch(`${process.env.SUPABASE_URL}/rest/v1/note_purchases`, {
       method: "POST",
