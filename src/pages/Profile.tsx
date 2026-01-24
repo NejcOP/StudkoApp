@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -67,1194 +67,1361 @@ interface Purchase {
 }
 
 const Profile = () => {
-  const { user, loading: authLoading } = useAuth();
-  const { theme, setTheme } = useTheme();
-  const navigate = useNavigate();
-  
-  const [profile, setProfile] = useState<Profile | null>(() => {
-    try {
-      const cached = sessionStorage.getItem(`profile_${user?.id}`);
-      if (cached) {
-        const { data, timestamp } = JSON.parse(cached);
-        if (Date.now() - timestamp < 5 * 60 * 1000) {
-          return data;
-        }
-      }
-    } catch (err) {
-      console.error('Error reading cached profile:', err);
-    }
-    return null;
-  });
-  const [tutorId, setTutorId] = useState<string | null>(null);
-  const [isApprovedTutor, setIsApprovedTutor] = useState(false);
-  const [myNotes, setMyNotes] = useState<Note[]>(() => {
-    try {
-      const cached = sessionStorage.getItem(`my_notes_${user?.id}`);
-      if (cached) {
-        const { data, timestamp } = JSON.parse(cached);
-        if (Date.now() - timestamp < 5 * 60 * 1000) {
-          return data;
-        }
-      }
-    } catch (err) {
-      console.error('Error reading cached notes:', err);
-    }
-    return [];
-  });
-  const [purchasedNotes, setPurchasedNotes] = useState<Purchase[]>(() => {
-    try {
-      const cached = sessionStorage.getItem(`purchased_notes_${user?.id}`);
-      if (cached) {
-        const { data, timestamp } = JSON.parse(cached);
-        if (Date.now() - timestamp < 5 * 60 * 1000) {
-          return data;
-        }
-      }
-    } catch (err) {
-      console.error('Error reading cached purchases:', err);
-    }
-    return [];
-  });
-  const [loading, setLoading] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [settingsTab, setSettingsTab] = useState("profile");
-  const [mainTab, setMainTab] = useState<string>("my-notes");
-  const [deleteNoteId, setDeleteNoteId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({
-    full_name: "",
-  });
-  const [emailForm, setEmailForm] = useState({
-    newEmail: "",
-  });
-  const [passwordForm, setPasswordForm] = useState({
-    newPassword: "",
-    confirmPassword: "",
-  });
-  const [saving, setSaving] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [loadingSubscription, setLoadingSubscription] = useState(false);
-  const [showCancelDialog, setShowCancelDialog] = useState(false);
-  const [cancelling, setCancelling] = useState(false);
-  const [isPayoutModalOpen, setIsPayoutModalOpen] = useState(false);
-  const [trialUsed, setTrialUsed] = useState(false);
-  const [totalEarnings, setTotalEarnings] = useState(0);
-  const [passwordResetEmailSent, setPasswordResetEmailSent] = useState(false);
+    // Inline loading states for tab content
+    const [profileLoading, setProfileLoading] = useState(false);
+    const [notesLoading, setNotesLoading] = useState(false);
+    const [purchasesLoading, setPurchasesLoading] = useState(false);
 
-  useEffect(() => {
-    if (!authLoading && !user) {
-      navigate("/login");
-    }
-  }, [user, authLoading, navigate]);
-
-  useEffect(() => {
-    if (user) {
-      loadProfileData();
-    }
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('tab') === 'purchased') {
-      setMainTab('purchases');
-    }
-
-    // Polling for payment success
-    let pollingInterval: NodeJS.Timeout | null = null;
-    if (urlParams.get('payment') === 'success' && user) {
-      setLoading(true);
-      let pollCount = 0;
-      pollingInterval = setInterval(async () => {
-        pollCount++;
-        const { data: purchasesData, error: purchasesError } = await supabase
-          .from('note_purchases')
-          .select('*, notes(*)')
-          .eq('buyer_id', user.id)
-          .order('purchased_at', { ascending: false });
-        if (!purchasesError && purchasesData && purchasesData.length > 0) {
-          setPurchasedNotes(purchasesData);
-          setLoading(false);
-          toast.success('Nakup uspešen! Zapisek je na voljo med kupljenimi.');
-          urlParams.delete('payment');
-          window.history.replaceState({}, '', `${window.location.pathname}?${urlParams.toString()}`);
-          if (pollingInterval) clearInterval(pollingInterval);
-        } else if (pollCount >= 30) { // 1 minuta polling
-          setLoading(false);
-          if (pollingInterval) clearInterval(pollingInterval);
-        }
-      }, 2000);
-    }
-
-    // Handle email update success
-    if (urlParams.get('email_updated') === 'true') {
-      setIsSettingsOpen(true);
-      setSettingsTab('password');
-      toast.success('E-pošta uspešno posodobljena!', {
-        description: 'Zdaj lahko po želji spremeniš še geslo.',
-        duration: 6000,
-      });
-      window.history.replaceState({}, '', '/profile');
-    }
-
-    return () => {
-      if (pollingInterval) clearInterval(pollingInterval);
-    };
-
-    // Handle password reset from email link
-    if (urlParams.get('type') === 'recovery' || urlParams.get('tab') === 'password') {
-      // Open settings dialog and show password tab
-      setIsSettingsOpen(true);
-      setSettingsTab('password');
-
-      // Če je confirmed=true, uporabnik se vrača po kliku na povezavo v e-pošti
-      if (urlParams.get('confirmed') === 'true' && urlParams.get('type') === 'recovery') {
-        const pendingPassword = localStorage.getItem('pendingPassword');
-
-        if (pendingPassword) {
-          // Zdaj dejansko posodobi geslo
-          toast.info('Potrjujem spremembo...');
-
-          supabase.auth.updateUser({
-            password: pendingPassword,
-          }).then(({ error }) => {
-            if (error) {
-              toast.error('Napaka pri posodobitvi gesla: ' + error.message);
-            } else {
-              toast.success('Geslo uspešno posodobljeno!', {
-                description: 'Tvoje novo geslo je zdaj aktivno.',
-                duration: 5000,
-              });
-              localStorage.removeItem('pendingPassword');
-            }
-          });
-        } else {
-          toast.success('Povezava potrjena!', {
-            description: 'Spodaj vnesi svoje novo geslo.',
-          });
-        }
-        
-        // Očisti URL parametre
-        window.history.replaceState({}, '', '/profile');
-      } else if (urlParams.get('type') === 'recovery') {
-        toast.success('Povezava potrjena!', {
-          description: 'Spodaj vnesi svoje novo geslo.',
-          duration: 6000,
-        });
-        // Remove query parameter from URL
-        window.history.replaceState({}, '', '/profile');
-      }
-    }
+    const { user, loading: authLoading } = useAuth();
+    const { theme, setTheme } = useTheme();
+    const navigate = useNavigate();
     
-    // Handle PRO activation success
-    if (urlParams.get('pro') === 'activated') {
-      const handleProActivation = async () => {
-        // Refresh session to get latest PRO status
-        await supabase.auth.refreshSession();
-        // Reload profile data
-        await loadProfileData();
-        // Show success message
-        toast.success('🎉 Dobrodošli v Študko PRO!', {
-          description: 'Vaše PRO funkcije so zdaj aktivne.',
-          duration: 5000,
-        });
-        // Remove query parameter from URL
-        window.history.replaceState({}, '', '/profile');
-      };
-      handleProActivation();
-    }
-  }, [user]);
-
-  // Recheck tutor status when instructor tab is accessed
-  useEffect(() => {
-    if (mainTab === 'instructor' && user && user.email) {
-      const recheckTutorStatus = async () => {
-        try {
-          const { data: tutorData } = await supabase
-            .from('tutors')
-            .select('id, status')
-            .eq('email', user.email)
-            .limit(1);
-          
-
-          
-          if (tutorData && tutorData.length > 0) {
-            const tutor = tutorData[0];
-            if (tutor.status === 'approved') {
-
-              // Use user.id for tutor_availability_dates table
-              setTutorId(user.id);
-              setIsApprovedTutor(true);
-              // Also update the profile to mark as instructor
-              await supabase
-                .from('profiles')
-                .update({ is_instructor: true })
-                .eq('id', user.id);
-              // Reload profile data to refresh the UI
-              await loadProfileData();
-            }
-          }
-        } catch (error) {
-          console.error('Error rechecking tutor status:', error);
-        }
-      };
-      
-      recheckTutorStatus();
-    }
-  }, [mainTab, user]);
-
-  // Check for Stripe onboarding success
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const stripe = urlParams.get('stripe');
-    const accountId = urlParams.get('account_id');
-    const proActivated = urlParams.get('pro');
-
-    if (stripe === 'success' && accountId && user) {
-      // Update profile with Stripe Connect account ID
-      supabase
-        .from('profiles')
-        .update({
-          stripe_connect_id: accountId,
-          stripe_onboarding_complete: true
-        })
-        .eq('id', user.id)
-        .then(({ error }) => {
-          if (error) {
-            console.error('Error updating profile:', error);
-            toast.error('Napaka pri posodabljanju profila');
-          } else {
-            toast.success('Stripe račun uspešno povezan!');
-            loadProfileData(); // Reload profile data
-            // Clean up URL
-            window.history.replaceState({}, document.title, window.location.pathname);
-          }
-        });
-    }
-
-    // Check for PRO activation
-    if (proActivated === 'activated') {
-      setTimeout(() => {
-        loadProfileData();
-        toast.success('Dobrodošli v Študko PRO! 🎉');
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }, 1500);
-    }
-  }, [user]);
-
-  // Real-time subscription to profile changes for PRO status
-  useEffect(() => {
-    if (!user?.id) return;
-
-    const channel = supabase
-      .channel('profile-subscription-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'profiles',
-          filter: `id=eq.${user.id}`,
-        },
-        (payload) => {
-          // Reload profile when updated but don't reset the edit form
-          loadProfileData(false);
-          
-          // Show success toast if is_pro becomes true
-          if (payload.new?.is_pro && !payload.old?.is_pro) {
-            toast.success('PRO naročnina je aktivna! 🚀');
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user?.id]);
-
-  const handleStripeOnboarding = async () => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await supabase.functions.invoke('stripe-connect-onboarding', {
-        body: {
-          user_id: user.id,
-          email: user.email
-        }
-      });
-
-      if (error) {
-        console.error('Error invoking Stripe function:', error);
-        toast.error('Napaka pri povezovanju s Stripe');
-        return;
-      }
-
-      if (data?.url) {
-        window.location.href = data.url;
-      } else {
-        toast.error('Napaka: ni prejet URL za Stripe');
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      toast.error('Napaka pri povezovanju s Stripe');
-    }
-  };
-
-  const loadProfileData = async (resetForm: boolean = true) => {
-    if (!user) return;
-    
-    // Check if we have valid cached data
-    try {
-      const cachedProfile = sessionStorage.getItem(`profile_${user.id}`);
-      const cachedNotes = sessionStorage.getItem(`my_notes_${user.id}`);
-      const cachedPurchases = sessionStorage.getItem(`purchased_notes_${user.id}`);
-      
-      if (cachedProfile && cachedNotes && cachedPurchases) {
-        const profileCache = JSON.parse(cachedProfile);
-        const notesCache = JSON.parse(cachedNotes);
-        const purchasesCache = JSON.parse(cachedPurchases);
-        
-        // Cache valid for 5 minutes
-        if (Date.now() - profileCache.timestamp < 5 * 60 * 1000 &&
-            Date.now() - notesCache.timestamp < 5 * 60 * 1000 &&
-            Date.now() - purchasesCache.timestamp < 5 * 60 * 1000) {
-
-          return;
-        }
-      }
-    } catch (err) {
-      console.error('Error checking profile cache:', err);
-    }
-    
-    setLoading(true);
-    try {
-      // Fetch profile
-      const { data: profileData, error: profileError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-
-      if (profileError) {
-
-        throw profileError;
-      }
-      // Cast payout_info from JSON to PayoutInfo type
-      const profileWithTypedPayout = {
-        ...profileData,
-        payout_info: profileData?.payout_info as PayoutInfo | undefined,
-      };
-      setProfile(profileWithTypedPayout as Profile);
-      
-      // Cache profile data
+    const [profile, setProfile] = useState<Profile | null>(() => {
       try {
-        sessionStorage.setItem(`profile_${user.id}`, JSON.stringify({
-          data: profileWithTypedPayout,
-          timestamp: Date.now()
-        }));
-      } catch (err) {
-        console.error('Error caching profile:', err);
-      }
-      
-      // Only reset form when explicitly requested (not during real-time updates)
-      if (resetForm) {
-        setEditForm({
-          full_name: profileData?.full_name || "",
-        });
-      }
-
-      // Check trial status
-      const hasUsedTrial = profileData?.trial_used || 
-        (profileData?.trial_ends_at && new Date(profileData.trial_ends_at) < new Date());
-      setTrialUsed(hasUsedTrial || false);
-
-      // If user is an instructor, get their tutor status and set tutorId to user.id
-      if (profileData?.is_instructor) {
-        const { data: tutorData } = await supabase
-          .from("tutors")
-          .select("id, status")
-          .eq("user_id", user.id)
-          .limit(1);
-        
-
-        
-        if (tutorData && tutorData.length > 0) {
-          // Use user.id for tutor_availability_dates table (references profiles.id)
-          setTutorId(user.id);
-          setIsApprovedTutor(tutorData[0].status === 'approved');
+        const cached = sessionStorage.getItem(`profile_${user?.id}`);
+        if (cached) {
+          const { data, timestamp } = JSON.parse(cached);
+          if (Date.now() - timestamp < 5 * 60 * 1000) {
+            return data;
+          }
         }
-      } else {
-        setIsApprovedTutor(false);
-      }
-
-      // Fetch user's notes
-      const { data: notesData, error: notesError } = await supabase
-        .from("notes")
-        .select("*")
-        .eq("author_id", user.id)
-        .order("created_at", { ascending: false });
-
-      if (notesError) {
-        console.error("Error fetching notes:", notesError);
-        throw notesError;
-      }
-
-      setMyNotes(notesData || []);
-      
-      // Cache notes data
-      try {
-        sessionStorage.setItem(`my_notes_${user.id}`, JSON.stringify({
-          data: notesData || [],
-          timestamp: Date.now()
-        }));
       } catch (err) {
-        console.error('Error caching notes:', err);
+        console.error('Error reading cached profile:', err);
       }
+      return null;
+    });
+    const [tutorId, setTutorId] = useState<string | null>(null);
+    const [isApprovedTutor, setIsApprovedTutor] = useState(false);
+    const [myNotes, setMyNotes] = useState<Note[]>(() => {
+      try {
+        const cached = sessionStorage.getItem(`my_notes_${user?.id}`);
+        if (cached) {
+          const { data, timestamp } = JSON.parse(cached);
+          if (Date.now() - timestamp < 5 * 60 * 1000) {
+            return data;
+          }
+        }
+      } catch (err) {
+        console.error('Error reading cached notes:', err);
+      }
+      return [];
+    });
+    const [purchasedNotes, setPurchasedNotes] = useState<Purchase[]>(() => {
+      try {
+        const cached = sessionStorage.getItem(`purchased_notes_${user?.id}`);
+        if (cached) {
+          const { data, timestamp } = JSON.parse(cached);
+          if (Date.now() - timestamp < 5 * 60 * 1000) {
+            return data;
+          }
+        }
+      } catch (err) {
+        console.error('Error reading cached purchases:', err);
+      }
+      return [];
+    });
+    const [loading, setLoading] = useState(false);
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [settingsTab, setSettingsTab] = useState("profile");
+    const [mainTab, setMainTab] = useState<string>("my-notes");
+    const [deleteNoteId, setDeleteNoteId] = useState<string | null>(null);
+    const [editForm, setEditForm] = useState({
+      full_name: "",
+    });
+    const [emailForm, setEmailForm] = useState({
+      newEmail: "",
+    });
+    const [passwordForm, setPasswordForm] = useState({
+      newPassword: "",
+      confirmPassword: "",
+    });
+    const [saving, setSaving] = useState(false);
+    const [deleting, setDeleting] = useState(false);
+    const [loadingSubscription, setLoadingSubscription] = useState(false);
+    const [showCancelDialog, setShowCancelDialog] = useState(false);
+    const [cancelling, setCancelling] = useState(false);
+    const [isPayoutModalOpen, setIsPayoutModalOpen] = useState(false);
+    const [trialUsed, setTrialUsed] = useState(false);
+    const [totalEarnings, setTotalEarnings] = useState(0);
+    const [passwordResetEmailSent, setPasswordResetEmailSent] = useState(false);
 
-      // Fetch purchased notes from 'note_purchases' table (joined with notes)
-      const { data: purchasesData, error: purchasesError } = await supabase
-        .from("note_purchases")
-        .select("*, notes(*)")
-        .eq("buyer_id", user.id)
-        .order("purchased_at", { ascending: false });
-
-      if (!purchasesError && purchasesData) {
-        setPurchasedNotes(purchasesData);
+    // Move loadProfileData above useEffect hooks
+    const loadProfileData = useCallback(async (resetForm: boolean = true) => {
+      if (!user) return;
+      
+      // Check if we have valid cached data
+      try {
+        const cachedProfile = sessionStorage.getItem(`profile_${user.id}`);
+        const cachedNotes = sessionStorage.getItem(`my_notes_${user.id}`);
+        const cachedPurchases = sessionStorage.getItem(`purchased_notes_${user.id}`);
         
-        // Cache purchased notes data
+        if (cachedProfile && cachedNotes && cachedPurchases) {
+          const profileCache = JSON.parse(cachedProfile);
+          const notesCache = JSON.parse(cachedNotes);
+          const purchasesCache = JSON.parse(cachedPurchases);
+          
+          // Cache valid for 5 minutes
+          if (Date.now() - profileCache.timestamp < 5 * 60 * 1000 &&
+              Date.now() - notesCache.timestamp < 5 * 60 * 1000 &&
+              Date.now() - purchasesCache.timestamp < 5 * 60 * 1000) {
+
+            return;
+          }
+        }
+      } catch (err) {
+        console.error('Error checking profile cache:', err);
+      }
+      
+      // Inline loading for tab content
+      setProfileLoading(true);
+      try {
+        // Fetch profile
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single();
+
+        if (profileError) {
+
+          throw profileError;
+        }
+        // Cast payout_info from JSON to PayoutInfo type
+        const profileWithTypedPayout = {
+          ...profileData,
+          payout_info: profileData?.payout_info as PayoutInfo | undefined,
+        };
+        setProfile(profileWithTypedPayout as Profile);
+        
+        // Cache profile data
         try {
-          sessionStorage.setItem(`purchased_notes_${user.id}`, JSON.stringify({
-            data: purchasesData,
+          sessionStorage.setItem(`profile_${user.id}`, JSON.stringify({
+            data: profileWithTypedPayout,
             timestamp: Date.now()
           }));
         } catch (err) {
-          console.error('Error caching purchases:', err);
+          console.error('Error caching profile:', err);
         }
-      }
-
-      // Fetch earnings from note sales (where user is the author)
-      const { data: salesData } = await supabase
-        .from("note_purchases")
-        .select(`
-          price,
-          notes!inner (
-            author_id
-          )
-        `)
-        .eq("notes.author_id", user.id);
-      
-      if (salesData) {
-        const grossEarnings = salesData.reduce((sum: number, sale: any) => sum + Number(sale.price || 0), 0);
-        // Calculate net earnings after 20% platform fee
-        setTotalEarnings(grossEarnings * 0.80);
-      }
-    } catch (error: any) {
-      console.error("Error loading profile data:", error);
-      toast.error("Napaka pri nalaganju podatkov");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSaveProfile = async () => {
-    // Name cannot be changed after registration
-    // This function is kept for potential future profile updates
-    setIsSettingsOpen(false);
-  };
-
-  const handleUpdateEmail = async () => {
-    if (!user || !emailForm.newEmail) return;
-    
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(emailForm.newEmail)) {
-      toast.error("Vnesi veljaven email naslov");
-      return;
-    }
-    
-    setSaving(true);
-    try {
-      // Use production URL for email redirect (not localhost)
-      const isProduction = import.meta.env.PROD;
-      const redirectUrl = isProduction 
-        ? 'https://studko.vercel.app/profile?email_updated=true'
-        : `${window.location.origin}/profile?email_updated=true`;
-      
-      const { error } = await supabase.auth.updateUser(
-        { email: emailForm.newEmail },
-        { emailRedirectTo: redirectUrl }
-      );
-
-      if (error) throw error;
-
-      toast.success(
-        "Preveri svojo TRENUTNO e-po\u0161to!", 
-        {
-          description: "Za nadaljevanje mora\u0161 klikniti potrditveno povezavo, ki smo ti jo poslali na tvoj TRENUTNI email naslov.",
-          duration: 8000,
+        
+        // Only reset form when explicitly requested (not during real-time updates)
+        if (resetForm) {
+          setEditForm({
+            full_name: profileData?.full_name || "",
+          });
         }
-      );
-      setEmailForm({ newEmail: "" });
-    } catch (error: unknown) {
-      console.error("Error updating email:", error);
-      const errorMessage = error instanceof Error ? error.message : "Napaka pri posodabljanju emaila";
-      toast.error(errorMessage);
-    } finally {
-      setSaving(false);
-    }
-  };
 
-  const handleUpdatePassword = async () => {
-    if (!user?.email) {
-      toast.error("Uporabnik ni prijavljen");
-      return;
-    }
+        // Check trial status
+        const hasUsedTrial = profileData?.trial_used || 
+          (profileData?.trial_ends_at && new Date(profileData.trial_ends_at) < new Date());
+        setTrialUsed(hasUsedTrial || false);
 
-    if (!passwordForm.newPassword || !passwordForm.confirmPassword) {
-      toast.error("Izpolni vsa polja");
-      return;
-    }
-
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      toast.error("Gesli se ne ujemata");
-      return;
-    }
-
-    if (passwordForm.newPassword.length < 6) {
-      toast.error("Geslo mora imeti vsaj 6 znakov");
-      return;
-    }
-    
-    setSaving(true);
-    try {
-      // Shrani novo geslo v localStorage za kasnejšo uporabo
-      localStorage.setItem('pendingPassword', passwordForm.newPassword);
-      
-      // Pošlji e-pošto za potrditev
-      const isProduction = import.meta.env.PROD;
-      const redirectUrl = isProduction
-        ? 'https://studko.vercel.app/profile?tab=password&confirmed=true'
-        : `${window.location.origin}/profile?tab=password&confirmed=true`;
-      
-      const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
-        redirectTo: redirectUrl,
-      });
-
-      if (error) throw error;
-
-      toast.success("Varnostno preverjanje", {
-        description: "Na tvoj e-naslov smo poslali povezavo za potrditev spremembe gesla. Prosimo, klikni na povezavo v e-pošti.",
-        duration: 8000,
-      });
-      
-      // Izprazni polja in onemogoči gumb
-      setPasswordForm({ newPassword: "", confirmPassword: "" });
-      setPasswordResetEmailSent(true);
-      
-      // Po 5 minutah omogoči ponovno pošiljanje
-      setTimeout(() => {
-        setPasswordResetEmailSent(false);
-      }, 300000);
-      
-    } catch (error: unknown) {
-      console.error("Error sending password reset email:", error);
-      const errorMessage = error instanceof Error ? error.message : "Napaka pri pošiljanju e-pošte";
-      toast.error(errorMessage);
-      localStorage.removeItem('pendingPassword');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleDeleteNote = async () => {
-    if (!user || !deleteNoteId) return;
-    
-    setDeleting(true);
-    try {
-      const { error } = await supabase
-        .from("notes")
-        .delete()
-        .eq("id", deleteNoteId)
-        .eq("author_id", user.id);
-
-      if (error) throw error;
-
-      setMyNotes(myNotes.filter(note => note.id !== deleteNoteId));
-      setDeleteNoteId(null);
-      toast.success("Zapisek je bil izbrisan");
-    } catch (error: any) {
-      console.error("Error deleting note:", error);
-      toast.error("Pri brisanju zapiska je prišlo do napake");
-    } finally {
-      setDeleting(false);
-    }
-  };
-
-  const handleUpgradeToPro = async () => {
-    if (!user) return;
-    setLoadingSubscription(true);
-    try {
-      // Check if trial was already used
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('trial_used, trial_ends_at')
-        .eq('id', user.id)
-        .single();
-
-      const hasUsedTrial = profileData?.trial_used || 
-        (profileData?.trial_ends_at && new Date(profileData.trial_ends_at) < new Date());
-
-      const { data, error } = await supabase.functions.invoke("create-subscription-checkout", {
-        body: {
-          userId: user.id,
-          trialUsed: hasUsedTrial
+        // If user is an instructor, get their tutor status and set tutorId to user.id
+        if (profileData?.is_instructor) {
+          const { data: tutorData } = await supabase
+            .from("tutors")
+            .select("id, status")
+            .eq("user_id", user.id)
+            .limit(1);
+          
+          
+          if (tutorData && tutorData.length > 0) {
+            // Use user.id for tutor_availability_dates table (references profiles.id)
+            setTutorId(user.id);
+            setIsApprovedTutor(tutorData[0].status === 'approved');
+          }
+        } else {
+          setIsApprovedTutor(false);
         }
-      });
-      
-      if (error) throw error;
-      
-      if (data?.url) {
-        window.location.href = data.url;
-      }
-    } catch (error) {
-      console.error("Error creating checkout:", error);
-      toast.error("Napaka pri ustvarjanju seje");
-    } finally {
-      setLoadingSubscription(false);
-    }
-  };
 
-  const handleManageSubscription = async () => {
-    setLoadingSubscription(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("create-portal-session");
-      
-      if (error) throw error;
-      
-      if (data?.url) {
-        window.open(data.url, "_blank");
-      }
-    } catch (error) {
-      console.error("Error creating portal session:", error);
-      toast.error("Napaka pri odpiranju portala");
-    } finally {
-      setLoadingSubscription(false);
-    }
-  };
+        // Fetch user's notes
+        const { data: notesData, error: notesError } = await supabase
+          .from("notes")
+          .select("*")
+          .eq("author_id", user.id)
+          .order("created_at", { ascending: false });
 
-  const handleCancelSubscription = async () => {
-    setCancelling(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("cancel-subscription");
-      
-      if (error) throw error;
-      
-      if (data?.success) {
-        toast.success(data.message);
-        setShowCancelDialog(false);
-        await loadProfileData();
-      }
-    } catch (error: any) {
-      console.error("Error cancelling subscription:", error);
-      toast.error(error.message || "Napaka pri preklicu naročnine");
-    } finally {
-      setCancelling(false);
-    }
-  };
+        if (notesError) {
+          console.error("Error fetching notes:", notesError);
+          throw notesError;
+        }
 
-  const getSubscriptionDisplay = () => {
-    if (!profile?.is_pro && profile?.subscription_status === "none") {
-      return { text: "Brezplačen", color: "text-muted-foreground" };
-    }
-    if (profile?.cancel_at_period_end && profile?.trial_ends_at) {
-      return { 
-        text: `Študko PRO (preklicano) – dostop do ${formatDate(profile.trial_ends_at)}`, 
-        color: "text-orange-600 dark:text-orange-400" 
+        setMyNotes(notesData || []);
+        setNotesLoading(false);
+        
+        // Cache notes data
+        try {
+          sessionStorage.setItem(`my_notes_${user.id}`, JSON.stringify({
+            data: notesData || [],
+            timestamp: Date.now()
+          }));
+        } catch (err) {
+          console.error('Error caching notes:', err);
+        }
+
+        // Fetch purchased notes from 'note_purchases' table (joined with notes)
+        const { data: purchasesData, error: purchasesError } = await supabase
+          .from("note_purchases")
+          .select("*, notes(*)")
+          .eq("buyer_id", user.id)
+          .order("purchased_at", { ascending: false });
+
+        if (!purchasesError && purchasesData) {
+          setPurchasedNotes(purchasesData);
+          setPurchasesLoading(false);
+          
+          // Cache purchased notes data
+          try {
+            sessionStorage.setItem(`purchased_notes_${user.id}`, JSON.stringify({
+              data: purchasesData,
+              timestamp: Date.now()
+            }));
+          } catch (err) {
+            console.error('Error caching purchases:', err);
+          }
+        }
+
+        // Fetch earnings from note sales (where user is the author)
+        const { data: salesData } = await supabase
+          .from("note_purchases")
+          .select(`
+            price,
+            notes!inner (
+              author_id
+            )
+          `)
+          .eq("notes.author_id", user.id);
+        
+        if (salesData) {
+          const grossEarnings = salesData.reduce((sum: number, sale: { price: number }) => sum + Number(sale.price || 0), 0);
+          // Calculate net earnings after 20% platform fee
+          setTotalEarnings(grossEarnings * 0.80);
+        }
+      } catch (error) {
+        console.error("Error loading profile data:", error);
+        toast.error("Napaka pri nalaganju podatkov");
+      } finally {
+        setProfileLoading(false);
+      }
+    }, [user]);
+
+    useEffect(() => {
+      if (!authLoading && !user) {
+        navigate("/login");
+      }
+    }, [user, authLoading, navigate]);
+
+    useEffect(() => {
+      if (user) {
+        loadProfileData();
+      }
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('tab') === 'purchased') {
+        setMainTab('purchases');
+      }
+
+      // Polling for payment success
+      let pollingInterval: NodeJS.Timeout | null = null;
+      if (urlParams.get('payment') === 'success' && user) {
+        setLoading(true);
+        let pollCount = 0;
+        pollingInterval = setInterval(async () => {
+          pollCount++;
+          const { data: purchasesData, error: purchasesError } = await supabase
+            .from('note_purchases')
+            .select('*, notes(*)')
+            .eq('buyer_id', user.id)
+            .order('purchased_at', { ascending: false });
+          if (!purchasesError && purchasesData && purchasesData.length > 0) {
+            setPurchasedNotes(purchasesData);
+            setLoading(false);
+            toast.success('Nakup uspešen! Zapisek je na voljo med kupljenimi.');
+            urlParams.delete('payment');
+            window.history.replaceState({}, '', `${window.location.pathname}?${urlParams.toString()}`);
+            if (pollingInterval) clearInterval(pollingInterval);
+          } else if (pollCount >= 30) { // 1 minuta polling
+            setLoading(false);
+            if (pollingInterval) clearInterval(pollingInterval);
+          }
+        }, 2000);
+      }
+
+      // Handle email update success
+      if (urlParams.get('email_updated') === 'true') {
+        setIsSettingsOpen(true);
+        setSettingsTab('password');
+        toast.success('E-pošta uspešno posodobljena!', {
+          description: 'Zdaj lahko po želji spremeniš še geslo.',
+          duration: 6000,
+        });
+        window.history.replaceState({}, '', '/profile');
+      }
+
+      return () => {
+        if (pollingInterval) clearInterval(pollingInterval);
       };
-    }
-    if (profile?.subscription_status === "trialing" && profile?.trial_ends_at) {
-      const daysLeft = Math.ceil((new Date(profile.trial_ends_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-      return { text: `Študko PRO (preizkus) – še ${daysLeft} dni`, color: "text-purple-600 dark:text-purple-400" };
-    }
-    if (profile?.subscription_status === "active" || profile?.is_pro) {
-      return { text: "Študko PRO (aktiven)", color: "text-green-600 dark:text-green-400" };
-    }
-    return { text: "Brezplačen", color: "text-muted-foreground" };
-  };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
+      // Handle password reset from email link
+      if (urlParams.get('type') === 'recovery' || urlParams.get('tab') === 'password') {
+        // Open settings dialog and show password tab
+        setIsSettingsOpen(true);
+        setSettingsTab('password');
 
-  const formatDate = (dateString?: string | null) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return "";
-    return date.toLocaleDateString("sl-SI");
-  };
+        // Če je confirmed=true, uporabnik se vrača po kliku na povezavo v e-pošti
+        if (urlParams.get('confirmed') === 'true' && urlParams.get('type') === 'recovery') {
+          const pendingPassword = localStorage.getItem('pendingPassword');
 
-  // Check if user should see Instructor Dashboard tab
-  const showInstructorTab = profile?.is_instructor || isApprovedTutor || !!profile?.stripe_connect_id;
-  
+          if (pendingPassword) {
+            // Zdaj dejansko posodobi geslo
+            toast.info('Potrjujem spremembo...');
+
+            supabase.auth.updateUser({
+              password: pendingPassword,
+            }).then(({ error }) => {
+              if (error) {
+                toast.error('Napaka pri posodobitvi gesla: ' + error.message);
+              } else {
+                toast.success('Geslo uspešno posodobljeno!', {
+                  description: 'Tvoje novo geslo je zdaj aktivno.',
+                  duration: 5000,
+                });
+                localStorage.removeItem('pendingPassword');
+              }
+            });
+          } else {
+            toast.success('Povezava potrjena!', {
+              description: 'Spodaj vnesi svoje novo geslo.',
+            });
+          }
+          
+          // Očisti URL parametre
+          window.history.replaceState({}, '', '/profile');
+        } else if (urlParams.get('type') === 'recovery') {
+          toast.success('Povezava potrjena!', {
+            description: 'Spodaj vnesi svoje novo geslo.',
+            duration: 6000,
+          });
+          // Remove query parameter from URL
+          window.history.replaceState({}, '', '/profile');
+        }
+      }
+      
+      // Handle PRO activation success
+      if (urlParams.get('pro') === 'activated') {
+        const handleProActivation = async () => {
+          // Refresh session to get latest PRO status
+          await supabase.auth.refreshSession();
+          // Reload profile data
+          await loadProfileData();
+          // Show success message
+          toast.success('🎉 Dobrodošli v Študko PRO!', {
+            description: 'Vaše PRO funkcije so zdaj aktivne.',
+            duration: 5000,
+          });
+          // Remove query parameter from URL
+          window.history.replaceState({}, '', '/profile');
+        };
+        handleProActivation();
+      }
+    }, [user, loadProfileData]);
+
+    // Recheck tutor status when instructor tab is accessed
+    useEffect(() => {
+      if (mainTab === 'instructor' && user && user.email) {
+        const recheckTutorStatus = async () => {
+          try {
+            const { data: tutorData } = await supabase
+              .from('tutors')
+              .select('id, status')
+              .eq('email', user.email)
+              .limit(1);
+            
+            if (tutorData && tutorData.length > 0) {
+              const tutor = tutorData[0];
+              if (tutor.status === 'approved') {
+
+                // Use user.id for tutor_availability_dates table
+                setTutorId(user.id);
+                setIsApprovedTutor(true);
+                // Also update the profile to mark as instructor
+                await supabase
+                  .from('profiles')
+                  .update({ is_instructor: true })
+                  .eq('id', user.id);
+                // Reload profile data to refresh the UI
+                await loadProfileData();
+              }
+            }
+          } catch (error) {
+            console.error('Error rechecking tutor status:', error);
+          }
+        };
+        
+        recheckTutorStatus();
+      }
+    }, [mainTab, user, loadProfileData]);
+
+    // Check for Stripe onboarding success
+    useEffect(() => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const stripe = urlParams.get('stripe');
+      const accountId = urlParams.get('account_id');
+      const proActivated = urlParams.get('pro');
+
+      if (stripe === 'success' && accountId && user) {
+        // Update profile with Stripe Connect account ID
+        supabase
+          .from('profiles')
+          .update({
+            stripe_connect_id: accountId,
+            stripe_onboarding_complete: true
+          })
+          .eq('id', user.id)
+          .then(({ error }) => {
+            if (error) {
+              console.error('Error updating profile:', error);
+              toast.error('Napaka pri posodabljanju profila');
+            } else {
+              toast.success('Stripe račun uspešno povezan!');
+              loadProfileData(); // Reload profile data
+              // Clean up URL
+              window.history.replaceState({}, document.title, window.location.pathname);
+            }
+          });
+      }
+
+      // Check for PRO activation
+      if (proActivated === 'activated') {
+        setTimeout(() => {
+          loadProfileData();
+          toast.success('Dobrodošli v Študko PRO! 🎉');
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }, 1500);
+      }
+    }, [user, loadProfileData]);
+
+    // Real-time subscription to profile changes for PRO status
+    useEffect(() => {
+      if (!user?.id) return;
+
+      const channel = supabase
+        .channel('profile-subscription-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'profiles',
+            filter: `id=eq.${user.id}`,
+          },
+          (payload) => {
+            // Reload profile when updated but don't reset the edit form
+            loadProfileData(false);
+            
+            // Show success toast if is_pro becomes true
+            if (payload.new?.is_pro && !payload.old?.is_pro) {
+              toast.success('PRO naročnina je aktivna! 🚀');
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }, [user?.id, loadProfileData]);
+
+    const handleStripeOnboarding = async () => {
+      if (!user) return;
+
+      try {
+        const { data, error } = await supabase.functions.invoke('stripe-connect-onboarding', {
+          body: {
+            user_id: user.id,
+            email: user.email
+          }
+        });
+
+        if (error) {
+          console.error('Error invoking Stripe function:', error);
+          toast.error('Napaka pri povezovanju s Stripe');
+          return;
+        }
+
+        if (data?.url) {
+          window.location.href = data.url;
+        } else {
+          toast.error('Napaka: ni prejet URL za Stripe');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        toast.error('Napaka pri povezovanju s Stripe');
+      }
+    };
+
+    const loadProfileData = useCallback(async (resetForm: boolean = true) => {
+      if (!user) return;
+      
+      // Check if we have valid cached data
+      try {
+        const cachedProfile = sessionStorage.getItem(`profile_${user.id}`);
+        const cachedNotes = sessionStorage.getItem(`my_notes_${user.id}`);
+        const cachedPurchases = sessionStorage.getItem(`purchased_notes_${user.id}`);
+        
+        if (cachedProfile && cachedNotes && cachedPurchases) {
+          const profileCache = JSON.parse(cachedProfile);
+          const notesCache = JSON.parse(cachedNotes);
+          const purchasesCache = JSON.parse(cachedPurchases);
+          
+          // Cache valid for 5 minutes
+          if (Date.now() - profileCache.timestamp < 5 * 60 * 1000 &&
+              Date.now() - notesCache.timestamp < 5 * 60 * 1000 &&
+              Date.now() - purchasesCache.timestamp < 5 * 60 * 1000) {
+
+            return;
+          }
+        }
+      } catch (err) {
+        console.error('Error checking profile cache:', err);
+      }
+      
+      // Inline loading for tab content
+      setProfileLoading(true);
+      try {
+        // Fetch profile
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single();
+
+        if (profileError) {
+
+          throw profileError;
+        }
+        // Cast payout_info from JSON to PayoutInfo type
+        const profileWithTypedPayout = {
+          ...profileData,
+          payout_info: profileData?.payout_info as PayoutInfo | undefined,
+        };
+        setProfile(profileWithTypedPayout as Profile);
+        
+        // Cache profile data
+        try {
+          sessionStorage.setItem(`profile_${user.id}`, JSON.stringify({
+            data: profileWithTypedPayout,
+            timestamp: Date.now()
+          }));
+        } catch (err) {
+          console.error('Error caching profile:', err);
+        }
+        
+        // Only reset form when explicitly requested (not during real-time updates)
+        if (resetForm) {
+          setEditForm({
+            full_name: profileData?.full_name || "",
+          });
+        }
+
+        // Check trial status
+        const hasUsedTrial = profileData?.trial_used || 
+          (profileData?.trial_ends_at && new Date(profileData.trial_ends_at) < new Date());
+        setTrialUsed(hasUsedTrial || false);
+
+        // If user is an instructor, get their tutor status and set tutorId to user.id
+        if (profileData?.is_instructor) {
+          const { data: tutorData } = await supabase
+            .from("tutors")
+            .select("id, status")
+            .eq("user_id", user.id)
+            .limit(1);
+          
+          
+          if (tutorData && tutorData.length > 0) {
+            // Use user.id for tutor_availability_dates table (references profiles.id)
+            setTutorId(user.id);
+            setIsApprovedTutor(tutorData[0].status === 'approved');
+          }
+        } else {
+          setIsApprovedTutor(false);
+        }
+
+        // Fetch user's notes
+        const { data: notesData, error: notesError } = await supabase
+          .from("notes")
+          .select("*")
+          .eq("author_id", user.id)
+          .order("created_at", { ascending: false });
+
+        if (notesError) {
+          console.error("Error fetching notes:", notesError);
+          throw notesError;
+        }
+
+        setMyNotes(notesData || []);
+        setNotesLoading(false);
+        
+        // Cache notes data
+        try {
+          sessionStorage.setItem(`my_notes_${user.id}`, JSON.stringify({
+            data: notesData || [],
+            timestamp: Date.now()
+          }));
+        } catch (err) {
+          console.error('Error caching notes:', err);
+        }
+
+        // Fetch purchased notes from 'note_purchases' table (joined with notes)
+        const { data: purchasesData, error: purchasesError } = await supabase
+          .from("note_purchases")
+          .select("*, notes(*)")
+          .eq("buyer_id", user.id)
+          .order("purchased_at", { ascending: false });
+
+        if (!purchasesError && purchasesData) {
+          setPurchasedNotes(purchasesData);
+          setPurchasesLoading(false);
+          
+          // Cache purchased notes data
+          try {
+            sessionStorage.setItem(`purchased_notes_${user.id}`, JSON.stringify({
+              data: purchasesData,
+              timestamp: Date.now()
+            }));
+          } catch (err) {
+            console.error('Error caching purchases:', err);
+          }
+        }
+
+        // Fetch earnings from note sales (where user is the author)
+        const { data: salesData } = await supabase
+          .from("note_purchases")
+          .select(`
+            price,
+            notes!inner (
+              author_id
+            )
+          `)
+          .eq("notes.author_id", user.id);
+        
+        if (salesData) {
+          const grossEarnings = salesData.reduce((sum: number, sale: { price: number }) => sum + Number(sale.price || 0), 0);
+          // Calculate net earnings after 20% platform fee
+          setTotalEarnings(grossEarnings * 0.80);
+        }
+      } catch (error) {
+        console.error("Error loading profile data:", error);
+        toast.error("Napaka pri nalaganju podatkov");
+      } finally {
+        setProfileLoading(false);
+      }
+    }, [user]);
+
+    const handleSaveProfile = async () => {
+      // Name cannot be changed after registration
+      // This function is kept for potential future profile updates
+      setIsSettingsOpen(false);
+    };
+
+    const handleUpdateEmail = async () => {
+      if (!user || !emailForm.newEmail) return;
+      
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(emailForm.newEmail)) {
+        toast.error("Vnesi veljaven email naslov");
+        return;
+      }
+      
+      setSaving(true);
+      try {
+        // Use production URL for email redirect (not localhost)
+        const isProduction = import.meta.env.PROD;
+        const redirectUrl = isProduction 
+          ? 'https://studko.vercel.app/profile?email_updated=true'
+          : `${window.location.origin}/profile?email_updated=true`;
+        
+        const { error } = await supabase.auth.updateUser(
+          { email: emailForm.newEmail },
+          { emailRedirectTo: redirectUrl }
+        );
+
+        if (error) throw error;
+
+        toast.success(
+          "Preveri svojo TRENUTNO e-pošto!", 
+          {
+            description: "Za nadaljevanje mora\u0161 klikniti potrditveno povezavo, ki smo ti jo poslali na tvoj TRENUTNI email naslov.",
+            duration: 8000,
+          }
+        );
+        setEmailForm({ newEmail: "" });
+      } catch (error: unknown) {
+        console.error("Error updating email:", error);
+        const errorMessage = error instanceof Error ? error.message : "Napaka pri posodabljanju emaila";
+        toast.error(errorMessage);
+      } finally {
+        setSaving(false);
+      }
+    };
+
+    const handleUpdatePassword = async () => {
+      if (!user?.email) {
+        toast.error("Uporabnik ni prijavljen");
+        return;
+      }
+
+      if (!passwordForm.newPassword || !passwordForm.confirmPassword) {
+        toast.error("Izpolni vsa polja");
+        return;
+      }
+
+      if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+        toast.error("Gesli se ne ujemata");
+        return;
+      }
+
+      if (passwordForm.newPassword.length < 6) {
+        toast.error("Geslo mora imeti vsaj 6 znakov");
+        return;
+      }
+      
+      setSaving(true);
+      try {
+        // Shrani novo geslo v localStorage za kasnejšo uporabo
+        localStorage.setItem('pendingPassword', passwordForm.newPassword);
+        
+        // Pošlji e-pošto za potrditev
+        const isProduction = import.meta.env.PROD;
+        const redirectUrl = isProduction
+          ? 'https://studko.vercel.app/profile?tab=password&confirmed=true'
+          : `${window.location.origin}/profile?tab=password&confirmed=true`;
+        
+        const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+          redirectTo: redirectUrl,
+        });
+
+        if (error) throw error;
+
+        toast.success("Varnostno preverjanje", {
+          description: "Na tvoj e-naslov smo poslali povezavo za potrditev spremembe gesla. Prosimo, klikni na povezavo v e-pošti.",
+          duration: 8000,
+        });
+        
+        // Izprazni polja in onemogoči gumb
+        setPasswordForm({ newPassword: "", confirmPassword: "" });
+        setPasswordResetEmailSent(true);
+        
+        // Po 5 minutah omogoči ponovno pošiljanje
+        setTimeout(() => {
+          setPasswordResetEmailSent(false);
+        }, 300000);
+        
+      } catch (error: unknown) {
+        console.error("Error sending password reset email:", error);
+        const errorMessage = error instanceof Error ? error.message : "Napaka pri pošiljanju e-pošte";
+        toast.error(errorMessage);
+        localStorage.removeItem('pendingPassword');
+      } finally {
+        setSaving(false);
+      }
+    };
+
+    const handleDeleteNote = async () => {
+      if (!user || !deleteNoteId) return;
+      
+      setDeleting(true);
+      try {
+        const { error } = await supabase
+          .from("notes")
+          .delete()
+          .eq("id", deleteNoteId)
+          .eq("author_id", user.id);
+
+        if (error) throw error;
+
+        setMyNotes(myNotes.filter(note => note.id !== deleteNoteId));
+        setDeleteNoteId(null);
+        toast.success("Zapisek je bil izbrisan");
+      } catch (error) {
+        console.error("Error deleting note:", error);
+        toast.error("Pri brisanju zapiska je prišlo do napake");
+      } finally {
+        setDeleting(false);
+      }
+    };
+
+    const handleUpgradeToPro = async () => {
+      if (!user) return;
+      setLoadingSubscription(true);
+      try {
+        // Check if trial was already used
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('trial_used, trial_ends_at')
+          .eq('id', user.id)
+          .single();
+
+        const hasUsedTrial = profileData?.trial_used || 
+          (profileData?.trial_ends_at && new Date(profileData.trial_ends_at) < new Date());
+
+        const { data, error } = await supabase.functions.invoke("create-subscription-checkout", {
+          body: {
+            userId: user.id,
+            trialUsed: hasUsedTrial
+          }
+        });
+        
+        if (error) throw error;
+        
+        if (data?.url) {
+          window.location.href = data.url;
+        }
+      } catch (error) {
+        console.error("Error creating checkout:", error);
+        toast.error("Napaka pri ustvarjanju seje");
+      } finally {
+        setLoadingSubscription(false);
+      }
+    };
+
+    const handleManageSubscription = async () => {
+      setLoadingSubscription(true);
+      try {
+        const { data, error } = await supabase.functions.invoke("create-portal-session");
+        
+        if (error) throw error;
+        
+        if (data?.url) {
+          window.open(data.url, "_blank");
+        }
+      } catch (error) {
+        console.error("Error creating portal session:", error);
+        toast.error("Napaka pri odpiranju portala");
+      } finally {
+        setLoadingSubscription(false);
+      }
+    };
+
+    const handleCancelSubscription = async () => {
+      setCancelling(true);
+      try {
+        const { data, error } = await supabase.functions.invoke("cancel-subscription");
+        
+        if (error) throw error;
+        
+        if (data?.success) {
+          toast.success(data.message);
+          setShowCancelDialog(false);
+          await loadProfileData();
+        }
+      } catch (error) {
+        console.error("Error cancelling subscription:", error);
+        const errorMessage = error instanceof Error ? error.message : "Napaka pri preklicu naročnine";
+        toast.error(errorMessage);
+      } finally {
+        setCancelling(false);
+      }
+    };
+
+    const getSubscriptionDisplay = () => {
+      if (!profile?.is_pro && profile?.subscription_status === "none") {
+        return { text: "Brezplačen", color: "text-muted-foreground" };
+      }
+      if (profile?.cancel_at_period_end && profile?.trial_ends_at) {
+        return { 
+          text: `Študko PRO (preklicano) – dostop do ${formatDate(profile.trial_ends_at)}`, 
+          color: "text-orange-600 dark:text-orange-400" 
+        };
+      }
+      if (profile?.subscription_status === "trialing" && profile?.trial_ends_at) {
+        const daysLeft = Math.ceil((new Date(profile.trial_ends_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+        return { text: `Študko PRO (preizkus) – še ${daysLeft} dni`, color: "text-purple-600 dark:text-purple-400" };
+      }
+      if (profile?.subscription_status === "active" || profile?.is_pro) {
+        return { text: "Študko PRO (aktiven)", color: "text-green-600 dark:text-green-400" };
+      }
+      return { text: "Brezplačen", color: "text-muted-foreground" };
+    };
+
+    const getInitials = (name: string) => {
+      return name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2);
+    };
+
+    const formatDate = (dateString?: string | null) => {
+      if (!dateString) return "";
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "";
+      return date.toLocaleDateString("sl-SI");
+    };
+
+    // Check if user should see Instructor Dashboard tab
+    const showInstructorTab = profile?.is_instructor || isApprovedTutor || !!profile?.stripe_connect_id;
+    
 
 
-  if (authLoading || loading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
-        <div className="max-w-5xl mx-auto px-4 py-8">
-          <Skeleton className="h-12 w-48 mb-2" />
-          <Skeleton className="h-6 w-96 mb-8" />
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-1">
-              <Skeleton className="h-96 rounded-2xl" />
-            </div>
-            <div className="lg:col-span-2">
-              <Skeleton className="h-96 rounded-2xl" />
+    if (authLoading || loading) {
+      return (
+        <div className="min-h-screen bg-background">
+          <Navigation />
+          <div className="max-w-5xl mx-auto px-4 py-8">
+            <Skeleton className="h-12 w-48 mb-2" />
+            <Skeleton className="h-6 w-96 mb-8" />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-1">
+                <Skeleton className="h-96 rounded-2xl" />
+              </div>
+              <div className="lg:col-span-2">
+                <Skeleton className="h-96 rounded-2xl" />
+              </div>
             </div>
           </div>
+          <Footer />
         </div>
-        <Footer />
-      </div>
-    );
-  }
+      );
+    }
 
-  if (!user || !profile) {
-    return null;
-  }
+    if (!user || !profile) {
+      return null;
+    }
 
-  return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Background gradient blurs */}
-      <div className="absolute top-20 left-10 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl -z-10" />
-      <div className="absolute bottom-20 right-10 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl -z-10" />
-      
-      <Navigation />
-      
-      <div className="max-w-5xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
-        {/* Page Header */}
-        <div className="mb-4 sm:mb-6 lg:mb-8">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-purple-500 bg-clip-text text-transparent mb-2">
-            Moj profil
-          </h1>
-          <p className="text-sm sm:text-base text-muted-foreground">
-            Uredi svoje podatke in poglej svoje zapiske.
-          </p>
-        </div>
+    return (
+      <div className="min-h-screen bg-background relative overflow-hidden">
+        {/* Background gradient blurs */}
+        <div className="absolute top-20 left-10 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl -z-10" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl -z-10" />
+        
+        <Navigation />
+        
+        <div className="max-w-5xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
+          {/* Page Header */}
+          <div className="mb-4 sm:mb-6 lg:mb-8">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-purple-500 bg-clip-text text-transparent mb-2">
+              Moj profil
+            </h1>
+            <p className="text-sm sm:text-base text-muted-foreground">
+              Uredi svoje podatke in poglej svoje zapiske.
+            </p>
+          </div>
 
-        <div className={mainTab === 'instructor' ? '' : 'grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8'}>
-          {/* Profile Header Card - Hide when on instructor tab */}
-          {mainTab !== 'instructor' && (
-            <div className="lg:col-span-1">
-              <div className="bg-card dark:bg-card backdrop-blur rounded-2xl p-6 shadow-xl border border-border">
-              {/* Avatar */}
-              <div className="flex flex-col items-center mb-6">
-                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-indigo-600 via-purple-600 to-purple-500 flex items-center justify-center text-white text-2xl font-bold shadow-lg mb-4">
-                  {getInitials(profile.full_name)}
-                </div>
-                <h2 className="text-xl font-bold text-foreground">{profile.full_name}</h2>
-                <p className="text-sm text-muted-foreground">{user.email}</p>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="space-y-2 mb-6">
-                <Button variant="outline" className="w-full text-foreground" onClick={() => setIsSettingsOpen(true)}>
-                  <Settings className="w-4 h-4 mr-2" />
-                  Nastavitve
-                </Button>
-              </div>
-
-              {/* Settings Dialog */}
-              <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-                <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto bg-card">
-                  <DialogHeader>
-                    <DialogTitle className="text-foreground">Nastavitve računa</DialogTitle>
-                    <DialogDescription className="text-muted-foreground">
-                      Uredi svoje osebne podatke, email in geslo
-                    </DialogDescription>
-                  </DialogHeader>
-                  
-                  <Tabs value={settingsTab} onValueChange={setSettingsTab} className="w-full">
-                    <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-                      <TabsList className="grid w-full grid-cols-5 bg-muted min-w-[500px] sm:min-w-0">
-                        <TabsTrigger value="profile" className="text-foreground data-[state=active]:text-foreground text-xs sm:text-sm px-2">Osebni podatki</TabsTrigger>
-                        <TabsTrigger value="email" className="text-foreground data-[state=active]:text-foreground text-xs sm:text-sm px-2">Email</TabsTrigger>
-                        <TabsTrigger value="password" className="text-foreground data-[state=active]:text-foreground text-xs sm:text-sm px-2">Geslo</TabsTrigger>
-                        <TabsTrigger value="subscription" className="text-foreground data-[state=active]:text-foreground text-xs sm:text-sm px-2">Naročnina</TabsTrigger>
-                        <TabsTrigger value="theme" className="text-foreground data-[state=active]:text-foreground text-xs sm:text-sm px-2">Tema</TabsTrigger>
-                      </TabsList>
+          <div className={mainTab === 'instructor' ? '' : 'grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8'}>
+            {/* Profile Header Card - Hide when on instructor tab */}
+            {mainTab !== 'instructor' && (
+              <div className="lg:col-span-1">
+                <div className="bg-card dark:bg-card backdrop-blur rounded-2xl p-6 shadow-xl border border-border">
+                  {/* Avatar */}
+                  <div className="flex flex-col items-center mb-6">
+                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-indigo-600 via-purple-600 to-purple-500 flex items-center justify-center text-white text-2xl font-bold shadow-lg mb-4">
+                      {getInitials(profile.full_name)}
                     </div>
+                    <h2 className="text-xl font-bold text-foreground">{profile.full_name}</h2>
+                    <p className="text-sm text-muted-foreground">{user.email}</p>
+                  </div>
 
-                    {/* Profile Tab */}
-                    <TabsContent value="profile" className="space-y-4 py-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="settings_full_name" className="text-foreground">Ime in priimek</Label>
-                        <Input
-                          id="settings_full_name"
-                          value={profile?.full_name || ""}
-                          readOnly
-                          disabled
-                          className="bg-muted text-muted-foreground cursor-not-allowed"
-                        />
-                        <p className="text-xs text-muted-foreground italic">
-                          Ime je trajno in ga ni mogoče spremeniti.
-                        </p>
-                      </div>
-                    </TabsContent>
+                  {/* Action Buttons */}
+                  <div className="space-y-2 mb-6">
+                    <Button variant="outline" className="w-full text-foreground" onClick={() => setIsSettingsOpen(true)}>
+                      <Settings className="w-4 h-4 mr-2" />
+                      Nastavitve
+                    </Button>
+                  </div>
 
-                    {/* Email Tab */}
-                    <TabsContent value="email" className="space-y-4 py-4">
-                      <div className="space-y-2">
-                        <Label className="text-foreground">Trenutni email</Label>
-                        <Input value={user?.email || ""} disabled className="bg-muted text-muted-foreground" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="new_email" className="text-foreground">Nov email</Label>
-                        <Input
-                          id="new_email"
-                          type="email"
-                          value={emailForm.newEmail}
-                          onChange={(e) => setEmailForm({ newEmail: e.target.value })}
-                          placeholder="nov@email.com"
-                          className="bg-input text-foreground placeholder:text-muted-foreground"
-                          disabled={saving}
-                        />
-                      </div>
-                      <Button
-                        className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-90 text-white"
-                        onClick={handleUpdateEmail}
-                        disabled={saving || !emailForm.newEmail}
-                      >
-                        {saving ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Posodabljam...
-                          </>
-                        ) : (
-                          "Posodobi email"
-                        )}
-                      </Button>
-                      <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-3 border border-blue-200 dark:border-blue-800">
-                        <p className="text-sm text-blue-700 dark:text-blue-300">
-                          <strong>Pomembno:</strong> Ko klikneš gumb za posodobitev, boš prejel potrditveno povezavo na svoj <strong>trenutni email naslov</strong>. 
-                          Šele po potrditvi se bo email spremenil.
-                        </p>
-                      </div>
-                    </TabsContent>
-
-                    {/* Password Tab */}
-                    <TabsContent value="password" className="space-y-4 py-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="new_password" className="text-foreground">Novo geslo</Label>
-                        <Input
-                          id="new_password"
-                          type="password"
-                          value={passwordForm.newPassword}
-                          onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
-                          placeholder="Najmanj 6 znakov"
-                          className="bg-input text-foreground placeholder:text-muted-foreground"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="confirm_password" className="text-foreground">Potrdi novo geslo</Label>
-                        <Input
-                          id="confirm_password"
-                          type="password"
-                          value={passwordForm.confirmPassword}
-                          onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
-                          placeholder="Ponovi geslo"
-                          className="bg-input text-foreground placeholder:text-muted-foreground"
-                        />
-                      </div>
-                      <Button
-                        className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-90 text-white"
-                        onClick={handleUpdatePassword}
-                        disabled={saving || !passwordForm.newPassword || !passwordForm.confirmPassword || passwordResetEmailSent}
-                      >
-                        {saving ? "Pošiljam e-pošto..." : passwordResetEmailSent ? "E-pošta poslana - preveri nabiralnik" : "Posodobi geslo"}
-                      </Button>
-                      {passwordResetEmailSent && (
-                        <p className="text-xs text-muted-foreground text-center mt-2">
-                          E-pošto lahko ponovno pošlješ čez 5 minut.
-                        </p>
-                      )}
-                    </TabsContent>
-
-                    {/* Subscription Tab */}
-                    <TabsContent value="subscription" className="space-y-4 py-4">
-                      <div className="space-y-4">
-                        <div className="bg-muted rounded-xl p-4 border border-border">
-                          <p className="text-sm text-muted-foreground mb-1">Trenutni paket:</p>
-                          <p className={`text-2xl font-bold ${getSubscriptionDisplay().color}`}>
-                            {getSubscriptionDisplay().text}
-                          </p>
+                  {/* Settings Dialog */}
+                  <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+                    <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto bg-card">
+                      <DialogHeader>
+                        <DialogTitle className="text-foreground">Nastavitve računa</DialogTitle>
+                        <DialogDescription className="text-muted-foreground">
+                          Uredi svoje osebne podatke, email in geslo
+                        </DialogDescription>
+                      </DialogHeader>
+                      
+                      <Tabs value={settingsTab} onValueChange={setSettingsTab} className="w-full">
+                        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+                          <TabsList className="grid w-full grid-cols-5 bg-muted min-w-[500px] sm:min-w-0">
+                            <TabsTrigger value="profile" className="text-foreground data-[state=active]:text-foreground text-xs sm:text-sm px-2">Osebni podatki</TabsTrigger>
+                            <TabsTrigger value="email" className="text-foreground data-[state=active]:text-foreground text-xs sm:text-sm px-2">Email</TabsTrigger>
+                            <TabsTrigger value="password" className="text-foreground data-[state=active]:text-foreground text-xs sm:text-sm px-2">Geslo</TabsTrigger>
+                            <TabsTrigger value="subscription" className="text-foreground data-[state=active]:text-foreground text-xs sm:text-sm px-2">Naročnina</TabsTrigger>
+                            <TabsTrigger value="theme" className="text-foreground data-[state=active]:text-foreground text-xs sm:text-sm px-2">Tema</TabsTrigger>
+                          </TabsList>
                         </div>
 
-                        {(!profile?.is_pro || profile?.subscription_status === "none") ? (
-                          <div className="space-y-4">
-                            <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 rounded-xl p-6 border border-indigo-200 dark:border-indigo-800">
-                              <h3 className="text-lg font-bold text-foreground mb-3">
-                                Nadgradi na Študko PRO
-                              </h3>
-                              <ul className="space-y-2 mb-4">
-                                <li className="flex items-start gap-2 text-sm text-foreground">
-                                  <CheckCircle2 className="w-4 h-4 text-primary mt-0.5" />
-                                  <span>Neomejene AI razlage</span>
-                                </li>
-                                <li className="flex items-start gap-2 text-sm text-foreground">
-                                  <CheckCircle2 className="w-4 h-4 text-primary mt-0.5" />
-                                  <span>Nalaganje datotek in slik</span>
-                                </li>
-                                <li className="flex items-start gap-2 text-sm text-foreground">
-                                  <CheckCircle2 className="w-4 h-4 text-primary mt-0.5" />
-                                  <span>Prednostna podpora</span>
-                                </li>
-                              </ul>
-                              <p className="text-2xl font-bold text-foreground mb-4">
-                                3,49 €<span className="text-sm font-normal text-muted-foreground">/mesec</span>
-                              </p>
-                              <Button
-                                onClick={handleUpgradeToPro}
-                                disabled={loadingSubscription}
-                                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-90 text-white"
-                              >
-                                {loadingSubscription 
-                                  ? "Nalagam..." 
-                                  : trialUsed 
-                                    ? "Postani član Študko PRO" 
-                                    : "Nadgradi na PRO (7-dnevni preizkus)"}
-                              </Button>
-                            </div>
+                        {/* Profile Tab */}
+                        <TabsContent value="profile" className="space-y-4 py-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="settings_full_name" className="text-foreground">Ime in priimek</Label>
+                            <Input
+                              id="settings_full_name"
+                              value={profile?.full_name || ""}
+                              readOnly
+                              disabled
+                              className="bg-muted text-muted-foreground cursor-not-allowed"
+                            />
+                            <p className="text-xs text-muted-foreground italic">
+                              Ime je trajno in ga ni mogoče spremeniti.
+                            </p>
                           </div>
-                        ) : (
-                          <div className="space-y-4">
-                            {profile?.cancel_at_period_end ? (
+                        </TabsContent>
+
+                        {/* Email Tab */}
+                        <TabsContent value="email" className="space-y-4 py-4">
+                          <div className="space-y-2">
+                            <Label className="text-foreground">Trenutni email</Label>
+                            <Input value={user?.email || ""} disabled className="bg-muted text-muted-foreground" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="new_email" className="text-foreground">Nov email</Label>
+                            <Input
+                              id="new_email"
+                              type="email"
+                              value={emailForm.newEmail}
+                              onChange={(e) => setEmailForm({ newEmail: e.target.value })}
+                              placeholder="nov@email.com"
+                              className="bg-input text-foreground placeholder:text-muted-foreground"
+                              disabled={saving}
+                            />
+                          </div>
+                          <Button
+                            className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-90 text-white"
+                            onClick={handleUpdateEmail}
+                            disabled={saving || !emailForm.newEmail}
+                          >
+                            {saving ? (
                               <>
-                                <div className="bg-orange-50 dark:bg-orange-950/30 rounded-xl p-4 border border-orange-200 dark:border-orange-800">
-                                  <p className="text-sm text-orange-700 dark:text-orange-300 flex items-center gap-2 mb-2">
-                                    <MessageSquare className="w-4 h-4" />
-                                    Naročnina je preklicana
-                                  </p>
-                                  <p className="text-xs text-orange-600 dark:text-orange-400">
-                                    Tvoj dostop do PRO funkcij ostaja aktiven do konca plačanega obdobja.
-                                    {profile?.trial_ends_at && ` Dostop do: ${formatDate(profile.trial_ends_at)}`}
-                                  </p>
-                                </div>
-                                <div className="bg-muted rounded-xl p-4 border border-border">
-                                  <p className="text-sm text-muted-foreground">
-                                    Naročnino lahko ponovno aktiviraš kadarkoli tako, da znova skleneš PRO paket.
-                                  </p>
-                                </div>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Posodabljam...
                               </>
                             ) : (
-                              <>
-                                <div className="bg-green-50 dark:bg-green-950/30 rounded-xl p-4 border border-green-200 dark:border-green-800">
-                                  <p className="text-sm text-green-700 dark:text-green-300 flex items-center gap-2">
-                                    <CheckCircle2 className="w-4 h-4" />
-                                    Hvala, ker si del Študko PRO! 
+                              "Posodobi email"
+                            )}
+                          </Button>
+                          <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-3 border border-blue-200 dark:border-blue-800">
+                            <p className="text-sm text-blue-700 dark:text-blue-300">
+                              <strong>Pomembno:</strong> Ko klikneš gumb za posodobitev, boš prejel potrditveno povezavo na svoj <strong>trenutni email naslov</strong>. 
+                              Šele po potrditvi se bo email spremenil.
+                            </p>
+                          </div>
+                        </TabsContent>
+
+                        {/* Password Tab */}
+                        <TabsContent value="password" className="space-y-4 py-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="new_password" className="text-foreground">Novo geslo</Label>
+                            <Input
+                              id="new_password"
+                              type="password"
+                              value={passwordForm.newPassword}
+                              onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                              placeholder="Najmanj 6 znakov"
+                              className="bg-input text-foreground placeholder:text-muted-foreground"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="confirm_password" className="text-foreground">Potrdi novo geslo</Label>
+                            <Input
+                              id="confirm_password"
+                              type="password"
+                              value={passwordForm.confirmPassword}
+                              onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                              placeholder="Ponovi geslo"
+                              className="bg-input text-foreground placeholder:text-muted-foreground"
+                            />
+                          </div>
+                          <Button
+                            className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-90 text-white"
+                            onClick={handleUpdatePassword}
+                            disabled={saving || !passwordForm.newPassword || !passwordForm.confirmPassword || passwordResetEmailSent}
+                          >
+                            {saving ? "Pošiljam e-pošto..." : passwordResetEmailSent ? "E-pošta poslana - preveri nabiralnik" : "Posodobi geslo"}
+                          </Button>
+                          {passwordResetEmailSent && (
+                            <p className="text-xs text-muted-foreground text-center mt-2">
+                              E-pošto lahko ponovno pošlješ čez 5 minut.
+                            </p>
+                          )}
+                        </TabsContent>
+
+                        {/* Subscription Tab */}
+                        <TabsContent value="subscription" className="space-y-4 py-4">
+                          <div className="space-y-4">
+                            <div className="bg-muted rounded-xl p-4 border border-border">
+                              <p className="text-sm text-muted-foreground mb-1">Trenutni paket:</p>
+                              <p className={`text-2xl font-bold ${getSubscriptionDisplay().color}`}>
+                                {getSubscriptionDisplay().text}
+                              </p>
+                            </div>
+
+                            {(!profile?.is_pro || profile?.subscription_status === "none") ? (
+                              <div className="space-y-4">
+                                <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 rounded-xl p-6 border border-indigo-200 dark:border-indigo-800">
+                                  <h3 className="text-lg font-bold text-foreground mb-3">
+                                    Nadgradi na Študko PRO
+                                  </h3>
+                                  <ul className="space-y-2 mb-4">
+                                    <li className="flex items-start gap-2 text-sm text-foreground">
+                                      <CheckCircle2 className="w-4 h-4 text-primary mt-0.5" />
+                                      <span>Neomejene AI razlage</span>
+                                    </li>
+                                    <li className="flex items-start gap-2 text-sm text-foreground">
+                                      <CheckCircle2 className="w-4 h-4 text-primary mt-0.5" />
+                                      <span>Nalaganje datotek in slik</span>
+                                    </li>
+                                    <li className="flex items-start gap-2 text-sm text-foreground">
+                                      <CheckCircle2 className="w-4 h-4 text-primary mt-0.5" />
+                                      <span>Prednostna podpora</span>
+                                    </li>
+                                  </ul>
+                                  <p className="text-2xl font-bold text-foreground mb-4">
+                                    3,49 €<span className="text-sm font-normal text-muted-foreground">/mesec</span>
                                   </p>
-                                </div>
-                                <div className="space-y-3">
                                   <Button
-                                    variant="outline"
-                                    onClick={handleManageSubscription}
+                                    onClick={handleUpgradeToPro}
                                     disabled={loadingSubscription}
-                                    className="w-full text-foreground"
+                                    className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-90 text-white"
                                   >
-                                    {loadingSubscription ? "Nalagam..." : "Uredi plačilne podatke"}
+                                    {loadingSubscription 
+                                      ? "Nalagam..." 
+                                      : trialUsed 
+                                        ? "Postani član Študko PRO" 
+                                        : "Nadgradi na PRO (7-dnevni preizkus)"}
                                   </Button>
-                                  <div className="space-y-2">
-                                    <Button
-                                      variant="outline"
-                                      onClick={() => setShowCancelDialog(true)}
-                                      disabled={loadingSubscription}
-                                      className="w-full text-red-600 dark:text-red-400 border-red-300 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-950/30 hover:border-red-400 dark:hover:border-red-700"
-                                    >
-                                      Prekliči naročnino
-                                    </Button>
-                                    {profile?.current_period_end && (
-                                      <p className="text-xs text-center text-muted-foreground">
-                                        Tvoja naročnina je veljavna do: <span className="font-semibold text-foreground">{formatDate(profile.current_period_end)}</span>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="space-y-4">
+                                {profile?.cancel_at_period_end ? (
+                                  <>
+                                    <div className="bg-orange-50 dark:bg-orange-950/30 rounded-xl p-4 border border-orange-200 dark:border-orange-800">
+                                      <p className="text-sm text-orange-700 dark:text-orange-300 flex items-center gap-2 mb-2">
+                                        <MessageSquare className="w-4 h-4" />
+                                        Naročnina je preklicana
                                       </p>
-                                    )}
-                                  </div>
-                                </div>
-                                <div className="bg-muted rounded-xl p-3 border border-border">
-                                  <p className="text-xs text-muted-foreground">
-                                    <strong>Opomba:</strong> Preklic naročnine ne vrača denarja za že plačano obdobje. 
-                                    Dostop imaš do konca plačanega meseca.
-                                  </p>
-                                </div>
-                              </>
+                                      <p className="text-xs text-orange-600 dark:text-orange-400">
+                                        Tvoj dostop do PRO funkcij ostaja aktiven do konca plačanega obdobja.
+                                        {profile?.trial_ends_at && ` Dostop do: ${formatDate(profile.trial_ends_at)}`}
+                                      </p>
+                                    </div>
+                                    <div className="bg-muted rounded-xl p-4 border border-border">
+                                      <p className="text-sm text-muted-foreground">
+                                        Naročnino lahko ponovno aktiviraš kadarkoli tako, da znova skleneš PRO paket.
+                                      </p>
+                                    </div>
+                                  </>
+                                ) : (
+                                  <>
+                                    <div className="bg-green-50 dark:bg-green-950/30 rounded-xl p-4 border border-green-200 dark:border-green-800">
+                                      <p className="text-sm text-green-700 dark:text-green-300 flex items-center gap-2">
+                                        <CheckCircle2 className="w-4 h-4" />
+                                        Hvala, ker si del Študko PRO! 
+                                      </p>
+                                    </div>
+                                    <div className="space-y-3">
+                                      <Button
+                                        variant="outline"
+                                        onClick={handleManageSubscription}
+                                        disabled={loadingSubscription}
+                                        className="w-full text-foreground"
+                                      >
+                                        {loadingSubscription ? "Nalagam..." : "Uredi plačilne podatke"}
+                                      </Button>
+                                      <div className="space-y-2">
+                                        <Button
+                                          variant="outline"
+                                          onClick={() => setShowCancelDialog(true)}
+                                          disabled={loadingSubscription}
+                                          className="w-full text-red-600 dark:text-red-400 border-red-300 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-950/30 hover:border-red-400 dark:hover:border-red-700"
+                                        >
+                                          Prekliči naročnino
+                                        </Button>
+                                        {profile?.current_period_end && (
+                                          <p className="text-xs text-center text-muted-foreground">
+                                            Tvoja naročnina je veljavna do: <span className="font-semibold text-foreground">{formatDate(profile.current_period_end)}</span>
+                                          </p>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <div className="bg-muted rounded-xl p-3 border border-border">
+                                      <p className="text-xs text-muted-foreground">
+                                        <strong>Opomba:</strong> Preklic naročnine ne vrača denarja za že plačano obdobje. 
+                                        Dostop imaš do konca plačanega meseca.
+                                      </p>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
                             )}
                           </div>
-                        )}
+                        </TabsContent>
+
+                        {/* Theme Tab */}
+                        <TabsContent value="theme" className="space-y-4 py-4">
+                          <div className="space-y-4">
+                            <div>
+                              <Label className="text-base text-foreground">Izgled aplikacije</Label>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                Izberi svetlo ali temno temo za vso aplikacijo
+                              </p>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-4">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  setTheme("light");
+                                  toast.success("Svetla tema aktivirana");
+                                }}
+                                className={`relative p-4 h-auto flex-col gap-3 ${
+                                  theme === "light"
+                                    ? "border-primary bg-primary/5"
+                                    : "border-border hover:border-primary/50"
+                                }`}
+                              >
+                                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-center">
+                                  <Sun className="w-6 h-6 text-white" />
+                                </div>
+                                <div className="text-center">
+                                  <div className="font-semibold text-foreground">Svetla</div>
+                                  <div className="text-xs text-muted-foreground">Klasična svetla tema</div>
+                                </div>
+                                {theme === "light" && (
+                                  <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                                    <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                  </div>
+                                )}
+                              </Button>
+
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  setTheme("dark");
+                                  toast.success("Temna tema aktivirana");
+                                }}
+                                className={`relative p-4 h-auto flex-col gap-3 ${
+                                  theme === "dark"
+                                    ? "border-primary bg-primary/5"
+                                    : "border-border hover:border-primary/50"
+                                }`}
+                              >
+                                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-center">
+                                  <Moon className="w-6 h-6 text-white" />
+                                </div>
+                                <div className="text-center">
+                                  <div className="font-semibold text-foreground">Temna</div>
+                                  <div className="text-xs text-muted-foreground">Prijazna očem ponoči</div>
+                                </div>
+                                {theme === "dark" && (
+                                  <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                                    <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                  </div>
+                                )}
+                              </Button>
+                            </div>
+
+                            <p className="text-xs text-muted-foreground">
+                              Tvoja izbira teme se bo shranila in uporabila na vseh straneh.
+                            </p>
+                          </div>
+                        </TabsContent>
+                      </Tabs>
+                    </DialogContent>
+                  </Dialog>
+
+                  {/* Stats */}
+                  <div className="grid grid-cols-2 gap-4 pt-6 border-t border-border">
+                    <div className="text-center">
+                      <p className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                        {myNotes.length}
+                      </p>
+                      <p className="text-sm text-muted-foreground">Zapiskov</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">
+                        {purchasedNotes.length}
+                      </p>
+                      <p className="text-sm text-muted-foreground">Kupljenih</p>
+                    </div>
+                  </div>
+
+                  {/* Payout Settings Section - Stripe Connect Only */}
+                  <div className="pt-6 border-t border-border">
+                    <h3 className="text-lg font-bold text-foreground mb-3">
+                      Izplačila (Stripe Connect)
+                    </h3>
+                    
+                    {/* Earnings Display */}
+                    <div className="bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-950/30 dark:to-indigo-950/30 rounded-xl p-4 border border-purple-200 dark:border-purple-700 mb-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Euro className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                        <span className="text-sm text-muted-foreground">Tvoj zaslužek:</span>
                       </div>
-                    </TabsContent>
+                      <p className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                        €{totalEarnings.toFixed(2).replace('.', ',')}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Od prodaje zapiskov (80% po proviziji)
+                      </p>
+                    </div>
 
-                    {/* Theme Tab */}
-                    <TabsContent value="theme" className="space-y-4 py-4">
-                      <div className="space-y-4">
-                        <div>
-                          <Label className="text-base text-foreground">Izgled aplikacije</Label>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            Izberi svetlo ali temno temo za vso aplikacijo
-                          </p>
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-4">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              setTheme("light");
-                              toast.success("Svetla tema aktivirana");
-                            }}
-                            className={`relative p-4 h-auto flex-col gap-3 ${
-                              theme === "light"
-                                ? "border-primary bg-primary/5"
-                                : "border-border hover:border-primary/50"
-                            }`}
-                          >
-                            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-center">
-                              <Sun className="w-6 h-6 text-white" />
-                            </div>
-                            <div className="text-center">
-                              <div className="font-semibold text-foreground">Svetla</div>
-                              <div className="text-xs text-muted-foreground">Klasična svetla tema</div>
-                            </div>
-                            {theme === "light" && (
-                              <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                </svg>
-                              </div>
-                            )}
-                          </Button>
-
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              setTheme("dark");
-                              toast.success("Temna tema aktivirana");
-                            }}
-                            className={`relative p-4 h-auto flex-col gap-3 ${
-                              theme === "dark"
-                                ? "border-primary bg-primary/5"
-                                : "border-border hover:border-primary/50"
-                            }`}
-                          >
-                            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-center">
-                              <Moon className="w-6 h-6 text-white" />
-                            </div>
-                            <div className="text-center">
-                              <div className="font-semibold text-foreground">Temna</div>
-                              <div className="text-xs text-muted-foreground">Prijazna očem ponoči</div>
-                            </div>
-                            {theme === "dark" && (
-                              <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                </svg>
-                              </div>
-                            )}
-                          </Button>
-                        </div>
-
-                        <p className="text-xs text-muted-foreground">
-                          Tvoja izbira teme se bo shranila in uporabila na vseh straneh.
+                    {/* Stripe Connect Status - Only show green if stripe_connect_id is NOT null */}
+                    {profile?.stripe_connect_id ? (
+                      <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-xl p-4 border border-green-200 dark:border-green-800">
+                        <p className="text-sm text-green-700 dark:text-green-300 mb-3 flex items-center gap-2">
+                          <CheckCircle2 className="w-4 h-4" />
+                          Stripe račun je povezan ✅
                         </p>
+                        <Button 
+                          variant="outline" 
+                          className="w-full text-foreground"
+                          onClick={async () => {
+                            if (!profile?.stripe_connect_id) return;
+                            try {
+                              const { data, error } = await supabase.functions.invoke('stripe-connect-dashboard', {
+                                body: { accountId: profile.stripe_connect_id }
+                              });
+                              if (error || !data?.url) {
+                                toast.error('Napaka pri odpiranju Stripe dashboarda');
+                                return;
+                              }
+                              window.open(data.url, '_blank');
+                            } catch (err) {
+                              toast.error('Napaka pri odpiranju Stripe dashboarda');
+                            }
+                          }}
+                        >
+                          <Wallet className="w-4 h-4 mr-2" />
+                          Upravljaj Stripe račun
+                        </Button>
                       </div>
-                    </TabsContent>
-                  </Tabs>
-                </DialogContent>
-              </Dialog>
-
-              {/* Stats */}
-              <div className="grid grid-cols-2 gap-4 pt-6 border-t border-border">
-                <div className="text-center">
-                  <p className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                    {myNotes.length}
-                  </p>
-                  <p className="text-sm text-muted-foreground">Zapiskov</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">
-                    {purchasedNotes.length}
-                  </p>
-                  <p className="text-sm text-muted-foreground">Kupljenih</p>
-                </div>
-              </div>
-
-              {/* Payout Settings Section - Stripe Connect Only */}
-              <div className="pt-6 border-t border-border">
-                <h3 className="text-lg font-bold text-foreground mb-3">
-                  Izplačila (Stripe Connect)
-                </h3>
-                
-                {/* Earnings Display */}
-                <div className="bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-950/30 dark:to-indigo-950/30 rounded-xl p-4 border border-purple-200 dark:border-purple-700 mb-4">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Euro className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                    <span className="text-sm text-muted-foreground">Tvoj zaslužek:</span>
+                    ) : (
+                      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-xl p-4 border border-blue-200 dark:border-blue-800">
+                        <p className="text-sm text-foreground mb-3">
+                          Nastavi Stripe izplačila za avtomatska plačila od prodaje zapiskov.
+                        </p>
+                        <Button 
+                          className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-90 text-white"
+                          onClick={handleStripeOnboarding}
+                        >
+                          <Wallet className="w-4 h-4 mr-2" />
+                          Nastavi Stripe izplačila
+                        </Button>
+                      </div>
+                    )}
                   </div>
-                  <p className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-                    €{totalEarnings.toFixed(2).replace('.', ',')}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Od prodaje zapiskov (80% po proviziji)
-                  </p>
                 </div>
-
-                {/* Stripe Connect Status - Only show green if stripe_connect_id is NOT null */}
-                {profile?.stripe_connect_id ? (
-                  <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-xl p-4 border border-green-200 dark:border-green-800">
-                    <p className="text-sm text-green-700 dark:text-green-300 mb-3 flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4" />
-                      Stripe račun je povezan ✅
-                    </p>
-                    <Button 
-                      variant="outline" 
-                      className="w-full text-foreground"
-                      onClick={async () => {
-                        if (!profile?.stripe_connect_id) return;
-                        try {
-                          const { data, error } = await supabase.functions.invoke('stripe-connect-dashboard', {
-                            body: { accountId: profile.stripe_connect_id }
-                          });
-                          if (error || !data?.url) {
-                            toast.error('Napaka pri odpiranju Stripe dashboarda');
-                            return;
-                          }
-                          window.open(data.url, '_blank');
-                        } catch (err) {
-                          toast.error('Napaka pri odpiranju Stripe dashboarda');
-                        }
-                      }}
-                    >
-                      <Wallet className="w-4 h-4 mr-2" />
-                      Upravljaj Stripe račun
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-xl p-4 border border-blue-200 dark:border-blue-800">
-                    <p className="text-sm text-foreground mb-3">
-                      Nastavi Stripe izplačila za avtomatska plačila od prodaje zapiskov.
-                    </p>
-                    <Button 
-                      className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-90 text-white"
-                      onClick={handleStripeOnboarding}
-                    >
-                      <Wallet className="w-4 h-4 mr-2" />
-                      Nastavi Stripe izplačila
-                    </Button>
-                  </div>
-                )}
               </div>
             </div>
           </div>
@@ -1326,7 +1493,7 @@ const Profile = () => {
                           </div>
                         </div>
                         <div className="flex items-center gap-2 mt-4">
-                          <Link to={`/notes/${purchase.note_id}`} className="flex-1">
+                          <Link to={`/notes/${note.id}`} className="flex-1">
                             <Button variant="outline" className="w-full text-foreground">
                               <ExternalLink className="w-4 h-4 mr-2" />
                               Odpri

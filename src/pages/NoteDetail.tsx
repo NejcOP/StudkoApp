@@ -1,5 +1,5 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { NotePreview } from "@/components/NotePreview";
 import { SellerBadge } from "@/components/SellerBadge";
 import { FlashcardViewer } from "@/components/FlashcardViewer";
+import type { Flashcard } from "@/components/FlashcardViewer";
 
 interface Note {
   id: string;
@@ -81,28 +82,7 @@ const NoteDetail = () => {
     });
   };
 
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (id) {
-      fetchNote();
-      if (user) {
-        setTimeout(() => checkPurchaseStatus(), 1000);
-      }
-    }
-    // Handle checkout/payment success
-    if (urlParams.get('checkout') === 'success') {
-      toast.success("Nakup uspešen! Zapisek je zdaj tvoj.");
-      window.history.replaceState({}, '', `/notes/${id}`);
-      if (user) setTimeout(() => checkPurchaseStatus(), 1000);
-    }
-    if (urlParams.get('payment') === 'success') {
-      toast.success("Plačilo uspešno! Zapisek je zdaj tvoj.");
-      window.history.replaceState({}, '', `/notes/${id}`);
-      if (user) setTimeout(() => checkPurchaseStatus(), 1000);
-    }
-  }, [id, user]);
-
-  const fetchNote = async () => {
+  const fetchNote = useCallback(async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -139,10 +119,9 @@ const NoteDetail = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, user]);
 
-  // Fetch purchase status from 'purchases' table
-  const checkPurchaseStatus = async () => {
+  const checkPurchaseStatus = useCallback(async () => {
     if (!user || !id) return;
     try {
       const { data, error } = await supabase
@@ -155,7 +134,7 @@ const NoteDetail = () => {
     } catch (error) {
       console.error("Error checking purchase status:", error);
     }
-  };
+  }, [id, user]);
 
   const handlePurchase = async () => {
     if (!user) {
@@ -188,9 +167,10 @@ try {
       } else {
         throw new Error("No checkout URL returned");
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error purchasing note:", error);
-      toast.error(error.message || "Napaka pri nakupu zapiska");
+      const errorMessage = error instanceof Error ? error.message : "Napaka pri nakupu zapiska";
+      toast.error(errorMessage);
       setPurchasing(false);
     }
   };
@@ -210,7 +190,7 @@ try {
 
       toast.success("Zapisek je bil izbrisan");
       navigate("/profile");
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error deleting note:", error);
       toast.error("Pri brisanju zapiska je prišlo do napake");
     } finally {
@@ -316,7 +296,7 @@ try {
     if (note && user) {
       loadFlashcards();
     }
-  }, [note, user]);
+  }, [note, user, loadFlashcards]);
 
   if (loading) {
     return (
@@ -811,7 +791,7 @@ try {
       {/* Flashcard Viewer */}
       {showFlashcards && flashcards.length > 0 && (
         <FlashcardViewer
-          flashcards={flashcards}
+          flashcards={flashcards as Flashcard[]}
           onClose={() => setShowFlashcards(false)}
         />
       )}

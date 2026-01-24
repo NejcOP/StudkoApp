@@ -30,8 +30,8 @@ const AddNote = () => {
     schoolName: "",
     price: "",
   });
-  const [fetchedSchools, setFetchedSchools] = useState<any[]>([]);
-  const [fetchedSubjects, setFetchedSubjects] = useState<any[]>([]);
+  const [fetchedSchools, setFetchedSchools] = useState<{ name: string }[]>([]);
+  const [fetchedSubjects, setFetchedSubjects] = useState<{ name: string }[]>([]);
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [hasPayoutSetup, setHasPayoutSetup] = useState<boolean | null>(null);
@@ -207,7 +207,7 @@ const AddNote = () => {
       }
 
       // Insert note into database
-      let fileUrls: string[] = [];
+      const fileUrls: string[] = [];
       console.log('📂 Starting file upload - PDF:', !!pdfFile, 'Images:', imageFiles.length);
       
       // Upload PDF if exists

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ChevronLeft, ChevronRight, RotateCw, Check, X } from "lucide-react";
 
-interface Flashcard {
+export interface Flashcard {
   id: string;
   question: string;
   answer: string;
