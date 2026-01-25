@@ -34,30 +34,15 @@ const NoteDetail = () => {
   const [note, setNote] = useState<Note | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasPurchased, setHasPurchased] = useState(false);
-    author_id: string;
-    file_url?: string | null;
-    profiles: {
-      full_name: string;
-      stripe_connect_id?: string;
-    };
-  }
+  const [purchasing, setPurchasing] = useState(false);
+  const [improving, setImproving] = useState(false);
+  const [generatingFlashcards, setGeneratingFlashcards] = useState(false);
+  const [flashcards, setFlashcards] = useState<any[]>([]);
+  const [showFlashcards, setShowFlashcards] = useState(false);
 
-  const NoteDetail = () => {
-    const { id } = useParams();
-    const navigate = useNavigate();
-    const { user } = useAuth();
-    const [note, setNote] = useState<Note | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [hasPurchased, setHasPurchased] = useState(false);
-    const [purchasing, setPurchasing] = useState(false);
-    const [improving, setImproving] = useState(false);
-    const [generatingFlashcards, setGeneratingFlashcards] = useState(false);
-    const [flashcards, setFlashcards] = useState<any[]>([]);
-    const [showFlashcards, setShowFlashcards] = useState(false);
-
-    const fetchNote = useCallback(async () => {
-      if (!id) return;
-      setLoading(true);
+  const fetchNote = useCallback(async () => {
+    if (!id) return;
+    setLoading(true);
       try {
         const { data, error } = await supabase
           .from("notes")
