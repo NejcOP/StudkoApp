@@ -119,7 +119,7 @@ const NoteDetail = () => {
     } finally {
       setLoading(false);
     }
-  }, [id, user]);
+  }, [id]);
 
   const checkPurchaseStatus = useCallback(async () => {
     if (!user || !id) return;
@@ -272,7 +272,7 @@ try {
     }
   };
 
-  const loadFlashcards = async () => {
+  const loadFlashcards = useCallback(async () => {
     if (!user || !note) return;
 
     try {
@@ -290,7 +290,7 @@ try {
     } catch (error) {
       console.error('Error loading flashcards:', error);
     }
-  };
+  }, [user, note]);
 
   useEffect(() => {
     if (note && user) {
@@ -351,13 +351,15 @@ try {
           {isOwner && (
             <div className="mt-4 p-4 bg-green-900/20 border border-green-500 rounded-lg">
               <p className="text-green-500 font-bold">Ta zapisek je v tvoji lasti</p>
-              <button
-                onClick={e => { e.preventDefault(); if (note.file_url) handleDownload(); }}
-                className={`mt-2 w-full py-2 rounded-md transition ${note.file_url ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-gray-400 text-gray-100 cursor-not-allowed'}`}
+              <Button
+                onClick={() => handleDownload()}
+                className="mt-2 w-full"
                 disabled={!note.file_url}
+                variant="outline"
               >
-                {note.file_url ? 'Prenesi PDF zapisek' : 'Datoteka se pripravlja'}
-              </button>
+                <Download className="w-5 h-5 mr-2" />
+                {note.file_url ? 'Prenesi zapisek' : 'Datoteka se pripravlja'}
+              </Button>
             </div>
           )}
 
@@ -506,7 +508,7 @@ try {
                           </div>
                           {fileUrls.length === 1 && (
                             <Button
-                              onClick={e => { e.preventDefault(); handleDownload(url, index); }}
+                              onClick={() => handleDownload(url, index)}
                               variant="outline"
                               size="sm"
                               className="w-full gap-2"
@@ -527,7 +529,7 @@ try {
                           </div>
                           {fileUrls.length === 1 && (
                             <Button
-                              onClick={e => { e.preventDefault(); handleDownload(url, index); }}
+                              onClick={() => handleDownload(url, index)}
                               variant="outline"
                               size="sm"
                               className="w-full gap-2"
@@ -596,12 +598,10 @@ try {
                     variant="hero"
                     size="lg"
                     className="w-full shadow-glow-primary mb-4"
-                    asChild
+                    onClick={() => handleDownload()}
                   >
-                    <a href={note.file_url!} download target="_blank" rel="noopener noreferrer">
-                      <Download className="w-5 h-5 mr-2" />
-                      Prenesi zapisek
-                    </a>
+                    <Download className="w-5 h-5 mr-2" />
+                    Prenesi zapisek
                   </Button>
                 )}
 
