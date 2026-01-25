@@ -51,9 +51,11 @@ const NoteDetail = () => {
         .select("*, profiles(full_name, stripe_connect_id)")
         .eq("id", id)
         .single();
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
       setNote(data);
-    } catch {
+    } catch (err) {
       setNote(null);
     } finally {
       setLoading(false);
