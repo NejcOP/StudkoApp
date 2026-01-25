@@ -28,36 +28,12 @@ interface Note {
 }
 
 const NoteDetail = () => {
-  const urlParams = new URLSearchParams(window.location.search);
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [note, setNote] = useState<Note | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasPurchased, setHasPurchased] = useState(false);
-
-
-  import { useParams, useNavigate } from "react-router-dom";
-  import { useEffect, useState, useCallback } from "react";
-  import { supabase } from "@/integrations/supabase/client";
-  import { Button } from "@/components/ui/button";
-  import Navigation from "@/components/Navigation";
-  import Footer from "@/components/Footer";
-  import { ArrowLeft, Download, ShoppingCart, Sparkles, Brain, Zap } from "lucide-react";
-  import { useAuth } from "@/hooks/useAuth";
-  import { toast } from "sonner";
-  import { FlashcardViewer } from "@/components/FlashcardViewer";
-
-  interface Note {
-    id: string;
-    title: string;
-    description: string | null;
-    subject: string;
-    level: string;
-    type: string;
-    school_type: string;
-    price: number;
-    created_at: string;
     author_id: string;
     file_url?: string | null;
     profiles: {
