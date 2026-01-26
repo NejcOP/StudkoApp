@@ -165,7 +165,10 @@ const Profile = () => {
           if (Date.now() - profileCache.timestamp < 5 * 60 * 1000 &&
               Date.now() - notesCache.timestamp < 5 * 60 * 1000 &&
               Date.now() - purchasesCache.timestamp < 5 * 60 * 1000) {
-
+            // Cache is valid, no need to load
+            setProfileLoading(false);
+            setNotesLoading(false);
+            setPurchasesLoading(false);
             return;
           }
         }
@@ -173,8 +176,11 @@ const Profile = () => {
         console.error('Error checking profile cache:', err);
       }
       
-      // Inline loading for tab content
+      // Start loading for all sections
       setProfileLoading(true);
+      setNotesLoading(true);
+      setPurchasesLoading(true);
+      
       try {
         // Fetch profile
         const { data: profileData, error: profileError } = await supabase
@@ -301,7 +307,10 @@ const Profile = () => {
         console.error("Error loading profile data:", error);
         toast.error("Napaka pri nalaganju podatkov");
       } finally {
+        // Always reset all loading states
         setProfileLoading(false);
+        setNotesLoading(false);
+        setPurchasesLoading(false);
       }
     }, [user]);
 
