@@ -26,13 +26,29 @@ export const extractTextFromPdf = async (file: File): Promise<ExtractedContent> 
       const page = await pdf.getPage(i);
       const textContent = await page.getTextContent();
       const pageText = textContent.items
-        .map((item: any) => item.str)
+        .map((item: any) => {
+          // Normalize Unicode text to fix encoding issues
+          const str = item.str;
+          // Replace common broken characters
+          return str
+            .normalize('NFC') // Normalize Unicode
+            .replace(/\u010D/g, 'č')  // Fix č
+            .replace(/\u0161/g, 'š')  // Fix š
+            .replace(/\u017E/g, 'ž')  // Fix ž
+            .replace(/[\u200B-\u200D\uFEFF]/g, ''); // Remove zero-width spaces
+        })
         .join(' ');
       fullText += pageText + '\n\n';
     }
     
+    // Final cleanup
+    const cleanText = fullText
+      .trim()
+      .replace(/\s+/g, ' ') // Normalize whitespace
+      .replace(/\n{3,}/g, '\n\n'); // Max 2 newlines
+    
     return {
-      text: fullText.trim(),
+      text: cleanText,
       fileName: file.name,
       fileType: 'pdf',
       pageCount: numPages

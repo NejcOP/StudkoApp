@@ -51,12 +51,15 @@ serve(async (req) => {
 
 RULES:
 - Generate exactly 10-15 flashcards
-- Questions must be clear and specific
-- Answers must be concise (2-4 sentences)
+- Questions must be clear, specific, and in Slovenian
+- Answers must be concise (2-4 sentences) and in Slovenian
 - Use Markdown: **bold** for key terms, lists for multiple points
 - Adapt to subject: ${subject || "General"}
 
-Return ONLY valid JSON: {"flashcards": [{"question": "...", "answer": "..."}]}`;
+IMPORTANT: Return ONLY valid JSON in this EXACT format:
+{"flashcards": [{"question": "Question text?", "answer": "Answer text with **bold** for key terms."}]}
+
+Do NOT include any text before or after the JSON. Do NOT include markdown code blocks.`;
 
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GOOGLE_AI_API_KEY}`;
     
@@ -69,6 +72,7 @@ Return ONLY valid JSON: {"flashcards": [{"question": "...", "answer": "..."}]}`;
         temperature: 0.7,
         topP: 0.95,
         maxOutputTokens: 2048,
+        response_mime_type: "application/json"
       }
     };
 
