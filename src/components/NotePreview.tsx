@@ -303,8 +303,8 @@ export function NotePreview({ fileUrl, onPurchase, price, purchasing = false, pa
                 width={containerWidth}
               />
               
-              {/* For single-page PDFs or when viewing preview pages: LEFT 25% clear, RIGHT 75% blur */}
-              {numPages === 1 && isPreviewPage && (
+              {/* For preview pages: LEFT 25% clear, RIGHT 75% blur */}
+              {isPreviewPage && (
                 <>
                   {/* Blur overlay for right 75% */}
                   <div 
