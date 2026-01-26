@@ -215,21 +215,70 @@ const AIAssistant = () => {
           setFlashcardTitle(noteData.title);
           if (noteData.subject) setSubject(noteData.subject);
           
-          // Extract text from note
-          let textContent = '';
-          if (noteData.description) {
-            textContent = noteData.description;
-          } else if (noteData.file_url) {
-            // If only file URL exists, show message
-            textContent = 'Vsebina iz naloženih datotek';
-          }
-          
-          setFlashcardText(textContent);
-          
           // Show loading state immediately
           setIsLoading(true);
           setFlashcards([]);
           setRevealedCards(new Set());
+          
+          // Extract text from note - prioritize file content (PDF/image)
+          let textContent = '';
+          
+          if (noteData.file_url) {
+            try {
+              // Parse file_url (can be JSON array or single URL)
+              let fileUrls: string[] = [];
+              try {
+                fileUrls = JSON.parse(noteData.file_url);
+              } catch {
+                fileUrls = [noteData.file_url];
+              }
+
+              // Process first file (PDF or image)
+              const firstFileUrl = fileUrls[0];
+              if (firstFileUrl) {
+                // Fetch the file
+                const fileResponse = await fetch(firstFileUrl);
+                const fileBlob = await fileResponse.blob();
+                
+                // Determine file type from URL or blob
+                const fileName = firstFileUrl.split('/').pop() || '';
+                const isPdf = fileName.toLowerCase().endsWith('.pdf') || fileBlob.type === 'application/pdf';
+                const isImage = fileBlob.type.startsWith('image/');
+
+                if (isPdf) {
+                  // Extract text from PDF
+                  toast.info("Berem PDF dokument...");
+                  const { extractTextFromPdf } = await import('@/lib/fileTextExtractor');
+                  const pdfFile = new File([fileBlob], fileName, { type: 'application/pdf' });
+                  const extracted = await extractTextFromPdf(pdfFile);
+                  textContent = extracted.text;
+                } else if (isImage) {
+                  // Extract text from image using OCR
+                  toast.info("Skeniram sliko z OCR...");
+                  const { extractTextFromImage } = await import('@/lib/ocrHelpers');
+                  const imageFile = new File([fileBlob], fileName, { type: fileBlob.type });
+                  const result = await extractTextFromImage(imageFile);
+                  if (result.text) {
+                    textContent = result.text;
+                  } else if (result.error) {
+                    throw new Error(result.error);
+                  }
+                }
+              }
+            } catch (extractError) {
+              console.error('File extraction error:', extractError);
+              toast.error("Napaka pri branju datoteke. Uporabljam opis zapiska.");
+              // Fallback to description
+              textContent = noteData.description || '';
+            }
+          }
+          
+          // Fallback to description if no content from file
+          if (!textContent && noteData.description) {
+            textContent = noteData.description;
+          }
+          
+          setFlashcardText(textContent);
           
           // Trigger generation if we have content
           if (textContent && textContent.length > 10) {
