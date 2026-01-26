@@ -38,7 +38,7 @@ export const FlashcardHistory = ({ onLoadSet }: FlashcardHistoryProps) => {
 
       if (error) throw error;
 
-      setSets((data as FlashcardSet[]) || []);
+      setSets((data as unknown as FlashcardSet[]) || []);
     } catch (error) {
       console.error("Error loading flashcard sets:", error);
       toast.error("Napaka pri nalaganju zgodovine");

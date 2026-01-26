@@ -106,7 +106,7 @@ const AIAssistant = () => {
   const [selectedNoteId, setSelectedNoteId] = useState<string>("");
   const [showHistory, setShowHistory] = useState(false);
   const [showQuizHistory, setShowQuizHistory] = useState(false);
-  const [retakeQuizQuestions, setRetakeQuizQuestions] = useState<any[] | null>(null);
+  const [retakeQuizQuestions, setRetakeQuizQuestions] = useState<Array<{ question: string; options: string[]; correct_answer: string }> | null>(null);
   const [retakeQuizTitle, setRetakeQuizTitle] = useState<string>("");
   
   const handleLoadFlashcardSet = (cards: Array<{ question: string; answer: string }>, title: string) => {
@@ -115,7 +115,7 @@ const AIAssistant = () => {
     setShowHistory(false);
   };
 
-  const handleRetakeQuiz = (questions: any[], title: string) => {
+  const handleRetakeQuiz = (questions: Array<{ question: string; options: string[]; correct_answer: string }>, title: string) => {
     setRetakeQuizQuestions(questions);
     setRetakeQuizTitle(title);
     setShowQuizHistory(false);
@@ -1162,8 +1162,8 @@ const AIAssistant = () => {
               <button 
                 onClick={async () => {
                   setIsLoading(true);
-                  await checkProAccess();
-                  setIsLoading(false);
+                  // Refresh page to check PRO status
+                  window.location.reload();
                 }}
                 className="text-sm text-muted-foreground hover:text-primary transition-colors"
               >
@@ -1478,7 +1478,14 @@ const AIAssistant = () => {
                         <QuizMode 
                           isLoading={isLoading} 
                           setIsLoading={setIsLoading}
-                          initialQuestions={retakeQuizQuestions || undefined}
+                          initialQuestions={retakeQuizQuestions ? retakeQuizQuestions.map((q, idx) => ({
+                            id: idx + 1,
+                            type: 'multiple_choice' as const,
+                            question: q.question,
+                            options: q.options,
+                            correct_answer: q.correct_answer,
+                            explanation: ''
+                          })) : undefined}
                           initialTitle={retakeQuizTitle || undefined}
                         />
                       )}

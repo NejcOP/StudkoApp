@@ -27,7 +27,7 @@ interface QuizResult {
 }
 
 interface QuizHistoryProps {
-  onRetakeQuiz?: (questions: any[], title: string) => void;
+  onRetakeQuiz?: (questions: Array<{ question: string; options?: string[]; correct_answer: string }>, title: string) => void;
 }
 
 export const QuizHistory = ({ onRetakeQuiz }: QuizHistoryProps) => {
@@ -40,7 +40,7 @@ export const QuizHistory = ({ onRetakeQuiz }: QuizHistoryProps) => {
     if (user) {
       loadQuizResults();
     }
-  }, [user]);
+  }, [user, loadQuizResults]);
 
   const loadQuizResults = async () => {
     if (!user) return;
@@ -55,7 +55,7 @@ export const QuizHistory = ({ onRetakeQuiz }: QuizHistoryProps) => {
 
       if (error) throw error;
 
-      setResults(data || []);
+      setResults((data as unknown as QuizResult[]) || []);
     } catch (error) {
       console.error("Error loading quiz results:", error);
       toast.error("Napaka pri nalaganju zgodovine");

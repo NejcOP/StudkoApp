@@ -33,7 +33,7 @@ const ConfirmEmail = () => {
       setMessage("");
       const { error } = await supabase.auth.verifyOtp({
         token,
-        type: type === "signup" ? "signup" : type,
+        type: (type === "signup" ? "signup" : type) as 'signup' | 'email_change' | 'recovery',
         email: emailFromUrl,
       });
       if (error) {
@@ -67,7 +67,7 @@ const ConfirmEmail = () => {
       setMessage("");
       const { error } = await supabase.auth.verifyOtp({
         token,
-        type: type === "signup" ? "signup" : type,
+        type: (type === "signup" ? "signup" : type) as 'signup' | 'email_change' | 'recovery',
         email,
       });
       if (error) {
