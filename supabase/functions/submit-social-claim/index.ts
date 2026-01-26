@@ -119,7 +119,7 @@ serve(async (req) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            from: "Študko Admin <onboarding@resend.dev>",
+            from: "Študko <no-reply@studko.si>",
             to: [ADMIN_EMAIL],
             subject: `🎥 Nova TikTok prijava - ${userName}`,
             html: emailHtml,
