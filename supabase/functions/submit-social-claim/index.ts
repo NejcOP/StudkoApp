@@ -10,21 +10,26 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log("[SOCIAL-CLAIM] Request received:", req.method);
+  
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    console.log("[SOCIAL-CLAIM] Creating Supabase client...");
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
+    console.log("[SOCIAL-CLAIM] Parsing request body...");
     const { userId, claimType, videoLink1, videoLink2 } = await req.json();
 
-    console.log("[SOCIAL-CLAIM] Processing claim:", { userId, claimType });
+    console.log("[SOCIAL-CLAIM] Processing claim:", { userId, claimType, videoLink1, videoLink2 });
 
     // Get user info
+    console.log("[SOCIAL-CLAIM] Fetching user data...");
     const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId);
     
     if (userError) {
@@ -33,8 +38,10 @@ serve(async (req) => {
     }
 
     const userEmail = userData.user?.email;
+    console.log("[SOCIAL-CLAIM] User email:", userEmail);
 
     // Get user profile
+    console.log("[SOCIAL-CLAIM] Fetching user profile...");
     const { data: profile } = await supabaseAdmin
       .from("profiles")
       .select("full_name")
@@ -61,7 +68,10 @@ serve(async (req) => {
       throw claimError;
     }
 
+    console.log("[SOCIAL-CLAIM] Claim inserted successfully, ID:", claim?.id);
+
     // Send email notification to admin
+    console.log("[SOCIAL-CLAIM] Checking email settings - RESEND_API_KEY exists:", !!RESEND_API_KEY, "ADMIN_EMAIL:", ADMIN_EMAIL);
     if (RESEND_API_KEY && ADMIN_EMAIL) {
       const emailHtml = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -112,6 +122,7 @@ serve(async (req) => {
       `;
 
       try {
+        console.log("[SOCIAL-CLAIM] Sending email via Resend API...");
         const emailResponse = await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: {
@@ -126,8 +137,11 @@ serve(async (req) => {
           }),
         });
 
+        console.log("[SOCIAL-CLAIM] Email response status:", emailResponse.status);
+        
         if (!emailResponse.ok) {
-          console.error("[SOCIAL-CLAIM] Email send failed:", await emailResponse.text());
+          const errorText = await emailResponse.text();
+          console.error("[SOCIAL-CLAIM] Email send failed:", errorText);
         } else {
           console.log("[SOCIAL-CLAIM] Email sent successfully to admin");
         }
@@ -137,6 +151,7 @@ serve(async (req) => {
     }
 
     // Create notification for user
+    console.log("[SOCIAL-CLAIM] Creating notification for user...");
     const { error: notifError } = await supabaseAdmin
       .from("notifications")
       .insert({
@@ -152,8 +167,11 @@ serve(async (req) => {
 
     if (notifError) {
       console.error("[SOCIAL-CLAIM] Error creating notification:", notifError);
+    } else {
+      console.log("[SOCIAL-CLAIM] Notification created successfully");
     }
 
+    console.log("[SOCIAL-CLAIM] Returning success response");
     return new Response(
       JSON.stringify({ success: true, claimId: claim.id }),
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }

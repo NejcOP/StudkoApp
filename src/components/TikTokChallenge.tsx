@@ -65,7 +65,12 @@ export const TikTokChallenge = () => {
     console.log("Submitting TikTok claim...", { userId: user.id, videoLink1, videoLink2 });
 
     try {
-      const { data, error } = await supabase.functions.invoke("submit-social-claim", {
+      // Add timeout wrapper
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Timeout - funkcija se ni odzvala v 30 sekundah")), 30000)
+      );
+
+      const invokePromise = supabase.functions.invoke("submit-social-claim", {
         body: {
           userId: user.id,
           claimType: "tiktok_challenge",
@@ -74,6 +79,8 @@ export const TikTokChallenge = () => {
         },
       });
 
+      const { data, error } = await Promise.race([invokePromise, timeoutPromise]) as any;
+
       console.log("Edge function response:", { data, error });
 
       if (error) {
@@ -81,6 +88,8 @@ export const TikTokChallenge = () => {
         throw error;
       }
 
+      console.log("Success! Showing toast...");
+      
       toast({
         title: "Uspešno oddano! 🎉",
         description: "Tvoja prijava je bila poslana. Preverili jo bomo v nekaj dneh!",
