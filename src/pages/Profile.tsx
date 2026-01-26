@@ -961,17 +961,13 @@ const Profile = () => {
                         {/* Email Tab */}
                         <TabsContent value="email" className="space-y-4 py-4">
                           <div className="space-y-2">
-                            <Label className="text-foreground">Trenutni email</Label>
-                            <Input value={user?.email || ""} disabled className="bg-muted text-muted-foreground" />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="new_email" className="text-foreground">Nov email</Label>
+                            <Label htmlFor="new_email" className="text-foreground">Email</Label>
                             <Input
                               id="new_email"
                               type="email"
                               value={emailForm.newEmail}
                               onChange={(e) => setEmailForm({ newEmail: e.target.value })}
-                              placeholder="nov@email.com"
+                              placeholder={user?.email || "nov@email.com"}
                               className="bg-input text-foreground placeholder:text-muted-foreground"
                               disabled={saving}
                             />
@@ -987,7 +983,7 @@ const Profile = () => {
                                 Posodabljam...
                               </>
                             ) : (
-                              "Posodobi email"
+                              "Zamenjaj email"
                             )}
                           </Button>
                           <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-3 border border-blue-200 dark:border-blue-800">
