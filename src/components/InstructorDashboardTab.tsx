@@ -52,19 +52,39 @@ interface InstructorDashboardTabProps {
 export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDashboardTabProps) => {
   const { user } = useAuth();
   const { hasProAccess, checkingAccess } = useProAccess();
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [loading, setLoading] = useState(true);
+  
+  // Check if we have cached bookings
+  const getCachedBookings = () => {
+    try {
+      const cached = sessionStorage.getItem(`instructor_bookings_${tutorId}`);
+      if (cached) {
+        const { data, timestamp } = JSON.parse(cached);
+        // Cache valid for 5 minutes
+        if (Date.now() - timestamp < 5 * 60 * 1000) {
+          return data;
+        }
+      }
+    } catch (err) {
+      console.error('Error reading cached bookings:', err);
+    }
+    return null;
+  };
+
+  const [bookings, setBookings] = useState<Booking[]>(() => getCachedBookings() || []);
+  const [loading, setLoading] = useState(!getCachedBookings());
   const [updating, setUpdating] = useState<string | null>(null);
   const [timeFilter, setTimeFilter] = useState<'24h' | '7d' | '30d' | '1y' | 'all'>('30d');
   const [aiAnalysisLoading, setAiAnalysisLoading] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
   const [dailyTip, setDailyTip] = useState<string>("");
-  const dataLoadedRef = useRef(false);
 
   useEffect(() => {
-    if (tutorId && user && !dataLoadedRef.current) {
+    const cached = getCachedBookings();
+    if (cached) {
+      setBookings(cached);
+      setLoading(false);
+    } else if (tutorId && user) {
       loadBookings();
-      dataLoadedRef.current = true;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tutorId]);
@@ -221,6 +241,16 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
       })) || [];
 
       setBookings(enrichedBookings);
+      
+      // Cache the bookings
+      try {
+        sessionStorage.setItem(`instructor_bookings_${tutorId}`, JSON.stringify({
+          data: enrichedBookings,
+          timestamp: Date.now()
+        }));
+      } catch (err) {
+        console.error('Error caching bookings:', err);
+      }
     } catch (error) {
       console.error('Error loading bookings:', error);
       if (!silent) toast.error('Napaka pri nalaganju rezervacij');
