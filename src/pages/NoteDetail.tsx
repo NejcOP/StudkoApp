@@ -403,6 +403,64 @@ const NoteDetail = () => {
                   ))}
                 </div>
               )}
+
+              {/* Full Content Section - Show for purchased notes or free notes */}
+              {!showPreview && fileUrls.length > 0 && (
+                <div className="bg-gradient-card rounded-2xl p-6 border border-border shadow-lg">
+                  <div className="flex items-center justify-between gap-3 mb-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent to-primary flex items-center justify-center">
+                        <BookOpen className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h2 className="text-lg font-bold text-foreground">
+                          Polna vsebina
+                        </h2>
+                        <p className="text-sm text-muted-foreground">
+                          {fileUrls.length} {fileUrls.length === 1 ? 'datoteka' : fileUrls.length === 2 ? 'datoteki' : 'datoteke'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Display all files */}
+                  <div className="space-y-6">
+                    {fileUrls.map((url, index) => (
+                      <div key={index} className="space-y-3">
+                        {index > 0 && <div className="border-t border-border my-6"></div>}
+
+                        {/* File header */}
+                        {fileUrls.length > 1 && (
+                          <div className="flex items-center justify-between mb-3">
+                            <p className="text-sm font-medium text-muted-foreground">
+                              Datoteka {index + 1} od {fileUrls.length}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Display PDF or Image */}
+                        {url.toLowerCase().includes('.pdf') || url.startsWith('blob:') ? (
+                          <div className="aspect-[3/4] rounded-xl overflow-hidden border border-border bg-muted">
+                            <iframe
+                              src={url}
+                              className="w-full h-full"
+                              title={`Note preview ${index + 1}`}
+                            />
+                          </div>
+                        ) : (
+                          <div className="rounded-xl overflow-hidden border border-border">
+                            <img
+                              src={url}
+                              alt={`${note.title} - stran ${index + 1}`}
+                              className="w-full h-auto"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Sidebar */}
