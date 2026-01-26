@@ -97,42 +97,42 @@ export const TikTokChallenge = () => {
   };
 
   return (
-    <div className="relative group overflow-hidden rounded-2xl bg-gradient-to-br from-black via-gray-900 to-black border-2 border-transparent hover:border-cyan-400 transition-all duration-300 shadow-xl">
+    <div className="relative group overflow-hidden rounded-xl bg-gradient-to-br from-black via-gray-900 to-black border-2 border-transparent hover:border-cyan-400 transition-all duration-300 shadow-lg">
       {/* Neon glow effect */}
       <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 via-pink-500 to-cyan-500 opacity-0 group-hover:opacity-20 blur-xl transition-opacity duration-300"></div>
       
-      <div className="relative p-6 space-y-4">
+      <div className="relative p-3 space-y-2">
         {/* Header */}
         <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-400 to-pink-500 flex items-center justify-center shadow-lg">
-              <Video className="w-7 h-7 text-white" />
+          <div className="flex items-center gap-2">
+            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-cyan-400 to-pink-500 flex items-center justify-center shadow-lg">
+              <Video className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+              <h3 className="text-sm font-bold text-white flex items-center gap-1">
                 TikTok Izziv
-                <Sparkles className="w-4 h-4 text-yellow-400 animate-pulse" />
+                <Sparkles className="w-3 h-3 text-yellow-400 animate-pulse" />
               </h3>
-              <p className="text-sm text-cyan-400 font-semibold">1 mesec PRO brezplačno!</p>
+              <p className="text-xs text-cyan-400 font-semibold">1 mesec PRO brezplačno!</p>
             </div>
           </div>
         </div>
 
         {/* Instructions */}
-        <div className="space-y-2 text-sm text-gray-300">
-          <p className="text-white font-semibold mb-3">Kako sodelovati:</p>
-          <div className="space-y-2 pl-2">
-            <div className="flex items-start gap-2">
-              <span className="text-cyan-400 text-lg">🎥</span>
+        <div className="space-y-1 text-xs text-gray-300">
+          <p className="text-white font-semibold text-xs">Kako sodelovati:</p>
+          <div className="space-y-1 pl-1">
+            <div className="flex items-start gap-1.5">
+              <span className="text-cyan-400 text-sm">🎥</span>
               <p>Posnemi <span className="text-white font-bold">2 TikTok videa</span>, kjer pokažeš, kako uporabljaš Študko</p>
             </div>
-            <div className="flex items-start gap-2">
-              <span className="text-pink-400 text-lg">#️⃣</span>
-              <p>Uporabi hashtag <span className="text-cyan-400 font-mono">#studkoapp</span></p>
+            <div className="flex items-start gap-1.5">
+              <span className="text-pink-400 text-sm">#️⃣</span>
+              <p>Uporabi hashtag <span className="text-cyan-400 font-mono text-xs">#studkoapp</span></p>
             </div>
-            <div className="flex items-start gap-2">
-              <span className="text-yellow-400 text-lg">🏷️</span>
-              <p>Označi naš profil <span className="text-pink-400 font-mono">@studkoapp</span></p>
+            <div className="flex items-start gap-1.5">
+              <span className="text-yellow-400 text-sm">🏷️</span>
+              <p>Označi naš profil <span className="text-pink-400 font-mono text-xs">@studkoapp</span></p>
             </div>
           </div>
         </div>
@@ -141,17 +141,17 @@ export const TikTokChallenge = () => {
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button
-              className="w-full bg-gradient-to-r from-cyan-500 via-pink-500 to-cyan-500 hover:from-cyan-600 hover:via-pink-600 hover:to-cyan-600 text-white font-bold py-6 text-base shadow-lg hover:shadow-cyan-500/50 transition-all duration-300"
+              className="w-full bg-gradient-to-r from-cyan-500 via-pink-500 to-cyan-500 hover:from-cyan-600 hover:via-pink-600 hover:to-cyan-600 text-white font-bold py-2 text-xs shadow-lg hover:shadow-cyan-500/50 transition-all duration-300"
               disabled={hasClaim}
             >
               {hasClaim ? (
                 <>
-                  <Video className="w-5 h-5 mr-2" />
+                  <Video className="w-3.5 h-3.5 mr-1.5" />
                   Prijava oddana ✓
                 </>
               ) : (
                 <>
-                  <Video className="w-5 h-5 mr-2" />
+                  <Video className="w-3.5 h-3.5 mr-1.5" />
                   Oddaj dokazilo
                 </>
               )}
