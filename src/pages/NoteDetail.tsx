@@ -138,18 +138,42 @@ const NoteDetail = () => {
     checkPurchaseStatus();
   }, [fetchNote, checkPurchaseStatus]);
 
-  const handleDownload = (url?: string) => {
-    const filePath = url || note?.file_url;
-    if (!filePath) {
-      toast.error("URL datoteke ni najden!");
+  const handleDownload = async () => {
+    if (fileUrls.length === 0) {
+      toast.error("Datoteke niso na voljo!");
       return;
     }
-    const { data } = supabase.storage.from('notes').getPublicUrl(filePath);
-    if (data?.publicUrl) {
-      window.open(data.publicUrl, '_blank');
+
+    if (fileUrls.length === 1) {
+      // Single file - direct download
+      const url = fileUrls[0];
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${note?.title || 'zapisek'}.pdf`;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
       toast.success('Datoteka se prenaša!');
     } else {
-      toast.error('Napaka pri pridobivanju povezave.');
+      // Multiple files - download all
+      toast.info(`Prenašam ${fileUrls.length} datotek...`);
+      for (let i = 0; i < fileUrls.length; i++) {
+        const url = fileUrls[i];
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${note?.title || 'zapisek'}_${i + 1}.pdf`;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Small delay between downloads
+        if (i < fileUrls.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      }
+      toast.success('Vse datoteke so prenešene!');
     }
   };
 
