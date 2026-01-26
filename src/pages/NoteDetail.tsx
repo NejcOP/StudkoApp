@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import { ArrowLeft, Download, ShoppingCart, Sparkles, Brain, Zap, Check } from "lucide-react";
+import { ArrowLeft, Download, ShoppingCart, Sparkles, Brain, Zap, Check, BookOpen, User, Calendar, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { FlashcardViewer, type Flashcard } from "@/components/FlashcardViewer";
+import { format } from "date-fns";
 
 interface Note {
   id: string;
@@ -283,73 +284,217 @@ const NoteDetail = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <div className="container mx-auto max-w-2xl py-8">
+      <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
         <button
           onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6"
+          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4 sm:mb-6 transition-colors min-h-[44px]"
         >
           <ArrowLeft className="w-4 h-4" /> Nazaj
         </button>
-        <div className="bg-white rounded-xl shadow p-6 mb-6">
-          <h1 className="text-2xl font-bold mb-2">{note.title}</h1>
-          <div className="mb-2 text-muted-foreground">{note.subject} • {note.level} • {note.type}</div>
-          <div className="mb-2">Vrsta šole: <b>{note.school_type}</b></div>
-          <div className="mb-2">Cena: <b>{note.price === 0 ? "BREZPLAČNO" : `${note.price.toFixed(2)} €`}</b></div>
-          {note.description && <div className="mb-4">{note.description}</div>}
+
+        <div className="max-w-5xl mx-auto">
+          {/* Owner Banner */}
           {isOwner && (
-            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded">
-              <span className="text-green-700 font-semibold">Ta zapisek je v tvoji lasti</span>
+            <div className="bg-gradient-to-r from-primary/10 to-accent/10 backdrop-blur rounded-2xl p-4 shadow-lg border border-primary/20 mb-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-foreground">Ta zapisek je v tvoji lasti</p>
+                  <p className="text-xs text-muted-foreground mt-1">Datoteka se pripravlja</p>
+                </div>
+              </div>
             </div>
           )}
-          {showDownloadButton && (
-            <Button onClick={() => handleDownload()} className="w-full mb-2" variant="outline">
-              <Download className="w-5 h-5 mr-2" /> Prenesi zapisek
-            </Button>
-          )}
-          {!isOwner && note.price > 0 && !hasPurchased && (
-            <Button
-              onClick={handlePurchase}
-              className="w-full mb-2"
-              variant="default"
-              disabled={purchasing || !note.profiles?.stripe_connect_id}
-            >
-              <ShoppingCart className="w-5 h-5 mr-2" />
-              {purchasing ? "Kupujem..." : !note.profiles?.stripe_connect_id ? "Ni na voljo" : "Kupi zapisek"}
-            </Button>
-          )}
-          {(isOwner || hasPurchased) && note.file_url && (
-            <div className="flex flex-col gap-2 mt-4">
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={handleImproveNotes}
-                disabled={improving}
-              >
-                {improving ? <Sparkles className="w-5 h-5 mr-2 animate-spin" /> : <Sparkles className="w-5 h-5 mr-2" />}
-                {improving ? "Izboljšujem..." : "AI izboljšaj zapiske"}
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={handleGenerateFlashcards}
-                disabled={generatingFlashcards}
-              >
-                {generatingFlashcards ? <Brain className="w-5 h-5 mr-2 animate-spin" /> : <Brain className="w-5 h-5 mr-2" />}
-                {generatingFlashcards ? "Generiram..." : "Ustvari flashcards"}
-              </Button>
-              {flashcards.length > 0 && (
-                <Button
-                  variant="secondary"
-                  className="w-full"
-                  onClick={() => setShowFlashcards(true)}
-                >
-                  <Zap className="w-5 h-5 mr-2" />
-                  Ponovi flashcards ({flashcards.length})
-                </Button>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Main Content */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Note Header */}
+              <div className="bg-gradient-card rounded-2xl p-8 border border-border shadow-lg">
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center shadow-glow-accent flex-shrink-0">
+                    <BookOpen className="w-8 h-8 text-white" />
+                  </div>
+                  <div className="flex-grow">
+                    <h1 className="text-3xl font-bold mb-2 text-foreground">
+                      {note.title}
+                    </h1>
+                    <div className="flex flex-wrap gap-2">
+                      <span className="px-3 py-1 bg-primary/10 text-primary rounded-lg text-sm font-medium">
+                        {note.subject}
+                      </span>
+                      <span className="px-3 py-1 bg-accent/10 text-accent rounded-lg text-sm font-medium">
+                        {note.level}
+                      </span>
+                      <span className="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">
+                        {note.type}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Info Card */}
+              <div className="bg-gradient-card rounded-2xl p-8 border border-border shadow-lg">
+                <h2 className="text-xl font-bold mb-4 text-foreground">Informacije</h2>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Vrsta šole:</span>
+                    <span className="font-medium text-foreground">{note.school_type}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Cena:</span>
+                    <span className="font-bold text-primary">
+                      {note.price === 0 ? "BREZPLAČNO" : `${note.price.toFixed(2)} €`}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Calendar className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">
+                      Dodano: {format(new Date(note.created_at), "dd. MMMM yyyy")}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Description */}
+              {note.description && (
+                <div className="bg-gradient-card rounded-2xl p-8 border border-border shadow-lg">
+                  <h2 className="text-xl font-bold mb-4 text-foreground">Opis</h2>
+                  <div className="text-muted-foreground whitespace-pre-line leading-relaxed">
+                    {note.description}
+                  </div>
+                </div>
               )}
             </div>
-          )}
+
+            {/* Sidebar */}
+            <div className="space-y-6">
+              {/* Purchase Card */}
+              <div className="bg-gradient-card rounded-2xl p-6 border border-border shadow-lg sticky top-24">
+                <div className="text-center mb-6">
+                  <p className="text-4xl font-bold text-primary mb-2">
+                    {note.price === 0 ? (
+                      <span className="text-accent">BREZPLAČNO</span>
+                    ) : (
+                      `${note.price.toFixed(2)} €`
+                    )}
+                  </p>
+                  <p className="text-muted-foreground text-sm">
+                    Enkratna cena
+                  </p>
+                </div>
+
+                {hasPurchased ? (
+                  <div className="mb-4">
+                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-2 border-green-200 dark:border-green-800 rounded-xl p-4 mb-3">
+                      <div className="flex items-center gap-3 text-green-700 dark:text-green-400">
+                        <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
+                          <CheckCircle2 className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-base">Ta zapisek je v tvoji lasti</p>
+                          <p className="text-sm text-green-600 dark:text-green-500">Dostop do polne vsebine</p>
+                        </div>
+                      </div>
+                    </div>
+                    {showDownloadButton && (
+                      <Button
+                        onClick={() => handleDownload()}
+                        className="w-full mb-2"
+                        variant="default"
+                        size="lg"
+                      >
+                        <Download className="w-5 h-5 mr-2" /> Prenesi zapisek
+                      </Button>
+                    )}
+                  </div>
+                ) : !isOwner && note.price > 0 ? (
+                  <Button
+                    onClick={handlePurchase}
+                    className="w-full mb-4"
+                    variant="default"
+                    size="lg"
+                    disabled={purchasing || !note.profiles?.stripe_connect_id}
+                  >
+                    <ShoppingCart className="w-5 h-5 mr-2" />
+                    {purchasing ? "Kupujem..." : !note.profiles?.stripe_connect_id ? "Ni na voljo" : "Kupi zapisek"}
+                  </Button>
+                ) : null}
+
+                {/* AI Features */}
+                {(isOwner || hasPurchased) && note.file_url && (
+                  <div className="space-y-3 mb-6">
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="w-full"
+                      onClick={handleImproveNotes}
+                      disabled={improving}
+                    >
+                      {improving ? <Sparkles className="w-5 h-5 mr-2 animate-spin" /> : <Sparkles className="w-5 h-5 mr-2" />}
+                      {improving ? "Izboljšujem..." : "AI izboljšaj zapiske"}
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="w-full"
+                      onClick={handleGenerateFlashcards}
+                      disabled={generatingFlashcards}
+                    >
+                      {generatingFlashcards ? <Brain className="w-5 h-5 mr-2 animate-spin" /> : <Brain className="w-5 h-5 mr-2" />}
+                      {generatingFlashcards ? "Generiram..." : "Ustvari flashcards"}
+                    </Button>
+
+                    {flashcards.length > 0 && (
+                      <Button
+                        variant="secondary"
+                        size="lg"
+                        className="w-full"
+                        onClick={() => setShowFlashcards(true)}
+                      >
+                        <Zap className="w-5 h-5 mr-2" />
+                        Ponovi flashcards ({flashcards.length})
+                      </Button>
+                    )}
+                  </div>
+                )}
+
+                <div className="mt-6 pt-6 border-t border-border space-y-3">
+                  <div className="flex items-center gap-2 text-sm">
+                    <div className="w-2 h-2 bg-primary rounded-full" />
+                    <span className="text-muted-foreground">Takojšen dostop</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <div className="w-2 h-2 bg-primary rounded-full" />
+                    <span className="text-muted-foreground">PDF format</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <div className="w-2 h-2 bg-primary rounded-full" />
+                    <span className="text-muted-foreground">Neomejeno prenosov</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Author Card */}
+              <div className="bg-gradient-card rounded-2xl p-6 border border-border shadow-lg">
+                <h3 className="text-lg font-bold mb-4 text-foreground">Avtor</h3>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-full bg-gradient-primary flex items-center justify-center shadow-glow-primary">
+                    <User className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-foreground">
+                      {note.profiles?.full_name || "Neznan avtor"}
+                    </p>
+                    <p className="text-sm text-muted-foreground">Študent</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+
         {showFlashcards && flashcards.length > 0 && (
           <FlashcardViewer
             flashcards={flashcards}
