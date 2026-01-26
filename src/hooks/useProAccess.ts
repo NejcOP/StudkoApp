@@ -15,7 +15,7 @@ export function useProAccess() {
     
     // Check memory cache first (fastest)
     const memoryCache = globalProStatusCache[user.id];
-    if (memoryCache && Date.now() - memoryCache.timestamp < 10 * 60 * 1000) {
+    if (memoryCache && Date.now() - memoryCache.timestamp < 30 * 60 * 1000) { // 30 minutes
       return memoryCache.status;
     }
     
@@ -24,8 +24,8 @@ export function useProAccess() {
       const cached = localStorage.getItem(`pro_status_${user.id}`);
       if (cached) {
         const { status, timestamp } = JSON.parse(cached);
-        // Cache valid for 10 minutes
-        if (Date.now() - timestamp < 10 * 60 * 1000) {
+        // Cache valid for 30 minutes
+        if (Date.now() - timestamp < 30 * 60 * 1000) {
           // Update memory cache
           globalProStatusCache[user.id] = { status, timestamp };
           return status;
@@ -34,10 +34,13 @@ export function useProAccess() {
     } catch (err) {
       console.error('Error reading cached PRO status:', err);
     }
-    return false;
+    return null; // Return null instead of false to indicate "unknown"
   };
   
-  const [hasProAccess, setHasProAccess] = useState(getCachedProStatus());
+  const [hasProAccess, setHasProAccess] = useState(() => {
+    const cached = getCachedProStatus();
+    return cached === true; // Only true if we have confirmed cache
+  });
   const [checkingAccess, setCheckingAccess] = useState(false);
 
   const checkProAccess = async (force = false) => {
@@ -56,7 +59,7 @@ export function useProAccess() {
     
     // Check if we have valid cache
     const cached = getCachedProStatus();
-    if (!force && cached !== false) {
+    if (!force && cached === true) { // Only skip if cache is explicitly true
       setCheckingAccess(false);
       return;
     }
@@ -73,8 +76,13 @@ export function useProAccess() {
         
       if (error) {
         console.error('Error checking PRO access:', error);
-        // On error, keep cached value if available
-        setHasProAccess(cached);
+        // On error, keep previous state if it was PRO - don't downgrade user
+        if (hasProAccess || cached === true) {
+          console.log('Keeping PRO status due to error');
+          // Don't change state, keep current PRO status
+        } else {
+          setHasProAccess(false);
+        }
       } else {
         const isActive = profile?.subscription_status === "active";
         const isTrialing =
@@ -96,8 +104,13 @@ export function useProAccess() {
       }
     } catch (err) {
       console.error('Exception checking PRO access:', err);
-      // On exception, keep cached value
-      setHasProAccess(cached);
+      // On exception, keep previous PRO status if user had it
+      if (hasProAccess || cached === true) {
+        console.log('Keeping PRO status due to exception');
+        // Don't change state, keep current PRO status
+      } else {
+        setHasProAccess(false);
+      }
     } finally {
       setCheckingAccess(false);
     }
