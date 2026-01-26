@@ -324,6 +324,7 @@ const Profile = () => {
       let pollingInterval: NodeJS.Timeout | null = null;
       if (urlParams.get('payment') === 'success' && user) {
         setLoading(true);
+        toast.info('Preverjam nakup...');
         let pollCount = 0;
         pollingInterval = setInterval(async () => {
           pollCount++;
@@ -339,8 +340,11 @@ const Profile = () => {
             urlParams.delete('payment');
             window.history.replaceState({}, '', `${window.location.pathname}?${urlParams.toString()}`);
             if (pollingInterval) clearInterval(pollingInterval);
-          } else if (pollCount >= 30) { // 1 minuta polling
+          } else if (pollCount >= 5) { // 10 sekund polling (5 x 2s)
             setLoading(false);
+            toast.info('Nakup se procesira. Zapisek bo kmalu na voljo.');
+            urlParams.delete('payment');
+            window.history.replaceState({}, '', `${window.location.pathname}?${urlParams.toString()}`);
             if (pollingInterval) clearInterval(pollingInterval);
           }
         }, 2000);
