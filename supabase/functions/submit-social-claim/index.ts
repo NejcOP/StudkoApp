@@ -121,33 +121,31 @@ serve(async (req) => {
         </div>
       `;
 
-      try {
-        console.log("[SOCIAL-CLAIM] Sending email via Resend API...");
-        const emailResponse = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${RESEND_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            from: "Študko <no-reply@studko.si>",
-            to: [ADMIN_EMAIL],
-            subject: `🎥 Nova TikTok prijava - ${userName}`,
-            html: emailHtml,
-          }),
-        });
-
+      // Send email asynchronously without blocking (fire-and-forget)
+      console.log("[SOCIAL-CLAIM] Initiating async email send...");
+      fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${RESEND_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: "Študko <no-reply@studko.si>",
+          to: [ADMIN_EMAIL],
+          subject: `🎥 Nova TikTok prijava - ${userName}`,
+          html: emailHtml,
+        }),
+      }).then(async (emailResponse) => {
         console.log("[SOCIAL-CLAIM] Email response status:", emailResponse.status);
-        
         if (!emailResponse.ok) {
           const errorText = await emailResponse.text();
           console.error("[SOCIAL-CLAIM] Email send failed:", errorText);
         } else {
           console.log("[SOCIAL-CLAIM] Email sent successfully to admin");
         }
-      } catch (emailError) {
+      }).catch((emailError) => {
         console.error("[SOCIAL-CLAIM] Email error:", emailError);
-      }
+      });
     }
 
     // Create notification for user
