@@ -42,6 +42,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 };
 */
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -83,9 +84,11 @@ type Message = {
 };
 
 const AIAssistant = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const { hasProAccess, checkingAccess } = useProAccess();
   const [mode, setMode] = useState<AIMode>("chat");
+  const [autoGenerating, setAutoGenerating] = useState(false);
   const [subject, setSubject] = useState("");
   const [question, setQuestion] = useState("");
   const [files, setFiles] = useState<File[]>([]);
@@ -180,6 +183,92 @@ const AIAssistant = () => {
       loadConversations();
     }
   }, [user?.id, loadUserNotes, loadConversations]);
+
+  // Auto-generate flashcards from URL params (e.g., from NoteDetail)
+  useEffect(() => {
+    const action = searchParams.get('action');
+    const noteId = searchParams.get('noteId');
+    const noteTitle = searchParams.get('noteTitle');
+
+    if (action === 'generate-flashcards' && noteId && noteTitle && !autoGenerating && user?.id) {
+      setAutoGenerating(true);
+      setMode('flashcards');
+      
+      // Load note content and auto-generate
+      const autoGenerate = async () => {
+        try {
+          // Fetch note content (notes table has: title, description, subject, file_url)
+          const { data: noteData, error: noteError } = await supabase
+            .from('notes')
+            .select('description, file_url, subject')
+            .eq('id', noteId)
+            .single();
+
+          if (noteError) throw noteError;
+
+          // Set form fields
+          setFlashcardTitle(decodeURIComponent(noteTitle));
+          if (noteData.subject) setSubject(noteData.subject);
+          
+          // Extract text from note
+          let textContent = '';
+          if (noteData.description) {
+            textContent = noteData.description;
+          } else if (noteData.file_url) {
+            // If only file URL exists, show message
+            textContent = 'Vsebina iz naloženih datotek';
+          }
+          
+          setFlashcardText(textContent);
+          
+          // Show loading state immediately
+          setIsLoading(true);
+          setFlashcards([]);
+          setRevealedCards(new Set());
+          
+          // Trigger generation if we have content
+          if (textContent && textContent.length > 10) {
+            const { data, error } = await supabase.functions.invoke("generate-flashcards-ai", {
+              body: {
+                text: textContent,
+                subject: noteData.subject || null,
+                title: decodeURIComponent(noteTitle)
+              }
+            });
+
+            if (error) throw error;
+
+            if (data?.flashcards) {
+              setFlashcards(data.flashcards);
+              
+              // Save flashcard set
+              await supabase.from('flashcard_sets').insert({
+                user_id: user.id,
+                title: decodeURIComponent(noteTitle),
+                content: data.flashcards
+              });
+              
+              toast.success("Flashcards so ustvarjeni!");
+            }
+          } else {
+            toast.error("Zapisek nima dovolj vsebine za generiranje flashcards.");
+          }
+        } catch (error) {
+          console.error('Auto-generate error:', error);
+          toast.error("Napaka pri avtomatskem generiranju flashcards.");
+        } finally {
+          setIsLoading(false);
+          // Clear URL params after processing
+          searchParams.delete('action');
+          searchParams.delete('noteId');
+          searchParams.delete('noteTitle');
+          setSearchParams(searchParams, { replace: true });
+        }
+      };
+
+      autoGenerate();
+    }
+  }, [searchParams, setSearchParams, user?.id, autoGenerating]);
 
   useEffect(() => {
     if (user?.id) {
@@ -1442,6 +1531,18 @@ const AIAssistant = () => {
                           )}
                         </Button>
                       </div>
+
+                      {isLoading && flashcards.length === 0 && (
+                        <div className="bg-card rounded-2xl border border-border shadow-lg p-6 mb-6">
+                          <div className="flex items-center justify-center py-12">
+                            <div className="text-center space-y-4">
+                              <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+                              <p className="text-muted-foreground font-medium">AI generira flashcards...</p>
+                              <p className="text-sm text-muted-foreground">To lahko traja nekaj sekund</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
 
                       {flashcards.length > 0 && (
                         <FlashcardCarousel 

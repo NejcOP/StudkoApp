@@ -256,13 +256,13 @@ const NoteDetail = () => {
   const handleGenerateFlashcards = () => {
     if (!note) return;
     
-    // Redirect to AI page with flashcards tab and note info
+    // Redirect to AI page with action to auto-generate flashcards
     const params = new URLSearchParams({
-      tab: 'flashcards',
+      action: 'generate-flashcards',
       noteId: note.id,
-      noteTitle: note.title
+      noteTitle: encodeURIComponent(note.title)
     });
-    navigate(`/ai?${params.toString()}`);
+    navigate(`/ai-assistant?${params.toString()}`);
   };
 
   // Memoize computed values
@@ -568,7 +568,7 @@ const NoteDetail = () => {
                       <Button
                         size="lg"
                         className="w-full bg-primary hover:bg-primary/90 text-white shadow-glow-primary"
-                        onClick={() => navigate(`/ai?tab=flashcards&noteTitle=${encodeURIComponent(note.title)}`)}
+                        onClick={() => navigate(`/ai-assistant?mode=flashcards`)}
                       >
                         <Zap className="w-5 h-5 mr-2" />
                         Odpri flashcards
