@@ -62,9 +62,10 @@ export const TikTokChallenge = () => {
     }
 
     setSubmitting(true);
+    console.log("Submitting TikTok claim...", { userId: user.id, videoLink1, videoLink2 });
 
     try {
-      const { error } = await supabase.functions.invoke("submit-social-claim", {
+      const { data, error } = await supabase.functions.invoke("submit-social-claim", {
         body: {
           userId: user.id,
           claimType: "tiktok_challenge",
@@ -73,7 +74,12 @@ export const TikTokChallenge = () => {
         },
       });
 
-      if (error) throw error;
+      console.log("Edge function response:", { data, error });
+
+      if (error) {
+        console.error("Edge function error:", error);
+        throw error;
+      }
 
       toast({
         title: "Uspešno oddano! 🎉",
@@ -88,7 +94,7 @@ export const TikTokChallenge = () => {
       console.error("Error submitting claim:", error);
       toast({
         title: "Napaka",
-        description: "Prišlo je do napake pri oddaji. Poskusi znova.",
+        description: error instanceof Error ? error.message : "Prišlo je do napake pri oddaji. Poskusi znova.",
         variant: "destructive",
       });
     } finally {
