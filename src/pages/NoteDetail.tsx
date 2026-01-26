@@ -8,7 +8,6 @@ import Footer from "@/components/Footer";
 import { ArrowLeft, Download, ShoppingCart, Sparkles, Brain, Zap, Check, BookOpen, User, Calendar, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { FlashcardViewer, type Flashcard } from "@/components/FlashcardViewer";
 import { NotePreview } from "@/components/NotePreview";
 import { format } from "date-fns";
 
@@ -74,10 +73,8 @@ const NoteDetail = () => {
   const [purchasing, setPurchasing] = useState(false);
   const [improving, setImproving] = useState(false);
   const [improvedSuccess, setImprovedSuccess] = useState(false);
-  const [generatingFlashcards, setGeneratingFlashcards] = useState(false);
-  const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
-  const [showFlashcards, setShowFlashcards] = useState(false);
   const [fileUrls, setFileUrls] = useState<string[]>([]);
+  const [hasExistingFlashcards, setHasExistingFlashcards] = useState(false);
 
   const fetchNote = useCallback(async () => {
     if (!id) return;
@@ -133,10 +130,29 @@ const NoteDetail = () => {
     }
   }, [id, user]);
 
+  // Check if flashcards already exist for this note
+  const checkExistingFlashcards = useCallback(async () => {
+    if (!user || !note) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('flashcard_sets')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('title', note.title)
+        .maybeSingle();
+      
+      setHasExistingFlashcards(!!data && !error);
+    } catch {
+      setHasExistingFlashcards(false);
+    }
+  }, [user, note]);
+
   useEffect(() => {
     fetchNote();
     checkPurchaseStatus();
-  }, [fetchNote, checkPurchaseStatus]);
+    checkExistingFlashcards();
+  }, [fetchNote, checkPurchaseStatus, checkExistingFlashcards]);
 
   const handleDownload = async () => {
     if (fileUrls.length === 0) {
@@ -237,33 +253,16 @@ const NoteDetail = () => {
     }
   };
 
-  const handleGenerateFlashcards = async () => {
-    if (!user || !note || !note.file_url) return;
+  const handleGenerateFlashcards = () => {
+    if (!note) return;
     
-    // Optimistic: Show generating state immediately
-    setGeneratingFlashcards(true);
-    toast.info("Generiram flashcards...");
-    
-    try {
-      const { data, error } = await supabase.functions.invoke('generate-flashcards', {
-        body: { noteId: note.id, content: note.file_url, userId: user.id }
-      });
-      if (error) throw error;
-      
-      const formattedFlashcards = (data.flashcards || []).map((card: { front?: string; back?: string; question?: string; answer?: string }, index: number) => ({
-        id: `${note.id}-${index}`,
-        question: card.front || card.question || '',
-        answer: card.back || card.answer || ''
-      }));
-      
-      setFlashcards(formattedFlashcards);
-      setShowFlashcards(true);
-      toast.success("Flashcards ustvarjeni!");
-    } catch {
-      toast.error("Napaka pri generiranju flashcards");
-    } finally {
-      setGeneratingFlashcards(false);
-    }
+    // Redirect to AI page with flashcards tab and note info
+    const params = new URLSearchParams({
+      tab: 'flashcards',
+      noteId: note.id,
+      noteTitle: note.title
+    });
+    navigate(`/ai?${params.toString()}`);
   };
 
   // Memoize computed values
@@ -560,21 +559,19 @@ const NoteDetail = () => {
                       size="lg"
                       className="w-full"
                       onClick={handleGenerateFlashcards}
-                      disabled={generatingFlashcards}
                     >
-                      {generatingFlashcards ? <Brain className="w-5 h-5 mr-2 animate-spin" /> : <Brain className="w-5 h-5 mr-2" />}
-                      {generatingFlashcards ? "Generiram..." : "Ustvari flashcards"}
+                      <Brain className="w-5 h-5 mr-2" />
+                      Ustvari flashcards
                     </Button>
 
-                    {flashcards.length > 0 && (
+                    {hasExistingFlashcards && (
                       <Button
-                        variant="secondary"
                         size="lg"
-                        className="w-full"
-                        onClick={() => setShowFlashcards(true)}
+                        className="w-full bg-primary hover:bg-primary/90 text-white shadow-glow-primary"
+                        onClick={() => navigate(`/ai?tab=flashcards&noteTitle=${encodeURIComponent(note.title)}`)}
                       >
                         <Zap className="w-5 h-5 mr-2" />
-                        Ponovi flashcards ({flashcards.length})
+                        Odpri flashcards
                       </Button>
                     )}
                   </div>
@@ -614,13 +611,6 @@ const NoteDetail = () => {
             </div>
           </div>
         </div>
-
-        {showFlashcards && flashcards.length > 0 && (
-          <FlashcardViewer
-            flashcards={flashcards}
-            onClose={() => setShowFlashcards(false)}
-          />
-        )}
       </div>
       <Footer />
     </div>
