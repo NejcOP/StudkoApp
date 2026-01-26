@@ -64,7 +64,9 @@ const NoteDetail = () => {
   const { user } = useAuth();
   
   // Initialize with cached data for instant display
-  const [note, setNote] = useState<Note | null>(() => id ? getCachedNote(id) : null);
+  const cachedData = id ? getCachedNote(id) : null;
+  const [note, setNote] = useState<Note | null>(cachedData);
+  const [loading, setLoading] = useState(!cachedData);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [hasPurchased, setHasPurchased] = useState(false);
   const [purchasing, setPurchasing] = useState(false);
@@ -77,8 +79,12 @@ const NoteDetail = () => {
   const fetchNote = useCallback(async () => {
     if (!id) return;
     
-    // Only show refreshing indicator, not full loading
-    setIsRefreshing(true);
+    // Show loading on first load, refreshing on subsequent loads
+    if (note) {
+      setIsRefreshing(true);
+    } else {
+      setLoading(true);
+    }
     
     try {
       const { data, error } = await supabase
@@ -90,8 +96,9 @@ const NoteDetail = () => {
       setNote(data);
       setCachedNote(id, data);
     } catch (err) {
-      if (!note) setNote(null); // Only clear if we don't have cached data
+      setNote(null);
     } finally {
+      setLoading(false);
       setIsRefreshing(false);
     }
   }, [id, note]);
@@ -231,10 +238,8 @@ const NoteDetail = () => {
     [note, hasPurchased]
   );
   
-  const showLoading = !note && isRefreshing;
-
-  // Show skeleton only if no cached data
-  if (showLoading) {
+  // Show skeleton only on initial load without cached data
+  if (loading) {
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
