@@ -11,13 +11,15 @@ DROP POLICY IF EXISTS "Users can update their own notes" ON storage.objects;
 DROP POLICY IF EXISTS "Users can delete their own notes" ON storage.objects;
 
 -- Allow authenticated users to upload their own note files
+-- Path format: notes/{user_id}/{filename}
+-- storage.foldername returns array: [1]='notes', [2]='{user_id}', [3]='{filename}'
 CREATE POLICY "Users can upload their own notes"
 ON storage.objects
 FOR INSERT
 TO authenticated
 WITH CHECK (
   bucket_id = 'notes' AND
-  auth.uid()::text = (storage.foldername(name))[1]
+  auth.uid()::text = (storage.foldername(name))[2]
 );
 
 -- Allow anyone (including anonymous) to view notes (public bucket)
@@ -35,11 +37,11 @@ FOR UPDATE
 TO authenticated
 USING (
   bucket_id = 'notes' AND
-  auth.uid()::text = (storage.foldername(name))[1]
+  auth.uid()::text = (storage.foldername(name))[2]
 )
 WITH CHECK (
   bucket_id = 'notes' AND
-  auth.uid()::text = (storage.foldername(name))[1]
+  auth.uid()::text = (storage.foldername(name))[2]
 );
 
 -- Allow users to delete their own uploaded files
@@ -49,5 +51,5 @@ FOR DELETE
 TO authenticated
 USING (
   bucket_id = 'notes' AND
-  auth.uid()::text = (storage.foldername(name))[1]
+  auth.uid()::text = (storage.foldername(name))[2]
 );
