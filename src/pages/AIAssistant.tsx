@@ -184,15 +184,20 @@ const AIAssistant = () => {
     }
   }, [user?.id, loadUserNotes, loadConversations]);
 
-  // Auto-generate flashcards from URL params (e.g., from NoteDetail)
+  // Auto-activate tab and auto-generate flashcards from URL params
   useEffect(() => {
+    const tab = searchParams.get('tab');
     const action = searchParams.get('action');
     const noteId = searchParams.get('noteId');
-    const noteTitle = searchParams.get('noteTitle');
 
-    if (action === 'generate-flashcards' && noteId && noteTitle && !autoGenerating && user?.id) {
+    // Activate tab if specified
+    if (tab && ['chat', 'flashcards', 'quiz', 'summary'].includes(tab)) {
+      setMode(tab as AIMode);
+    }
+
+    // Auto-generate flashcards if action=generate and noteId present
+    if (action === 'generate' && noteId && tab === 'flashcards' && !autoGenerating && user?.id) {
       setAutoGenerating(true);
-      setMode('flashcards');
       
       // Load note content and auto-generate
       const autoGenerate = async () => {
@@ -200,14 +205,14 @@ const AIAssistant = () => {
           // Fetch note content (notes table has: title, description, subject, file_url)
           const { data: noteData, error: noteError } = await supabase
             .from('notes')
-            .select('description, file_url, subject')
+            .select('title, description, file_url, subject')
             .eq('id', noteId)
             .single();
 
           if (noteError) throw noteError;
 
           // Set form fields
-          setFlashcardTitle(decodeURIComponent(noteTitle));
+          setFlashcardTitle(noteData.title);
           if (noteData.subject) setSubject(noteData.subject);
           
           // Extract text from note
@@ -232,7 +237,7 @@ const AIAssistant = () => {
               body: {
                 text: textContent,
                 subject: noteData.subject || null,
-                title: decodeURIComponent(noteTitle)
+                title: noteData.title
               }
             });
 
@@ -244,7 +249,7 @@ const AIAssistant = () => {
               // Save flashcard set
               await supabase.from('flashcard_sets').insert({
                 user_id: user.id,
-                title: decodeURIComponent(noteTitle),
+                title: noteData.title,
                 content: data.flashcards
               });
               
@@ -258,10 +263,9 @@ const AIAssistant = () => {
           toast.error("Napaka pri avtomatskem generiranju flashcards.");
         } finally {
           setIsLoading(false);
-          // Clear URL params after processing
+          // Clear action and noteId params after processing
           searchParams.delete('action');
           searchParams.delete('noteId');
-          searchParams.delete('noteTitle');
           setSearchParams(searchParams, { replace: true });
         }
       };
