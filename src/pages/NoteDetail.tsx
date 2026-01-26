@@ -9,6 +9,7 @@ import { ArrowLeft, Download, ShoppingCart, Sparkles, Brain, Zap, Check, BookOpe
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { FlashcardViewer, type Flashcard } from "@/components/FlashcardViewer";
+import { NotePreview } from "@/components/NotePreview";
 import { format } from "date-fns";
 
 interface Note {
@@ -76,6 +77,7 @@ const NoteDetail = () => {
   const [generatingFlashcards, setGeneratingFlashcards] = useState(false);
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [showFlashcards, setShowFlashcards] = useState(false);
+  const [fileUrls, setFileUrls] = useState<string[]>([]);
 
   const fetchNote = useCallback(async () => {
     if (!id) return;
@@ -96,6 +98,18 @@ const NoteDetail = () => {
       if (error) throw error;
       setNote(data);
       setCachedNote(id, data);
+      
+      // Parse file URLs (can be JSON array or single string)
+      if (data?.file_url) {
+        try {
+          const parsed = JSON.parse(data.file_url);
+          const urls = Array.isArray(parsed) ? parsed : [parsed];
+          setFileUrls(urls);
+        } catch {
+          // If not JSON, treat as single URL
+          setFileUrls([data.file_url]);
+        }
+      }
     } catch (err) {
       setNote(null);
     } finally {
@@ -239,6 +253,12 @@ const NoteDetail = () => {
     [note, hasPurchased]
   );
   
+  // Show preview for paid notes that haven't been purchased (including for owner to see what buyers see)
+  const showPreview = useMemo(() => 
+    note && note.file_url && note.price > 0 && !hasPurchased,
+    [note, hasPurchased]
+  );
+  
   // Show skeleton only on initial load without cached data
   if (loading) {
     return (
@@ -363,6 +383,24 @@ const NoteDetail = () => {
                   <div className="text-muted-foreground whitespace-pre-line leading-relaxed">
                     {note.description}
                   </div>
+                </div>
+              )}
+
+              {/* Preview Section - Show 25% of content for paid notes not yet purchased */}
+              {showPreview && fileUrls.length > 0 && (
+                <div className="space-y-6">
+                  {fileUrls.map((url, index) => (
+                    <NotePreview
+                      key={index}
+                      fileUrl={url}
+                      onPurchase={isOwner ? () => toast.info("Ne moreš kupiti svojih zapiskov") : handlePurchase}
+                      price={note.price}
+                      purchasing={purchasing}
+                      pageNumber={index + 1}
+                      totalPages={fileUrls.length}
+                      isOwner={isOwner}
+                    />
+                  ))}
                 </div>
               )}
             </div>
