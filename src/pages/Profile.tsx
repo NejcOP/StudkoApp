@@ -589,6 +589,7 @@ const Profile = () => {
       }
       
       setSaving(true);
+      console.log("Starting email update to:", emailForm.newEmail);
       
       // Optimistic: Show immediate feedback
       toast.info("Pošiljam verifikacijski email...");
@@ -600,17 +601,28 @@ const Profile = () => {
           ? 'https://studko.vercel.app/profile?email_updated=true'
           : `${window.location.origin}/profile?email_updated=true`;
         
-        const { error } = await supabase.auth.updateUser(
+        console.log("Calling supabase.auth.updateUser...");
+        
+        const updatePromise = supabase.auth.updateUser(
           { email: emailForm.newEmail },
           { emailRedirectTo: redirectUrl }
         );
+        
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error("Timeout - email update se ni odzval v 30s")), 30000)
+        );
+        
+        const result = await Promise.race([updatePromise, timeoutPromise]);
+        const { error } = result as { error: Error | null };
+        
+        console.log("Email update response:", { error });
 
         if (error) throw error;
 
         toast.success(
           "Preveri svojo TRENUTNO e-pošto!", 
           {
-            description: "Za nadaljevanje mora\u0161 klikniti potrditveno povezavo, ki smo ti jo poslali na tvoj TRENUTNI email naslov.",
+            description: "Za nadaljevanje moraš klikniti potrditveno povezavo, ki smo ti jo poslali na tvoj TRENUTNI email naslov.",
             duration: 8000,
           }
         );
@@ -620,6 +632,7 @@ const Profile = () => {
         const errorMessage = error instanceof Error ? error.message : "Napaka pri posodabljanju emaila";
         toast.error(errorMessage);
       } finally {
+        console.log("Email update finished");
         setSaving(false);
       }
     };
