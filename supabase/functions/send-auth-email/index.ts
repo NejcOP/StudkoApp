@@ -45,9 +45,14 @@ serve(async (req) => {
     // Validate RESEND_API_KEY exists
     if (!RESEND_API_KEY) {
       console.error('RESEND_API_KEY is not set!')
+      // Return 200 to not block auth flow - Supabase will use default emails
       return new Response(
-        JSON.stringify({ error: 'RESEND_API_KEY not configured' }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
+        JSON.stringify({ 
+          success: false,
+          error: 'RESEND_API_KEY not configured',
+          details: 'Email sending disabled, auth flow continues'
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
       )
     }
     
@@ -161,13 +166,15 @@ serve(async (req) => {
     )
   } catch (error) {
     console.error('Error sending email:', error)
+    // Always return 200 to not block auth flow - log error but continue
     return new Response(
       JSON.stringify({
-        error: error.message,
-        details: 'Failed to send authentication email',
+        success: false,
+        error: error.message || 'Failed to send email',
+        details: 'Email sending failed but auth flow continues',
       }),
       {
-        status: 500,
+        status: 200, // Changed from 500 to not block Supabase auth
         headers: { 'Content-Type': 'application/json' },
       }
     )
