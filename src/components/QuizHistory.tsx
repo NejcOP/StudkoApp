@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -36,13 +36,7 @@ export const QuizHistory = ({ onRetakeQuiz }: QuizHistoryProps) => {
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (user) {
-      loadQuizResults();
-    }
-  }, [user, loadQuizResults]);
-
-  const loadQuizResults = async () => {
+  const loadQuizResults = useCallback(async () => {
     if (!user) return;
 
     setLoading(true);
@@ -62,7 +56,13 @@ export const QuizHistory = ({ onRetakeQuiz }: QuizHistoryProps) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      loadQuizResults();
+    }
+  }, [user, loadQuizResults]);
 
   const handleDelete = async (id: string) => {
     if (!confirm("Ali res želiš izbrisati ta rezultat?")) return;

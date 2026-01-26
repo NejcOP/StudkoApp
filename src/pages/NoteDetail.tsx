@@ -1,10 +1,11 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import { ArrowLeft, Download, ShoppingCart, Sparkles, Brain, Zap } from "lucide-react";
+import { ArrowLeft, Download, ShoppingCart, Sparkles, Brain, Zap, Check } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { FlashcardViewer, type Flashcard } from "@/components/FlashcardViewer";
@@ -27,22 +28,58 @@ interface Note {
   };
 }
 
+// Cache utilities
+const CACHE_KEY_PREFIX = 'note_detail_';
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+const getCachedNote = (noteId: string): Note | null => {
+  try {
+    const cached = localStorage.getItem(`${CACHE_KEY_PREFIX}${noteId}`);
+    if (!cached) return null;
+    const { data, timestamp } = JSON.parse(cached);
+    if (Date.now() - timestamp > CACHE_DURATION) {
+      localStorage.removeItem(`${CACHE_KEY_PREFIX}${noteId}`);
+      return null;
+    }
+    return data;
+  } catch {
+    return null;
+  }
+};
+
+const setCachedNote = (noteId: string, note: Note) => {
+  try {
+    localStorage.setItem(`${CACHE_KEY_PREFIX}${noteId}`, JSON.stringify({
+      data: note,
+      timestamp: Date.now()
+    }));
+  } catch {
+    // Ignore storage errors
+  }
+};
+
 const NoteDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [note, setNote] = useState<Note | null>(null);
-  const [loading, setLoading] = useState(true);
+  
+  // Initialize with cached data for instant display
+  const [note, setNote] = useState<Note | null>(() => id ? getCachedNote(id) : null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [hasPurchased, setHasPurchased] = useState(false);
   const [purchasing, setPurchasing] = useState(false);
   const [improving, setImproving] = useState(false);
+  const [improvedSuccess, setImprovedSuccess] = useState(false);
   const [generatingFlashcards, setGeneratingFlashcards] = useState(false);
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [showFlashcards, setShowFlashcards] = useState(false);
 
   const fetchNote = useCallback(async () => {
     if (!id) return;
-    setLoading(true);
+    
+    // Only show refreshing indicator, not full loading
+    setIsRefreshing(true);
+    
     try {
       const { data, error } = await supabase
         .from("notes")
@@ -51,12 +88,13 @@ const NoteDetail = () => {
         .single();
       if (error) throw error;
       setNote(data);
+      setCachedNote(id, data);
     } catch (err) {
-      setNote(null);
+      if (!note) setNote(null); // Only clear if we don't have cached data
     } finally {
-      setLoading(false);
+      setIsRefreshing(false);
     }
-  }, [id]);
+  }, [id, note]);
 
   const checkPurchaseStatus = useCallback(async () => {
     if (!user || !id) return;
@@ -127,34 +165,51 @@ const NoteDetail = () => {
 
   const handleImproveNotes = async () => {
     if (!user || !note || !note.file_url) return;
+    
+    // Optimistic update
     setImproving(true);
+    setImprovedSuccess(true);
+    toast.success("Zapisek se izboljšuje...");
+    
     try {
       const { error } = await supabase.functions.invoke('improve-notes', {
         body: { noteId: note.id, content: note.file_url }
       });
       if (error) throw error;
-      toast.success("Zapisek izboljšan!");
+      
+      // Silent refresh in background
       fetchNote();
+      toast.success("Zapisek uspešno izboljšan!");
     } catch {
+      // Rollback on error
+      setImprovedSuccess(false);
       toast.error("Napaka pri izboljšavi");
     } finally {
       setImproving(false);
+      // Keep success state for a moment
+      setTimeout(() => setImprovedSuccess(false), 3000);
     }
   };
 
   const handleGenerateFlashcards = async () => {
     if (!user || !note || !note.file_url) return;
+    
+    // Optimistic: Show generating state immediately
     setGeneratingFlashcards(true);
+    toast.info("Generiram flashcards...");
+    
     try {
       const { data, error } = await supabase.functions.invoke('generate-flashcards', {
         body: { noteId: note.id, content: note.file_url, userId: user.id }
       });
       if (error) throw error;
+      
       const formattedFlashcards = (data.flashcards || []).map((card: { front?: string; back?: string; question?: string; answer?: string }, index: number) => ({
         id: `${note.id}-${index}`,
         question: card.front || card.question || '',
         answer: card.back || card.answer || ''
       }));
+      
       setFlashcards(formattedFlashcards);
       setShowFlashcards(true);
       toast.success("Flashcards ustvarjeni!");
@@ -165,15 +220,43 @@ const NoteDetail = () => {
     }
   };
 
-  const isOwner = user && note && note.author_id === user.id;
-  const showDownloadButton = note && hasPurchased && note.file_url;
+  // Memoize computed values
+  const isOwner = useMemo(() => 
+    user && note && note.author_id === user.id, 
+    [user, note]
+  );
+  
+  const showDownloadButton = useMemo(() => 
+    note && hasPurchased && note.file_url, 
+    [note, hasPurchased]
+  );
+  
+  const showLoading = !note && isRefreshing;
 
-  if (loading) {
+  // Show skeleton only if no cached data
+  if (showLoading) {
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
-        <div className="container mx-auto flex items-center justify-center min-h-[60vh]">
-          <span>Nalaganje...</span>
+        <div className="container mx-auto px-4 py-8 max-w-4xl">
+          <Skeleton className="h-10 w-3/4 mb-6" />
+          <div className="bg-card rounded-lg shadow-lg p-8 space-y-6">
+            <div className="flex items-center gap-4 mb-6">
+              <Skeleton className="h-12 w-12 rounded-full" />
+              <div className="space-y-2">
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+            </div>
+            <Skeleton className="h-6 w-48 mb-4" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-2/3" />
+            <div className="flex gap-4 mt-8">
+              <Skeleton className="h-10 w-32" />
+              <Skeleton className="h-10 w-32" />
+            </div>
+          </div>
         </div>
         <Footer />
       </div>

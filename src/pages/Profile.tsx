@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -576,6 +576,10 @@ const Profile = () => {
       }
       
       setSaving(true);
+      
+      // Optimistic: Show immediate feedback
+      toast.info("Pošiljam verifikacijski email...");
+      
       try {
         // Use production URL for email redirect (not localhost)
         const isProduction = import.meta.env.PROD;
@@ -673,6 +677,13 @@ const Profile = () => {
       if (!user || !deleteNoteId) return;
       
       setDeleting(true);
+      
+      // Optimistic update - remove immediately from UI
+      const originalNotes = [...myNotes];
+      setMyNotes(myNotes.filter(note => note.id !== deleteNoteId));
+      setDeleteNoteId(null);
+      toast.success("Zapisek se briše...");
+      
       try {
         const { error } = await supabase
           .from("notes")
@@ -681,11 +692,17 @@ const Profile = () => {
           .eq("author_id", user.id);
 
         if (error) throw error;
-
-        setMyNotes(myNotes.filter(note => note.id !== deleteNoteId));
-        setDeleteNoteId(null);
-        toast.success("Zapisek je bil izbrisan");
+        
+        // Update cache
+        sessionStorage.setItem(`my_notes_${user.id}`, JSON.stringify({
+          data: myNotes.filter(note => note.id !== deleteNoteId),
+          timestamp: Date.now()
+        }));
+        
+        toast.success("Zapisek uspešno izbrisan!");
       } catch (error) {
+        // Rollback on error
+        setMyNotes(originalNotes);
         console.error("Error deleting note:", error);
         toast.error("Pri brisanju zapiska je prišlo do napake");
       } finally {
@@ -803,7 +820,24 @@ const Profile = () => {
     };
 
     // Check if user should see Instructor Dashboard tab
-    const showInstructorTab = profile?.is_instructor || isApprovedTutor || !!profile?.stripe_connect_id;
+    const showInstructorTab = useMemo(() => 
+      profile?.is_instructor || isApprovedTutor || !!profile?.stripe_connect_id,
+      [profile?.is_instructor, isApprovedTutor, profile?.stripe_connect_id]
+    );
+    
+    // Memoize computed Pro status
+    const isPro = useMemo(() => 
+      profile?.is_pro === true && 
+      profile?.subscription_status === 'active',
+      [profile?.is_pro, profile?.subscription_status]
+    );
+    
+    // Memoize computed trial status
+    const isInTrial = useMemo(() => 
+      profile?.trial_ends_at && 
+      new Date(profile.trial_ends_at) > new Date(),
+      [profile?.trial_ends_at]
+    );
     
 
 
