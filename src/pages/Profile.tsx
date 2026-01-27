@@ -923,14 +923,26 @@ const Profile = () => {
       try {
         const { data, error } = await supabase.functions.invoke("create-portal-session");
         
-        if (error) throw error;
+        if (error) {
+          console.error("Portal session error:", error);
+          throw error;
+        }
+        
+        if (data?.error) {
+          console.error("Portal session error from function:", data.error);
+          toast.error(data.error);
+          return;
+        }
         
         if (data?.url) {
           window.open(data.url, "_blank");
+        } else {
+          toast.error("Napaka: ni prejel URL za portal");
         }
       } catch (error) {
         console.error("Error creating portal session:", error);
-        toast.error("Napaka pri odpiranju portala");
+        const errorMessage = error instanceof Error ? error.message : "Napaka pri odpiranju portala";
+        toast.error(errorMessage);
       } finally {
         setLoadingSubscription(false);
       }
