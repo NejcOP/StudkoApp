@@ -47,6 +47,7 @@ interface Profile {
   stripe_connect_id?: string;
   stripe_onboarding_complete?: boolean;
   payout_info?: PayoutInfo;
+  last_email_change_at?: string;
 }
 
 interface Note {
@@ -577,6 +578,21 @@ const Profile = () => {
       if (!emailRegex.test(emailForm.newEmail)) {
         toast.error("Vnesi veljaven email naslov");
         return;
+      }
+
+      // Check if 30 days have passed since last email change
+      if (profile?.last_email_change_at) {
+        const lastChange = new Date(profile.last_email_change_at);
+        const daysSinceLastChange = Math.floor((Date.now() - lastChange.getTime()) / (1000 * 60 * 60 * 24));
+        
+        if (daysSinceLastChange < 30) {
+          const daysRemaining = 30 - daysSinceLastChange;
+          toast.error(`Email lahko spremeniš samo enkrat na 30 dni`, {
+            description: `Poizkusi znova čez ${daysRemaining} ${daysRemaining === 1 ? 'dan' : daysRemaining < 5 ? 'dni' : 'dni'}.`,
+            duration: 6000,
+          });
+          return;
+        }
       }
       
       setSaving(true);
