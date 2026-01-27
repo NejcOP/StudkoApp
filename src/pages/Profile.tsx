@@ -203,6 +203,16 @@ const Profile = () => {
           ...profileData,
           payout_info: profileData?.payout_info as PayoutInfo | undefined,
         };
+        
+        // Debug log for subscription status
+        console.log('Profile Data:', {
+          is_pro: profileData?.is_pro,
+          subscription_status: profileData?.subscription_status,
+          cancel_at_period_end: profileData?.cancel_at_period_end,
+          current_period_end: profileData?.current_period_end,
+          trial_ends_at: profileData?.trial_ends_at
+        });
+        
         setProfile(profileWithTypedPayout as Profile);
         
         // Cache profile data
