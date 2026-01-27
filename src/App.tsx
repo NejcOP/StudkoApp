@@ -79,8 +79,8 @@ const App = () => (
         </TooltipProvider>
       </ThemeProvider>
     </AuthProvider>
-  </ErrorBoundary>
   </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;
