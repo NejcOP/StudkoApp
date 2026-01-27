@@ -111,8 +111,13 @@ serve(async (req) => {
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR in cancel-subscription", { message: errorMessage });
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    logStep("ERROR in cancel-subscription", { message: errorMessage, stack: errorStack });
+    
+    return new Response(JSON.stringify({ 
+      error: errorMessage,
+      details: "Check Supabase logs for more information" 
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });

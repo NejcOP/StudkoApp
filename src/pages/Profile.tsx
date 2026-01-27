@@ -953,7 +953,16 @@ const Profile = () => {
       try {
         const { data, error } = await supabase.functions.invoke("cancel-subscription");
         
-        if (error) throw error;
+        if (error) {
+          console.error("Cancel subscription error:", error);
+          throw error;
+        }
+        
+        if (data?.error) {
+          console.error("Cancel subscription error from function:", data.error);
+          toast.error(data.error);
+          return;
+        }
         
         if (data?.success) {
           const expiryDate = profile?.current_period_end 
