@@ -19,23 +19,54 @@ const ConfirmEmail = () => {
       const token = searchParams.get("token");
       const type = searchParams.get("type");
       const emailFromUrl = searchParams.get("email") || emailParam;
+      
       if (!token || !type) {
         setStatus("error");
         setMessage("Manjkajoč ali neveljaven potrditveni link.");
         return;
       }
+
+      // For email_change, we don't need email parameter - the token contains all info
+      if (type === "email_change") {
+        setStatus("pending");
+        setMessage("");
+        
+        try {
+          const { error } = await supabase.auth.verifyOtp({
+            token_hash: token,
+            type: 'email_change',
+          });
+          
+          if (error) {
+            setStatus("error");
+            setMessage("Napaka pri potrditvi: " + error.message);
+          } else {
+            setStatus("success");
+            setMessage("E-naslov uspešno spremenjen!");
+            setTimeout(() => navigate("/profile"), 2000);
+          }
+        } catch (err) {
+          setStatus("error");
+          setMessage("Napaka pri potrditvi spremembe emaila.");
+        }
+        return;
+      }
+
+      // For signup and recovery, we need the email
       if (!emailFromUrl) {
         setStatus("need-email");
         setMessage("Za potrditev potrebujemo še tvoj e-naslov.");
         return;
       }
+      
       setStatus("pending");
       setMessage("");
       const { error } = await supabase.auth.verifyOtp({
-        token,
-        type: (type === "signup" ? "signup" : type) as 'signup' | 'email_change' | 'recovery',
+        token_hash: token,
+        type: type as 'signup' | 'recovery',
         email: emailFromUrl,
       });
+      
       if (error) {
         setStatus("error");
         setMessage("Napaka pri potrditvi: " + error.message);
@@ -59,17 +90,25 @@ const ConfirmEmail = () => {
     e.preventDefault();
     setSubmitting(true);
     await new Promise((r) => setTimeout(r, 100)); // UI feedback
-    await (async () => {
-      const token = searchParams.get("token");
-      const type = searchParams.get("type");
-      if (!token || !type || !email) return;
-      setStatus("pending");
-      setMessage("");
+    
+    const token = searchParams.get("token");
+    const type = searchParams.get("type");
+    
+    if (!token || !type || !email) {
+      setSubmitting(false);
+      return;
+    }
+    
+    setStatus("pending");
+    setMessage("");
+    
+    try {
       const { error } = await supabase.auth.verifyOtp({
-        token,
-        type: (type === "signup" ? "signup" : type) as 'signup' | 'email_change' | 'recovery',
+        token_hash: token,
+        type: type as 'signup' | 'recovery',
         email,
       });
+      
       if (error) {
         setStatus("error");
         setMessage("Napaka pri potrditvi: " + error.message);
@@ -78,7 +117,11 @@ const ConfirmEmail = () => {
         setMessage("E-naslov uspešno potrjen! Sedaj se lahko prijaviš.");
         setTimeout(() => navigate("/login"), 2000);
       }
-    })();
+    } catch (err) {
+      setStatus("error");
+      setMessage("Napaka pri potrditvi.");
+    }
+    
     setSubmitting(false);
   };
 
