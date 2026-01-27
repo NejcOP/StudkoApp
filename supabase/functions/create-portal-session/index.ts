@@ -38,13 +38,17 @@ serve(async (req) => {
       apiVersion: "2025-08-27.basil",
     });
     
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    
-    if (customers.data.length === 0) {
-      throw new Error("No Stripe customer found for this user");
+    const { data: profile, error: profileError } = await supabaseClient
+      .from("profiles")
+      .select("stripe_customer_id")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError || !profile?.stripe_customer_id) {
+      throw new Error("No Stripe customer ID found for this user. Please contact support.");
     }
-    
-    const customerId = customers.data[0].id;
+
+    const customerId = profile.stripe_customer_id;
     console.log("[CUSTOMER-PORTAL] Found customer:", customerId);
 
     const origin = req.headers.get("origin") || "http://localhost:3000";
