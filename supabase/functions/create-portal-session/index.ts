@@ -76,6 +76,12 @@ serve(async (req) => {
       console.log("[CUSTOMER-PORTAL] Found existing customer:", customerId);
     }
     
+    // Create Stripe Billing Portal session
+    const portalSession = await stripe.billingPortal.sessions.create({
+      customer: customerId,
+      return_url: `${req.headers.get("origin") || "https://studko.si"}/profile`,
+    });
+    
     console.log("[CUSTOMER-PORTAL] Portal session created:", portalSession.id);
 
     return new Response(JSON.stringify({ url: portalSession.url }), {
