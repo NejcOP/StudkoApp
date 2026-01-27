@@ -13,6 +13,7 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import Notes from "./pages/Notes";
 import AddNote from "./pages/AddNote";
@@ -51,6 +52,7 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/auth/reset-password" element={<ResetPassword />} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/notes" element={<ProtectedRoute><Notes /></ProtectedRoute>} />
               <Route path="/notes/new" element={<ProtectedRoute><AddNote /></ProtectedRoute>} />
