@@ -170,14 +170,6 @@ const Profile = () => {
           if (Date.now() - profileCache.timestamp < 5 * 60 * 1000 &&
               Date.now() - notesCache.timestamp < 5 * 60 * 1000 &&
               Date.now() - purchasesCache.timestamp < 5 * 60 * 1000) {
-            // Debug log cached profile
-            console.log('Using CACHED Profile Data:', {
-              is_pro: profileCache.data?.is_pro,
-              subscription_status: profileCache.data?.subscription_status,
-              cancel_at_period_end: profileCache.data?.cancel_at_period_end,
-              current_period_end: profileCache.data?.current_period_end,
-              trial_ends_at: profileCache.data?.trial_ends_at
-            });
             // Cache is valid, no need to load
             setProfileLoading(false);
             setNotesLoading(false);
@@ -211,15 +203,6 @@ const Profile = () => {
           ...profileData,
           payout_info: profileData?.payout_info as PayoutInfo | undefined,
         };
-        
-        // Debug log for subscription status
-        console.log('FRESH Profile Data (from DB):', {
-          is_pro: profileData?.is_pro,
-          subscription_status: profileData?.subscription_status,
-          cancel_at_period_end: profileData?.cancel_at_period_end,
-          current_period_end: profileData?.current_period_end,
-          trial_ends_at: profileData?.trial_ends_at
-        });
         
         setProfile(profileWithTypedPayout as Profile);
         
@@ -1283,36 +1266,12 @@ const Profile = () => {
                         {/* Subscription Tab */}
                         <TabsContent value="subscription" className="space-y-4 py-4">
                           <div className="space-y-4">
-                            {/* Debug button to clear cache */}
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                sessionStorage.clear();
-                                window.location.reload();
-                              }}
-                              className="w-full bg-yellow-50 dark:bg-yellow-950/30 border-yellow-300 dark:border-yellow-700"
-                            >
-                              🔄 Osveži podatke (Clear Cache)
-                            </Button>
-                            
                             <div className="bg-muted rounded-xl p-4 border border-border">
                               <p className="text-sm text-muted-foreground mb-1">Trenutni paket:</p>
                               <p className={`text-2xl font-bold ${getSubscriptionDisplay().color}`}>
                                 {getSubscriptionDisplay().text}
                               </p>
                             </div>
-
-                            {(() => {
-                              // Debug log - what does profile contain?
-                              console.log('🔍 SUBSCRIPTION TAB - Profile check:', {
-                                is_pro: profile?.is_pro,
-                                subscription_status: profile?.subscription_status,
-                                cancel_at_period_end: profile?.cancel_at_period_end,
-                                condition_result: !profile?.is_pro || profile?.subscription_status === "none"
-                              });
-                              return null;
-                            })()}
 
                             {(!profile?.is_pro || profile?.subscription_status === "none") ? (
                               <div className="space-y-4">
