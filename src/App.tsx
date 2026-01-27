@@ -8,6 +8,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { RatingPrompt } from "@/components/RatingPrompt";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -36,15 +37,16 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <ThemeProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <RatingPrompt />
-          <BrowserRouter>
-            <Routes>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <ThemeProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <RatingPrompt />
+            <BrowserRouter>
+              <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
@@ -67,6 +69,7 @@ const App = () => (
               <Route path="/call/:bookingId" element={<ProtectedRoute><VideoCall /></ProtectedRoute>} />
               <Route path="/admin/notes" element={<ProtectedRoute><AdminNotes /></ProtectedRoute>} />
               <Route path="/auth/confirm" element={<ConfirmEmail />} />
+              <Route path="/confirm-email" element={<ConfirmEmail />} />
               <Route path="/about" element={<About />} />
               <Route path="/terms" element={<Terms />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
@@ -76,6 +79,7 @@ const App = () => (
         </TooltipProvider>
       </ThemeProvider>
     </AuthProvider>
+  </ErrorBoundary>
   </QueryClientProvider>
 );
 

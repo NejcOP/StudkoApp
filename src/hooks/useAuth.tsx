@@ -19,82 +19,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+
+    // Check for existing session
+    const initSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
+        
+        if (session) {
+          setSession(session);
+          setUser(session.user);
+        } else {
+          setSession(null);
+          setUser(null);
+        }
+      } catch (err) {
+        console.error('Error initializing session:', err);
+        setSession(null);
+        setUser(null);
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        // Only clear session on explicit sign out, not on errors
+        if (!mounted) return;
+
+        console.log('Auth state change:', event);
+        
         if (event === 'SIGNED_OUT') {
           setSession(null);
           setUser(null);
-        } else {
+        } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          setSession(session);
+          setUser(session?.user ?? null);
+        } else if (event === 'USER_UPDATED') {
           setSession(session);
           setUser(session?.user ?? null);
         }
         
-        // Refresh session on sign in to ensure fresh tokens
-        if (event === 'SIGNED_IN' && session) {
-          try {
-            await supabase.auth.refreshSession();
-          } catch (err) {
-            console.warn('Failed to refresh on sign in:', err);
-            // Keep user logged in anyway
-          }
+        if (loading) {
+          setLoading(false);
         }
       }
     );
 
-    // Check for existing session and refresh it
-    const initSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        try {
-          // Try to refresh tokens for fresh access
-          const { data: { session: refreshedSession }, error } = await supabase.auth.refreshSession();
-          
-          if (refreshedSession && !error) {
-            // Success - use refreshed session
-            setSession(refreshedSession);
-            setUser(refreshedSession?.user ?? null);
-          } else {
-            // Refresh failed - keep existing session instead of logging out
-            console.warn('Session refresh failed, keeping existing session:', error);
-            setSession(session);
-            setUser(session?.user ?? null);
-          }
-        } catch (err) {
-          // Exception during refresh - keep existing session
-          console.error('Exception during session refresh, keeping existing session:', err);
-          setSession(session);
-          setUser(session?.user ?? null);
-        }
-      } else {
-        setSession(null);
-        setUser(null);
-      }
-      setLoading(false);
-    };
-
     initSession();
 
-    // Add visibility change listener to refresh session when app comes back
-    const handleVisibilityChange = async () => {
-      if (document.visibilityState === 'visible') {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          setSession(session);
-          setUser(session?.user ?? null);
-        } else {
-          setSession(null);
-          setUser(null);
-        }
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
     return () => {
+      mounted = false;
       subscription.unsubscribe();
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
 
