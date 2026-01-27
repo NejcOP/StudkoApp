@@ -359,16 +359,7 @@ const Profile = () => {
         }, 2000);
       }
 
-      // Handle email update success
-      if (urlParams.get('email_updated') === 'true') {
-        setIsSettingsOpen(true);
-        setSettingsTab('password');
-        toast.success('E-pošta uspešno posodobljena!', {
-          description: 'Zdaj lahko po želji spremeniš še geslo.',
-          duration: 6000,
-        });
-        window.history.replaceState({}, '', '/profile');
-      }
+      // Email update is now handled via ConfirmEmail page
 
       return () => {
         if (pollingInterval) clearInterval(pollingInterval);
@@ -590,6 +581,7 @@ const Profile = () => {
       
       setSaving(true);
       console.log("Starting email update to:", emailForm.newEmail);
+      console.log("Current user email:", user.email);
       
       // Optimistic: Show immediate feedback
       toast.info("Pošiljam verifikacijski email...");
@@ -598,8 +590,8 @@ const Profile = () => {
         // Use production URL for email redirect (not localhost)
         const isProduction = import.meta.env.PROD;
         const redirectUrl = isProduction 
-          ? 'https://studko.vercel.app/profile?email_updated=true'
-          : `${window.location.origin}/profile?email_updated=true`;
+          ? 'https://studko.vercel.app/confirm-email'
+          : `${window.location.origin}/confirm-email`;
         
         console.log("Calling supabase.auth.updateUser...");
         
@@ -613,17 +605,17 @@ const Profile = () => {
         );
         
         const result = await Promise.race([updatePromise, timeoutPromise]);
-        const { error } = result as { error: Error | null };
+        const { error, data } = result as { error: Error | null; data: any };
         
-        console.log("Email update response:", { error });
+        console.log("Email update response:", { error, data });
 
         if (error) throw error;
 
         toast.success(
-          "Preveri svojo TRENUTNO e-pošto!", 
+          "Preveri oba e-naslova!", 
           {
-            description: "Za nadaljevanje moraš klikniti potrditveno povezavo, ki smo ti jo poslali na tvoj TRENUTNI email naslov.",
-            duration: 8000,
+            description: "Najprej klikni povezavo v e-pošti, ki smo jo poslali na tvoj TRENUTNI e-naslov. Nato boš prejel še eno e-pošto na NOV e-naslov za končno potrditev.",
+            duration: 10000,
           }
         );
         setEmailForm({ newEmail: "" });

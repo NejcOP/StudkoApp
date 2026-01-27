@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 const ConfirmEmail = () => {
   const [status, setStatus] = useState<"pending" | "success" | "error" | "need-email">("pending");
@@ -32,22 +33,31 @@ const ConfirmEmail = () => {
         setMessage("");
         
         try {
-          const { error } = await supabase.auth.verifyOtp({
+          const { error, data } = await supabase.auth.verifyOtp({
             token_hash: token,
             type: 'email_change',
           });
           
           if (error) {
+            console.error("Email change verification error:", error);
             setStatus("error");
             setMessage("Napaka pri potrditvi: " + error.message);
           } else {
+            console.log("Email change verification success:", data);
             setStatus("success");
-            setMessage("E-naslov uspešno spremenjen!");
-            setTimeout(() => navigate("/profile"), 2000);
+            setMessage("E-naslov uspešno spremenjen! 🎉");
+            
+            // Wait a moment then show additional info
+            setTimeout(() => {
+              toast.success("Tvoj email je zdaj posodobljen. Prijavi se z novim emailom.");
+            }, 500);
+            
+            setTimeout(() => navigate("/profile"), 3000);
           }
         } catch (err) {
+          console.error("Email change verification exception:", err);
           setStatus("error");
-          setMessage("Napaka pri potrditvi spremembe emaila.");
+          setMessage("Napaka pri potrditvi spremembe emaila. Poskusi znova ali kontaktiraj podporo.");
         }
         return;
       }
