@@ -49,24 +49,43 @@ serve(async (req) => {
     // Get user's profile with subscription info
     const { data: profile, error: profileError } = await supabaseClient
       .from("profiles")
-      .select("stripe_customer_id, stripe_subscription_id, subscription_status")
+      .select("stripe_customer_id, stripe_subscription_id, subscription_status, is_pro")
       .eq("id", user.id)
       .single();
 
-    if (profileError) throw new Error(`Profile fetch error: ${profileError.message}`);
-    if (!profile?.stripe_subscription_id) {
-      throw new Error("No active subscription found");
+    if (profileError) {
+      logStep("Profile fetch error", { error: profileError });
+      throw new Error(`Profile fetch error: ${profileError.message}`);
+    }
+    
+    if (!profile) {
+      throw new Error("Profile not found");
     }
 
-    logStep("Profile fetched", { customerId: profile.stripe_customer_id, subscriptionId: profile.stripe_subscription_id });
+    logStep("Profile fetched", { 
+      customerId: profile.stripe_customer_id, 
+      subscriptionId: profile.stripe_subscription_id,
+      status: profile.subscription_status,
+      isPro: profile.is_pro
+    });
+
+    if (!profile.stripe_subscription_id) {
+      throw new Error("No active subscription found. Please contact support if you believe this is an error.");
+    }
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     // Set subscription to cancel at period end (no immediate cancellation, no refund)
-    const subscription = await stripe.subscriptions.update(
-      profile.stripe_subscription_id,
-      { cancel_at_period_end: true }
-    );
+    let subscription;
+    try {
+      subscription = await stripe.subscriptions.update(
+        profile.stripe_subscription_id,
+        { cancel_at_period_end: true }
+      );
+    } catch (stripeError: any) {
+      logStep("Stripe API error", { error: stripeError?.message, code: stripeError?.code });
+      throw new Error(`Stripe error: ${stripeError?.message || 'Unknown Stripe error'}`);
+    }
 
     logStep("Subscription set to cancel at period end", { 
       subscriptionId: subscription.id,
