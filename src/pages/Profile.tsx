@@ -612,9 +612,9 @@ const Profile = () => {
         if (error) throw error;
 
         toast.success(
-          "Preveri oba e-naslova!", 
+          "Preveri svoj novi e-naslov!", 
           {
-            description: "Najprej klikni povezavo v e-pošti, ki smo jo poslali na tvoj TRENUTNI e-naslov. Nato boš prejel še eno e-pošto na NOV e-naslov za končno potrditev.",
+            description: `Poslali smo potrditveno povezavo na ${emailForm.newEmail}. Klikni nanjo za dokončanje spremembe.`,
             duration: 10000,
           }
         );
