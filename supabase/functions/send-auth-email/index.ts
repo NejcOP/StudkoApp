@@ -73,8 +73,8 @@ serve(async (req) => {
 
     switch (type) {
       case 'signup': {
-        // Email confirmation for new signups
-        confirmLink = `${APP_URL}/auth/confirm?token=${tokenValue}&type=signup&redirect_to=${encodeURIComponent(redirect_to || '/notes')}`
+        // Email confirmation for new signups - include email in URL
+        confirmLink = `${APP_URL}/auth/confirm?token=${tokenValue}&type=signup&email=${encodeURIComponent(email)}&redirect_to=${encodeURIComponent(redirect_to || '/notes')}`
         subject = '🎉 Dobrodošel v Študko!'
         break
       }
