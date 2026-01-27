@@ -508,6 +508,61 @@ const Profile = () => {
       }
     }, [user, loadProfileData]);
 
+    // Check for subscription expiry and show notification
+    useEffect(() => {
+      if (!profile || !user) return;
+
+      const checkSubscriptionExpiry = () => {
+        const expiryDateStr = profile.current_period_end || profile.trial_ends_at;
+        if (!expiryDateStr) return;
+
+        const expiryDate = new Date(expiryDateStr);
+        const now = new Date();
+        const msUntilExpiry = expiryDate.getTime() - now.getTime();
+        const daysUntilExpiry = Math.ceil(msUntilExpiry / (1000 * 60 * 60 * 24));
+
+        // Check if subscription expired today
+        const lastNotifiedKey = `subscription_expired_notified_${user.id}`;
+        const lastNotified = localStorage.getItem(lastNotifiedKey);
+        const todayStr = now.toDateString();
+
+        if (daysUntilExpiry <= 0 && lastNotified !== todayStr && profile.cancel_at_period_end) {
+          toast.error(
+            "Tvoja PRO naročnina je potekla",
+            {
+              description: "Za nadaljevanje uporabe PRO funkcij prosim obnovi naročnino.",
+              duration: 10000,
+            }
+          );
+          localStorage.setItem(lastNotifiedKey, todayStr);
+        }
+
+        // Show warning 3 days before expiry
+        if (daysUntilExpiry > 0 && daysUntilExpiry <= 3 && profile.cancel_at_period_end) {
+          const warningKey = `subscription_expiry_warning_${user.id}_${daysUntilExpiry}`;
+          const warningShown = sessionStorage.getItem(warningKey);
+          
+          if (!warningShown) {
+            toast.warning(
+              `Tvoja PRO naročnina poteče čez ${daysUntilExpiry} ${daysUntilExpiry === 1 ? 'dan' : daysUntilExpiry === 2 ? 'dneva' : 'dni'}`,
+              {
+                description: "Če želiš ohraniti PRO dostop, obnovi naročnino v nastavitvah.",
+                duration: 8000,
+              }
+            );
+            sessionStorage.setItem(warningKey, 'true');
+          }
+        }
+      };
+
+      checkSubscriptionExpiry();
+
+      // Check again every hour
+      const interval = setInterval(checkSubscriptionExpiry, 60 * 60 * 1000);
+
+      return () => clearInterval(interval);
+    }, [profile, user]);
+
     // Real-time subscription to profile changes for PRO status
     useEffect(() => {
       if (!user?.id) return;
@@ -887,7 +942,18 @@ const Profile = () => {
         if (error) throw error;
         
         if (data?.success) {
-          toast.success(data.message);
+          const expiryDate = profile?.current_period_end 
+            ? formatDate(profile.current_period_end)
+            : formatDate(profile?.trial_ends_at);
+          
+          toast.success(
+            "Naročnina preklicana", 
+            {
+              description: `Tvoj PRO dostop ostaja aktiven do ${expiryDate}. Po tem datumu bodo PRO funkcije onemogočene.`,
+              duration: 10000,
+            }
+          );
+          
           setShowCancelDialog(false);
           await loadProfileData();
         }
@@ -1225,7 +1291,8 @@ const Profile = () => {
                                       </p>
                                       <p className="text-xs text-orange-600 dark:text-orange-400">
                                         Tvoj dostop do PRO funkcij ostaja aktiven do konca plačanega obdobja.
-                                        {profile?.trial_ends_at && ` Dostop do: ${formatDate(profile.trial_ends_at)}`}
+                                        {(profile?.current_period_end || profile?.trial_ends_at) && 
+                                          ` Dostop do: ${formatDate(profile.current_period_end || profile.trial_ends_at)}`}
                                       </p>
                                     </div>
                                     <div className="bg-muted rounded-xl p-4 border border-border">
