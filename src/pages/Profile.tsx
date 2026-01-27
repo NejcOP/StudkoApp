@@ -602,22 +602,6 @@ const Profile = () => {
       console.log("Starting email update to:", emailForm.newEmail);
       console.log("Current user email:", user.email);
       
-      // Check rate limit from localStorage
-      const lastEmailChangeSent = localStorage.getItem('lastEmailChangeSent');
-      if (lastEmailChangeSent) {
-        const timeSince = Date.now() - parseInt(lastEmailChangeSent);
-        const minutesRemaining = Math.ceil((600000 - timeSince) / 60000); // 10 minutes = 600000ms
-        
-        if (timeSince < 600000) { // Less than 10 minutes
-          toast.error("Email rate limit", {
-            description: `Lahko pošlješ email vsakih 10 minut. Poskusi znova čez ${minutesRemaining} ${minutesRemaining === 1 ? 'minuto' : minutesRemaining < 5 ? 'minuti' : 'minut'}.`,
-            duration: 6000,
-          });
-          setSaving(false);
-          return;
-        }
-      }
-      
       // Optimistic: Show immediate feedback
       toast.info("Pošiljam verifikacijski email...");
       
@@ -645,8 +629,6 @@ const Profile = () => {
         console.log("Email update response:", { error, data });
 
         if (error) throw error;
-
-        localStorage.setItem('lastEmailChangeSent', Date.now().toString());
 
         toast.success(
           "Preveri svoj novi e-naslov!", 
@@ -709,22 +691,6 @@ const Profile = () => {
       
       setSaving(true);
       try {
-        // Check rate limit from localStorage
-        const lastEmailSent = localStorage.getItem('lastPasswordEmailSent');
-        if (lastEmailSent) {
-          const timeSince = Date.now() - parseInt(lastEmailSent);
-          const minutesRemaining = Math.ceil((600000 - timeSince) / 60000); // 10 minutes
-          
-          if (timeSince < 600000) { // Less than 10 minutes
-            toast.error("Email rate limit", {
-              description: `Lahko pošlješ email vsakih 10 minut. Poskusi znova čez ${minutesRemaining} ${minutesRemaining === 1 ? 'minuto' : minutesRemaining < 5 ? 'minuti' : 'minut'}.`,
-              duration: 6000,
-            });
-            setSaving(false);
-            return;
-          }
-        }
-
         // First verify current password by attempting to sign in
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email: user.email,
@@ -751,9 +717,6 @@ const Profile = () => {
         });
 
         if (error) throw error;
-
-        // Save timestamp to prevent rate limiting
-        localStorage.setItem('lastPasswordEmailSent', Date.now().toString());
 
         toast.success("Preveri svoj email!", {
           description: "Poslali smo ti potrditveno povezavo. Klikni nanjo za dokončanje spremembe gesla.",
@@ -792,22 +755,6 @@ const Profile = () => {
 
       setSaving(true);
       try {
-        // Check rate limit
-        const lastEmailSent = localStorage.getItem('lastPasswordEmailSent');
-        if (lastEmailSent) {
-          const timeSince = Date.now() - parseInt(lastEmailSent);
-          const minutesRemaining = Math.ceil((600000 - timeSince) / 60000);
-          
-          if (timeSince < 600000) {
-            toast.error("Email rate limit", {
-              description: `Lahko pošlješ email vsakih 10 minut. Poskusi znova čez ${minutesRemaining} ${minutesRemaining === 1 ? 'minuto' : minutesRemaining < 5 ? 'minuti' : 'minut'}.`,
-              duration: 6000,
-            });
-            setSaving(false);
-            return;
-          }
-        }
-
         const isProduction = import.meta.env.PROD;
         const redirectUrl = isProduction
           ? 'https://studko.vercel.app/confirm-email'
@@ -818,8 +765,6 @@ const Profile = () => {
         });
 
         if (error) throw error;
-
-        localStorage.setItem('lastPasswordEmailSent', Date.now().toString());
 
         toast.success("Email poslan!", {
           description: "Preveri svoj email in klikni na povezavo za ponastavitev gesla.",
