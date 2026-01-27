@@ -960,7 +960,16 @@ const Profile = () => {
         
         if (data?.error) {
           console.error("Cancel subscription error from function:", data.error);
-          toast.error(data.error);
+          
+          // Special handling for manually granted PRO access
+          if (data.noSubscription) {
+            toast.error("Naročnina ni najdena", {
+              description: "Tvoj PRO dostop je bil dodeljen ročno in ga ni mogoče preklicati skozi to vmesniko. Prosimo, kontaktiraj podporo.",
+              duration: 10000,
+            });
+          } else {
+            toast.error(data.error);
+          }
           return;
         }
         

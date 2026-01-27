@@ -70,7 +70,15 @@ serve(async (req) => {
     });
 
     if (!profile.stripe_subscription_id) {
-      throw new Error("No active subscription found. Please contact support if you believe this is an error.");
+      logStep("No subscription ID found", { isPro: profile.is_pro });
+      
+      return new Response(JSON.stringify({ 
+        error: "No active Stripe subscription found. If you have PRO access, it was granted manually and cannot be cancelled through this interface. Please contact support.",
+        noSubscription: true
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+      });
     }
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
