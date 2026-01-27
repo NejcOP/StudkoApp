@@ -40,22 +40,41 @@ serve(async (req) => {
     
     const { data: profile, error: profileError } = await supabaseClient
       .from("profiles")
-      .select("stripe_customer_id")
+      .select("stripe_customer_id, full_name")
       .eq("id", user.id)
       .single();
 
-    if (profileError || !profile?.stripe_customer_id) {
-      throw new Error("No Stripe customer ID found for this user. Please contact support.");
+    if (profileError) {
+      throw new Error(`Profile fetch error: ${profileError.message}`);
     }
 
-    const customerId = profile.stripe_customer_id;
-    console.log("[CUSTOMER-PORTAL] Found customer:", customerId);
+    let customerId = profile?.stripe_customer_id;
 
-    const origin = req.headers.get("origin") || "http://localhost:3000";
-    const portalSession = await stripe.billingPortal.sessions.create({
-      customer: customerId,
-      return_url: `${origin}/profile`,
-    });
+    // If no customer ID exists, create a new Stripe customer
+    if (!customerId) {
+      console.log("[CUSTOMER-PORTAL] No customer ID found, creating new customer");
+      
+      const customer = await stripe.customers.create({
+        email: user.email,
+        name: profile?.full_name || undefined,
+        metadata: {
+          supabase_user_id: user.id,
+        },
+      });
+
+      customerId = customer.id;
+      console.log("[CUSTOMER-PORTAL] Created new customer:", customerId);
+
+      // Update profile with new customer ID
+      await supabaseClient
+        .from("profiles")
+        .update({ stripe_customer_id: customerId })
+        .eq("id", user.id);
+
+      console.log("[CUSTOMER-PORTAL] Updated profile with customer ID");
+    } else {
+      console.log("[CUSTOMER-PORTAL] Found existing customer:", customerId);
+    }
     
     console.log("[CUSTOMER-PORTAL] Portal session created:", portalSession.id);
 
