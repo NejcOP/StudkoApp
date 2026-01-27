@@ -145,6 +145,7 @@ const Profile = () => {
     const [loadingSubscription, setLoadingSubscription] = useState(false);
     const [showCancelDialog, setShowCancelDialog] = useState(false);
     const [cancelling, setCancelling] = useState(false);
+    const [reactivating, setReactivating] = useState(false);
     const [isPayoutModalOpen, setIsPayoutModalOpen] = useState(false);
     const [trialUsed, setTrialUsed] = useState(false);
     const [totalEarnings, setTotalEarnings] = useState(0);
@@ -966,6 +967,33 @@ const Profile = () => {
       }
     };
 
+    const handleReactivateSubscription = async () => {
+      setReactivating(true);
+      try {
+        const { data, error } = await supabase.functions.invoke("reactivate-subscription");
+        
+        if (error) throw error;
+        
+        if (data?.success) {
+          toast.success(
+            "Naročnina ponovno aktivirana", 
+            {
+              description: "Tvoja Študko PRO naročnina se bo samodejno podaljševala ob koncu vsakega obračunskega obdobja.",
+              duration: 10000,
+            }
+          );
+          
+          await loadProfileData();
+        }
+      } catch (error) {
+        console.error("Error reactivating subscription:", error);
+        const errorMessage = error instanceof Error ? error.message : "Napaka pri ponovni aktivaciji naročnine";
+        toast.error(errorMessage);
+      } finally {
+        setReactivating(false);
+      }
+    };
+
     const getSubscriptionDisplay = () => {
       if (!profile?.is_pro && profile?.subscription_status === "none") {
         return { text: "Brezplačen", color: "text-muted-foreground" };
@@ -1295,9 +1323,23 @@ const Profile = () => {
                                           ` Dostop do: ${formatDate(profile.current_period_end || profile.trial_ends_at)}`}
                                       </p>
                                     </div>
+                                    <Button
+                                      onClick={handleReactivateSubscription}
+                                      disabled={reactivating}
+                                      className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:opacity-90 text-white"
+                                    >
+                                      {reactivating ? (
+                                        <>
+                                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                          Ponovno aktiviram...
+                                        </>
+                                      ) : (
+                                        "Ponovno aktiviraj naročnino"
+                                      )}
+                                    </Button>
                                     <div className="bg-muted rounded-xl p-4 border border-border">
                                       <p className="text-sm text-muted-foreground">
-                                        Naročnino lahko ponovno aktiviraš kadarkoli tako, da znova skleneš PRO paket.
+                                        S ponovnim aktiviranjem se bo tvoja naročnina normalno podaljševala vsak mesec.
                                       </p>
                                     </div>
                                   </>
