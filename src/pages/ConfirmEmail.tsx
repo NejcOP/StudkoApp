@@ -17,9 +17,79 @@ const ConfirmEmail = () => {
 
   useEffect(() => {
     const confirm = async (emailParam?: string) => {
+      // Check for hash fragment (Supabase auth uses # for tokens)
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const accessToken = hashParams.get("access_token");
+      const refreshToken = hashParams.get("refresh_token");
+      const hashType = hashParams.get("type");
+      
+      // Check query params as fallback
       const token = searchParams.get("token");
       const type = searchParams.get("type");
       const emailFromUrl = searchParams.get("email") || emailParam;
+      
+      // If we have access token in hash, this is a password recovery flow
+      if (accessToken && refreshToken) {
+        setStatus("pending");
+        setMessage("");
+        
+        try {
+          // Set the session with the tokens from URL
+          const { error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+
+          if (sessionError) {
+            console.error("Session error:", sessionError);
+            setStatus("error");
+            setMessage("Napaka pri preverjanju povezave: " + sessionError.message);
+            return;
+          }
+
+          // Check if this is a password change (from Profile) or password recovery (forgot password)
+          const pendingPassword = localStorage.getItem('pendingPassword');
+          const pendingPasswordType = localStorage.getItem('pendingPasswordType');
+
+          if (pendingPassword && pendingPasswordType === 'change') {
+            // This is a password change with verification
+            const { error: updateError } = await supabase.auth.updateUser({
+              password: pendingPassword,
+            });
+
+            if (updateError) {
+              console.error("Password update error:", updateError);
+              setStatus("error");
+              setMessage("Napaka pri posodobitvi gesla: " + updateError.message);
+              localStorage.removeItem('pendingPassword');
+              localStorage.removeItem('pendingPasswordType');
+            } else {
+              localStorage.removeItem('pendingPassword');
+              localStorage.removeItem('pendingPasswordType');
+              setStatus("success");
+              setMessage("Geslo uspešno posodobljeno! 🎉");
+              
+              setTimeout(() => {
+                toast.success("Geslo je bilo uspešno spremenjeno.");
+              }, 500);
+              
+              setTimeout(() => navigate("/profile"), 3000);
+            }
+          } else {
+            // This is a forgot password flow - let user set new password
+            setStatus("success");
+            setMessage("Povezava verificirana! Preusmerjam na profil...");
+            setTimeout(() => {
+              navigate("/profile?tab=password&reset=true");
+            }, 2000);
+          }
+        } catch (err) {
+          console.error("Password reset exception:", err);
+          setStatus("error");
+          setMessage("Napaka pri potrditvi. Poskusi znova.");
+        }
+        return;
+      }
       
       if (!token || !type) {
         setStatus("error");
@@ -57,60 +127,6 @@ const ConfirmEmail = () => {
           console.error("Email change verification exception:", err);
           setStatus("error");
           setMessage("Napaka pri potrditvi spremembe emaila. Poskusi znova ali kontaktiraj podporo.");
-        }
-        return;
-      }
-
-      // For password_change, apply the pending password from localStorage
-      if (type === "password_change") {
-        setStatus("pending");
-        setMessage("");
-        
-        try {
-          const pendingPassword = localStorage.getItem('pendingPassword');
-          
-          if (!pendingPassword) {
-            setStatus("error");
-            setMessage("Seja je potekla. Prosim poskusi znova iz profila.");
-            return;
-          }
-
-          const { error } = await supabase.auth.verifyOtp({
-            token_hash: token,
-            type: 'recovery',
-          });
-
-          if (error) {
-            console.error("Password change verification error:", error);
-            setStatus("error");
-            setMessage("Napaka pri potrditvi: " + error.message);
-            return;
-          }
-
-          // Now update the password
-          const { error: updateError } = await supabase.auth.updateUser({
-            password: pendingPassword,
-          });
-
-          if (updateError) {
-            console.error("Password update error:", updateError);
-            setStatus("error");
-            setMessage("Napaka pri posodobitvi gesla: " + updateError.message);
-          } else {
-            localStorage.removeItem('pendingPassword');
-            setStatus("success");
-            setMessage("Geslo uspešno posodobljeno! 🎉");
-            
-            setTimeout(() => {
-              toast.success("Geslo je bilo uspešno spremenjeno.");
-            }, 500);
-            
-            setTimeout(() => navigate("/profile"), 3000);
-          }
-        } catch (err) {
-          console.error("Password change verification exception:", err);
-          setStatus("error");
-          setMessage("Napaka pri potrditvi spremembe gesla. Poskusi znova ali kontaktiraj podporo.");
         }
         return;
       }

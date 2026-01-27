@@ -700,11 +700,12 @@ const Profile = () => {
 
         // Store new password and send confirmation email
         localStorage.setItem('pendingPassword', passwordForm.newPassword);
+        localStorage.setItem('pendingPasswordType', 'change'); // Mark as password change, not recovery
         
         const isProduction = import.meta.env.PROD;
         const redirectUrl = isProduction
-          ? 'https://studko.vercel.app/confirm-email?type=password_change'
-          : `${window.location.origin}/confirm-email?type=password_change`;
+          ? 'https://studko.vercel.app/confirm-email'
+          : `${window.location.origin}/confirm-email`;
         
         const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
           redirectTo: redirectUrl,
@@ -744,8 +745,8 @@ const Profile = () => {
       try {
         const isProduction = import.meta.env.PROD;
         const redirectUrl = isProduction
-          ? 'https://studko.vercel.app/confirm-email?type=recovery'
-          : `${window.location.origin}/confirm-email?type=recovery`;
+          ? 'https://studko.vercel.app/confirm-email'
+          : `${window.location.origin}/confirm-email`;
         
         const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
           redirectTo: redirectUrl,
