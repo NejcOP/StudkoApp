@@ -48,6 +48,8 @@ interface Profile {
   stripe_onboarding_complete?: boolean;
   payout_info?: PayoutInfo;
   last_email_change_at?: string;
+  last_password_change_at?: string;
+  email?: string;
 }
 
 interface Note {
@@ -134,6 +136,7 @@ const Profile = () => {
       newEmail: "",
     });
     const [passwordForm, setPasswordForm] = useState({
+      currentPassword: "",
       newPassword: "",
       confirmPassword: "",
     });
@@ -651,7 +654,7 @@ const Profile = () => {
         return;
       }
 
-      if (!passwordForm.newPassword || !passwordForm.confirmPassword) {
+      if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
         toast.error("Izpolni vsa polja");
         return;
       }
@@ -665,17 +668,43 @@ const Profile = () => {
         toast.error("Geslo mora imeti vsaj 6 znakov");
         return;
       }
+
+      // Check if 30 days have passed since last password change
+      if (profile?.last_password_change_at) {
+        const lastChange = new Date(profile.last_password_change_at);
+        const daysSinceLastChange = Math.floor((Date.now() - lastChange.getTime()) / (1000 * 60 * 60 * 24));
+        
+        if (daysSinceLastChange < 30) {
+          const daysRemaining = 30 - daysSinceLastChange;
+          toast.error(`Geslo lahko spremeniš samo enkrat na 30 dni`, {
+            description: `Poizkusi znova čez ${daysRemaining} ${daysRemaining === 1 ? 'dan' : daysRemaining < 5 ? 'dni' : 'dni'}.`,
+            duration: 6000,
+          });
+          return;
+        }
+      }
       
       setSaving(true);
       try {
-        // Shrani novo geslo v localStorage za kasnejšo uporabo
+        // First verify current password by attempting to sign in
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: user.email,
+          password: passwordForm.currentPassword,
+        });
+
+        if (signInError) {
+          toast.error("Trenutno geslo je napačno");
+          setSaving(false);
+          return;
+        }
+
+        // Store new password and send confirmation email
         localStorage.setItem('pendingPassword', passwordForm.newPassword);
         
-        // Pošlji e-pošto za potrditev
         const isProduction = import.meta.env.PROD;
         const redirectUrl = isProduction
-          ? 'https://studko.vercel.app/profile?tab=password&confirmed=true'
-          : `${window.location.origin}/profile?tab=password&confirmed=true`;
+          ? 'https://studko.vercel.app/confirm-email?type=password_change'
+          : `${window.location.origin}/confirm-email?type=password_change`;
         
         const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
           redirectTo: redirectUrl,
@@ -683,16 +712,14 @@ const Profile = () => {
 
         if (error) throw error;
 
-        toast.success("Varnostno preverjanje", {
-          description: "Na tvoj e-naslov smo poslali povezavo za potrditev spremembe gesla. Prosimo, klikni na povezavo v e-pošti.",
+        toast.success("Preveri svoj email!", {
+          description: "Poslali smo ti potrditveno povezavo. Klikni nanjo za dokončanje spremembe gesla.",
           duration: 8000,
         });
         
-        // Izprazni polja in onemogoči gumb
-        setPasswordForm({ newPassword: "", confirmPassword: "" });
+        setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
         setPasswordResetEmailSent(true);
         
-        // Po 5 minutah omogoči ponovno pošiljanje
         setTimeout(() => {
           setPasswordResetEmailSent(false);
         }, 300000);
@@ -702,6 +729,44 @@ const Profile = () => {
         const errorMessage = error instanceof Error ? error.message : "Napaka pri pošiljanju e-pošte";
         toast.error(errorMessage);
         localStorage.removeItem('pendingPassword');
+      } finally {
+        setSaving(false);
+      }
+    };
+
+    const handleForgotPassword = async () => {
+      if (!user?.email) {
+        toast.error("Uporabnik ni prijavljen");
+        return;
+      }
+
+      setSaving(true);
+      try {
+        const isProduction = import.meta.env.PROD;
+        const redirectUrl = isProduction
+          ? 'https://studko.vercel.app/confirm-email?type=recovery'
+          : `${window.location.origin}/confirm-email?type=recovery`;
+        
+        const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+          redirectTo: redirectUrl,
+        });
+
+        if (error) throw error;
+
+        toast.success("Email poslan!", {
+          description: "Preveri svoj email in klikni na povezavo za ponastavitev gesla.",
+          duration: 8000,
+        });
+        
+        setPasswordResetEmailSent(true);
+        setTimeout(() => {
+          setPasswordResetEmailSent(false);
+        }, 300000);
+        
+      } catch (error: unknown) {
+        console.error("Error sending forgot password email:", error);
+        const errorMessage = error instanceof Error ? error.message : "Napaka pri pošiljanju e-pošte";
+        toast.error(errorMessage);
       } finally {
         setSaving(false);
       }
@@ -1018,6 +1083,17 @@ const Profile = () => {
                         {/* Password Tab */}
                         <TabsContent value="password" className="space-y-4 py-4">
                           <div className="space-y-2">
+                            <Label htmlFor="current_password" className="text-foreground">Trenutno geslo</Label>
+                            <Input
+                              id="current_password"
+                              type="password"
+                              value={passwordForm.currentPassword}
+                              onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                              placeholder="Vnesi trenutno geslo"
+                              className="bg-input text-foreground placeholder:text-muted-foreground"
+                            />
+                          </div>
+                          <div className="space-y-2">
                             <Label htmlFor="new_password" className="text-foreground">Novo geslo</Label>
                             <Input
                               id="new_password"
@@ -1042,7 +1118,7 @@ const Profile = () => {
                           <Button
                             className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-90 text-white"
                             onClick={handleUpdatePassword}
-                            disabled={saving || !passwordForm.newPassword || !passwordForm.confirmPassword || passwordResetEmailSent}
+                            disabled={saving || !passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword || passwordResetEmailSent}
                           >
                             {saving ? "Pošiljam e-pošto..." : passwordResetEmailSent ? "E-pošta poslana - preveri nabiralnik" : "Posodobi geslo"}
                           </Button>
@@ -1051,6 +1127,27 @@ const Profile = () => {
                               E-pošto lahko ponovno pošlješ čez 5 minut.
                             </p>
                           )}
+                          <div className="relative my-6">
+                            <div className="absolute inset-0 flex items-center">
+                              <span className="w-full border-t border-border" />
+                            </div>
+                            <div className="relative flex justify-center text-xs uppercase">
+                              <span className="bg-background px-2 text-muted-foreground">Ali</span>
+                            </div>
+                          </div>
+                          <Button
+                            variant="outline"
+                            className="w-full"
+                            onClick={handleForgotPassword}
+                            disabled={saving || passwordResetEmailSent}
+                          >
+                            Pozabljeno geslo
+                          </Button>
+                          <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-3 border border-blue-200 dark:border-blue-800">
+                            <p className="text-sm text-blue-700 dark:text-blue-300">
+                              <strong>Opomba:</strong> Geslo lahko spremeniš samo enkrat na 30 dni. Po kliku na gumb boš prejel potrditveno povezavo po e-pošti.
+                            </p>
+                          </div>
                         </TabsContent>
 
                         {/* Subscription Tab */}

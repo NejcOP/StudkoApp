@@ -47,9 +47,8 @@ const ConfirmEmail = () => {
             setStatus("success");
             setMessage("E-naslov uspešno spremenjen! 🎉");
             
-            // Wait a moment then show additional info
             setTimeout(() => {
-              toast.success("Tvoj email je zdaj posodobljen. Prijavi se z novim emailom.");
+              toast.success("Tvoj email je zdaj posodobljen.");
             }, 500);
             
             setTimeout(() => navigate("/profile"), 3000);
@@ -58,6 +57,60 @@ const ConfirmEmail = () => {
           console.error("Email change verification exception:", err);
           setStatus("error");
           setMessage("Napaka pri potrditvi spremembe emaila. Poskusi znova ali kontaktiraj podporo.");
+        }
+        return;
+      }
+
+      // For password_change, apply the pending password from localStorage
+      if (type === "password_change") {
+        setStatus("pending");
+        setMessage("");
+        
+        try {
+          const pendingPassword = localStorage.getItem('pendingPassword');
+          
+          if (!pendingPassword) {
+            setStatus("error");
+            setMessage("Seja je potekla. Prosim poskusi znova iz profila.");
+            return;
+          }
+
+          const { error } = await supabase.auth.verifyOtp({
+            token_hash: token,
+            type: 'recovery',
+          });
+
+          if (error) {
+            console.error("Password change verification error:", error);
+            setStatus("error");
+            setMessage("Napaka pri potrditvi: " + error.message);
+            return;
+          }
+
+          // Now update the password
+          const { error: updateError } = await supabase.auth.updateUser({
+            password: pendingPassword,
+          });
+
+          if (updateError) {
+            console.error("Password update error:", updateError);
+            setStatus("error");
+            setMessage("Napaka pri posodobitvi gesla: " + updateError.message);
+          } else {
+            localStorage.removeItem('pendingPassword');
+            setStatus("success");
+            setMessage("Geslo uspešno posodobljeno! 🎉");
+            
+            setTimeout(() => {
+              toast.success("Geslo je bilo uspešno spremenjeno.");
+            }, 500);
+            
+            setTimeout(() => navigate("/profile"), 3000);
+          }
+        } catch (err) {
+          console.error("Password change verification exception:", err);
+          setStatus("error");
+          setMessage("Napaka pri potrditvi spremembe gesla. Poskusi znova ali kontaktiraj podporo.");
         }
         return;
       }
