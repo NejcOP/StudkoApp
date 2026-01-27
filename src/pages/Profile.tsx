@@ -606,11 +606,11 @@ const Profile = () => {
       const lastEmailChangeSent = localStorage.getItem('lastEmailChangeSent');
       if (lastEmailChangeSent) {
         const timeSince = Date.now() - parseInt(lastEmailChangeSent);
-        const minutesRemaining = Math.ceil((3600000 - timeSince) / 60000);
+        const minutesRemaining = Math.ceil((600000 - timeSince) / 60000); // 10 minutes = 600000ms
         
-        if (timeSince < 3600000) { // Less than 1 hour
+        if (timeSince < 600000) { // Less than 10 minutes
           toast.error("Email rate limit", {
-            description: `Lahko pošlješ samo en email na uro. Poskusi znova čez ${minutesRemaining} ${minutesRemaining === 1 ? 'minuto' : minutesRemaining < 5 ? 'minuti' : 'minut'}.`,
+            description: `Lahko pošlješ email vsakih 10 minut. Poskusi znova čez ${minutesRemaining} ${minutesRemaining === 1 ? 'minuto' : minutesRemaining < 5 ? 'minuti' : 'minut'}.`,
             duration: 6000,
           });
           setSaving(false);
@@ -661,7 +661,7 @@ const Profile = () => {
         let errorMessage = error instanceof Error ? error.message : "Napaka pri posodabljanju emaila";
         
         if (errorMessage.includes('rate limit') || errorMessage.includes('Email rate limit exceeded')) {
-          errorMessage = "Preč pogosto pošiljanje emailov. Poskusi znova čez 1 uro.";
+          errorMessage = "Preč pogosto pošiljanje emailov. Poskusi znova čez 10 minut.";
         }
         
         toast.error(errorMessage);
@@ -713,11 +713,11 @@ const Profile = () => {
         const lastEmailSent = localStorage.getItem('lastPasswordEmailSent');
         if (lastEmailSent) {
           const timeSince = Date.now() - parseInt(lastEmailSent);
-          const minutesRemaining = Math.ceil((3600000 - timeSince) / 60000); // 1 hour = 3600000ms
+          const minutesRemaining = Math.ceil((600000 - timeSince) / 60000); // 10 minutes
           
-          if (timeSince < 3600000) { // Less than 1 hour
+          if (timeSince < 600000) { // Less than 10 minutes
             toast.error("Email rate limit", {
-              description: `Lahko pošlješ samo en email na uro. Poskusi znova čez ${minutesRemaining} ${minutesRemaining === 1 ? 'minuto' : minutesRemaining < 5 ? 'minuti' : 'minut'}.`,
+              description: `Lahko pošlješ email vsakih 10 minut. Poskusi znova čez ${minutesRemaining} ${minutesRemaining === 1 ? 'minuto' : minutesRemaining < 5 ? 'minuti' : 'minut'}.`,
               duration: 6000,
             });
             setSaving(false);
@@ -773,7 +773,7 @@ const Profile = () => {
         
         // Handle rate limit error specifically
         if (errorMessage.includes('rate limit') || errorMessage.includes('Email rate limit exceeded')) {
-          errorMessage = "Preč pogosto pošiljanje emailov. Poskusi znova čez 1 uro.";
+          errorMessage = "Preč pogosto pošiljanje emailov. Poskusi znova čez 10 minut.";
         }
         
         toast.error(errorMessage);
@@ -796,11 +796,11 @@ const Profile = () => {
         const lastEmailSent = localStorage.getItem('lastPasswordEmailSent');
         if (lastEmailSent) {
           const timeSince = Date.now() - parseInt(lastEmailSent);
-          const minutesRemaining = Math.ceil((3600000 - timeSince) / 60000);
+          const minutesRemaining = Math.ceil((600000 - timeSince) / 60000);
           
-          if (timeSince < 3600000) {
+          if (timeSince < 600000) {
             toast.error("Email rate limit", {
-              description: `Lahko pošlješ samo en email na uro. Poskusi znova čez ${minutesRemaining} ${minutesRemaining === 1 ? 'minuto' : minutesRemaining < 5 ? 'minuti' : 'minut'}.`,
+              description: `Lahko pošlješ email vsakih 10 minut. Poskusi znova čez ${minutesRemaining} ${minutesRemaining === 1 ? 'minuto' : minutesRemaining < 5 ? 'minuti' : 'minut'}.`,
               duration: 6000,
             });
             setSaving(false);
@@ -836,7 +836,7 @@ const Profile = () => {
         let errorMessage = error instanceof Error ? error.message : "Napaka pri pošiljanju e-pošte";
         
         if (errorMessage.includes('rate limit') || errorMessage.includes('Email rate limit exceeded')) {
-          errorMessage = "Preč pogosto pošiljanje emailov. Poskusi znova čez 1 uro.";
+          errorMessage = "Preč pogosto pošiljanje emailov. Poskusi znova čez 10 minut.";
         }
         
         toast.error(errorMessage);
