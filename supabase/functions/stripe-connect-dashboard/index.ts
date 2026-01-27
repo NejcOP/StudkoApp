@@ -13,25 +13,47 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Obvezno odgovori na OPTIONS zahteve za CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { status: 200, headers: corsHeaders })
+    return new Response(null, { 
+      status: 204, 
+      headers: corsHeaders 
+    })
   }
 
   try {
-    const { accountId } = await req.json()
-    if (!accountId) throw new Error('Manjka Stripe Connect accountId')
+    // Parse JSON body
+    const body = await req.json()
+    const { accountId } = body
+    
+    if (!accountId) {
+      return new Response(
+        JSON.stringify({ error: 'Manjka Stripe Connect accountId' }), 
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
 
     // Ustvari Express dashboard link
     const loginLink = await stripe.accounts.createLoginLink(accountId)
 
-    return new Response(JSON.stringify({ url: loginLink.url }), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return new Response(
+      JSON.stringify({ url: loginLink.url }), 
+      {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    )
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 400,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    console.error('Napaka pri ustvarjanju Stripe Connect dashboard linka:', error)
+    return new Response(
+      JSON.stringify({ error: error?.message || 'Neznana napaka' }), 
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    )
   }
 })
