@@ -1290,6 +1290,17 @@ const Profile = () => {
                               </p>
                             </div>
 
+                            {(() => {
+                              // Debug log - what does profile contain?
+                              console.log('🔍 SUBSCRIPTION TAB - Profile check:', {
+                                is_pro: profile?.is_pro,
+                                subscription_status: profile?.subscription_status,
+                                cancel_at_period_end: profile?.cancel_at_period_end,
+                                condition_result: !profile?.is_pro || profile?.subscription_status === "none"
+                              });
+                              return null;
+                            })()}
+
                             {(!profile?.is_pro || profile?.subscription_status === "none") ? (
                               <div className="space-y-4">
                                 <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 rounded-xl p-6 border border-indigo-200 dark:border-indigo-800">
