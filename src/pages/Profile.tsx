@@ -1283,6 +1283,19 @@ const Profile = () => {
                         {/* Subscription Tab */}
                         <TabsContent value="subscription" className="space-y-4 py-4">
                           <div className="space-y-4">
+                            {/* Debug button to clear cache */}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                sessionStorage.clear();
+                                window.location.reload();
+                              }}
+                              className="w-full bg-yellow-50 dark:bg-yellow-950/30 border-yellow-300 dark:border-yellow-700"
+                            >
+                              🔄 Osveži podatke (Clear Cache)
+                            </Button>
+                            
                             <div className="bg-muted rounded-xl p-4 border border-border">
                               <p className="text-sm text-muted-foreground mb-1">Trenutni paket:</p>
                               <p className={`text-2xl font-bold ${getSubscriptionDisplay().color}`}>

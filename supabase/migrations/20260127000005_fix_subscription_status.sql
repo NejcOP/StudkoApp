@@ -12,17 +12,15 @@ BEGIN
   END IF;
 END $$;
 
--- Update subscription_status for active PRO users
+-- Update subscription_status for ALL active PRO users (removed stripe_subscription_id requirement)
 UPDATE profiles
 SET subscription_status = 'active'
 WHERE is_pro = true 
-  AND (subscription_status = 'none' OR subscription_status IS NULL)
-  AND stripe_subscription_id IS NOT NULL;
+  AND (subscription_status = 'none' OR subscription_status IS NULL);
 
 -- Set default current_period_end for active subscriptions (30 days from now)
 UPDATE profiles
 SET current_period_end = (NOW() + INTERVAL '30 days')
 WHERE is_pro = true 
   AND subscription_status = 'active'
-  AND current_period_end IS NULL
-  AND stripe_subscription_id IS NOT NULL;
+  AND current_period_end IS NULL;
