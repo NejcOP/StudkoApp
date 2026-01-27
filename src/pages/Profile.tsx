@@ -170,6 +170,14 @@ const Profile = () => {
           if (Date.now() - profileCache.timestamp < 5 * 60 * 1000 &&
               Date.now() - notesCache.timestamp < 5 * 60 * 1000 &&
               Date.now() - purchasesCache.timestamp < 5 * 60 * 1000) {
+            // Debug log cached profile
+            console.log('Using CACHED Profile Data:', {
+              is_pro: profileCache.data?.is_pro,
+              subscription_status: profileCache.data?.subscription_status,
+              cancel_at_period_end: profileCache.data?.cancel_at_period_end,
+              current_period_end: profileCache.data?.current_period_end,
+              trial_ends_at: profileCache.data?.trial_ends_at
+            });
             // Cache is valid, no need to load
             setProfileLoading(false);
             setNotesLoading(false);
@@ -205,7 +213,7 @@ const Profile = () => {
         };
         
         // Debug log for subscription status
-        console.log('Profile Data:', {
+        console.log('FRESH Profile Data (from DB):', {
           is_pro: profileData?.is_pro,
           subscription_status: profileData?.subscription_status,
           cancel_at_period_end: profileData?.cancel_at_period_end,
