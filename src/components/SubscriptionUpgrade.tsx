@@ -54,23 +54,27 @@ export default function SubscriptionUpgrade() {
     try {
       console.log('Calling create-subscription-checkout with:', { userId: user.id, trialUsed });
       
-      const { data, error } = await supabase.functions.invoke("create-subscription-checkout", {
-        body: { 
-          userId: user.id,
-          trialUsed: trialUsed
-        },
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-subscription-checkout`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          },
+          body: JSON.stringify({ 
+            userId: user.id,
+            trialUsed: trialUsed 
+          }),
+        }
+      );
 
-      console.log('Response:', { data, error });
+      const data = await response.json();
+      console.log('Response:', { status: response.status, data });
 
-      if (error) {
-        console.error('Function invocation error:', error);
-        throw error;
-      }
-
-      if (data?.error) {
-        console.error('Function returned error:', data.error);
-        toast.error(data.error);
+      if (!response.ok) {
+        console.error('Function returned error:', data);
+        toast.error(data.error || 'Napaka pri ustvarjanju plačilne seje');
         return;
       }
 
