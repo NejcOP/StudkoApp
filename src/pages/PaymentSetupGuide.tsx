@@ -133,6 +133,18 @@ const PaymentSetupGuide = () => {
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                    <span><strong>Tip računa:</strong> Izberi "Samostojni podjetnik" (tudi če nisi - to je za posameznike)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                    <span><strong>Izdelki/storitve:</strong> Izberi "Prodaja digitalnih izdelkov" ali "Digital products"</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                    <span><strong>Spletna stran:</strong> Vpiši <code className="px-2 py-0.5 bg-muted rounded text-primary">studko.si</code></span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                     <span><strong>Bančni račun:</strong> IBAN za prejemanje izplačil</span>
                   </li>
                   <li className="flex items-start gap-2">
