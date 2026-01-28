@@ -775,8 +775,8 @@ const Profile = () => {
 
         if (error) throw error;
 
-        toast.success("Preveri svoj email!", {
-          description: "Poslali smo ti potrditveno povezavo. Klikni nanjo za dokončanje spremembe gesla.",
+        toast.success("Zahteva za spremembo gesla poslana! 📧", {
+          description: `Preveri svoj email (${user.email}) in potrdi spremembo gesla s klikom na povezavo.`,
           duration: 8000,
         });
         

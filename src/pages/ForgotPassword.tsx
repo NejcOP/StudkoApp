@@ -36,8 +36,8 @@ const ForgotPassword = () => {
       if (error) throw error;
 
       setEmailSent(true);
-      toast.success('Email poslan!', {
-        description: 'Preveri svojo e-pošto za povezavo za ponastavitev gesla.',
+      toast.success('Zahteva za ponastavitev gesla poslana! 📧', {
+        description: `Preveri svoj email (${email}) in potrdi ponastavitev gesla s klikom na povezavo.`,
         duration: 8000,
       });
     } catch (error: unknown) {
