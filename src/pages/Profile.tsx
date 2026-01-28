@@ -935,7 +935,11 @@ const Profile = () => {
     const handleCancelSubscription = async () => {
       setCancelling(true);
       try {
-        const { data, error } = await supabase.functions.invoke("cancel-subscription");
+        const { data, error } = await supabase.functions.invoke("cancel-subscription", {
+          headers: {
+            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+          }
+        });
         
         if (error) {
           console.error("Cancel subscription error:", error);
@@ -972,6 +976,8 @@ const Profile = () => {
           
           setShowCancelDialog(false);
           await loadProfileData();
+          setSettingsTab("profile");
+          setIsSettingsOpen(false);
         }
       } catch (error) {
         console.error("Error cancelling subscription:", error);
