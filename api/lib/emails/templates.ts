@@ -213,6 +213,38 @@ export function welcomeToProTemplate(userName: string): string {
 }
 
 /**
+ * Subscription cancellation template
+ */
+export function subscriptionCancelledTemplate(userName: string): string {
+  const content = `
+    <h2>Naročnina preklicana</h2>
+    <p>Pozdravljeni, <strong>${userName}</strong>!</p>
+    <p>Tvoja Študko PRO naročnina je bila uspešno preklicana.</p>
+    
+    <div class="info-box">
+      <p style="margin: 0;">
+        Dostop do PRO funkcij boš ohranil do konca trenutnega obračunskega obdobja. 
+        Po tem datumu se bodo PRO funkcije onemogočile.
+      </p>
+    </div>
+
+    <div class="divider"></div>
+
+    <p><strong>Premislil si?</strong></p>
+    <p>Kadarkoli se lahko ponovno naročiš na PRO v nastavitvah profila.</p>
+
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="https://studko.si/profile" class="button">Nazaj na Profil</a>
+    </div>
+
+    <p style="margin-top: 30px; color: #666; font-size: 14px;">
+      Hvala, ker si bil del Študko PRO. Upamo, da se kmalu vrneš! 💙
+    </p>
+  `;
+  return emailWrapper(content);
+}
+
+/**
  * Payout request confirmation template
  */
 export function payoutRequestTemplate(userName: string, amount: number, method: string): string {

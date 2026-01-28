@@ -1,5 +1,7 @@
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
+import { sendEmail } from './lib/emails/resend-client.js';
+import { welcomeToProTemplate, subscriptionCancelledTemplate } from './lib/emails/templates.js';
 
 export const config = { api: { bodyParser: false } };
 
@@ -99,6 +101,27 @@ export default async function handler(req, res) {
               trial_end: trialEndsAt
             }
           });
+
+          // Send confirmation email
+          if (data && data[0]) {
+            const profile = data[0];
+            const { data: authUser } = await supabase.auth.admin.getUserById(userId);
+            
+            if (authUser?.user?.email) {
+              try {
+                await sendEmail({
+                  to: authUser.user.email,
+                  subject: subscription.status === 'trialing' 
+                    ? 'Dobrodošel v Študko PRO preizkusu! 🎉' 
+                    : 'Dobrodošel v Študko PRO! 🚀',
+                  html: welcomeToProTemplate(profile.full_name || 'Študent')
+                });
+                console.log('✅ PRO aktivacijski email poslan na:', authUser.user.email);
+              } catch (emailError) {
+                console.error('❌ Napaka pri pošiljanju emaila:', emailError);
+              }
+            }
+          }
         }
       }
     }
@@ -132,13 +155,29 @@ export default async function handler(req, res) {
       const subscription = event.data.object;
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('id')
+        .select('id, full_name')
         .eq('stripe_customer_id', subscription.customer)
         .single();
       
       if (profiles?.id) {
         await supabase.from('profiles').update({ is_pro: false }).eq('id', profiles.id);
         console.log('✅ PRO SUBSCRIPTION CANCELLED');
+
+        // Send cancellation email
+        const { data: authUser } = await supabase.auth.admin.getUserById(profiles.id);
+        
+        if (authUser?.user?.email) {
+          try {
+            await sendEmail({
+              to: authUser.user.email,
+              subject: 'Študko PRO naročnina preklicana',
+              html: subscriptionCancelledTemplate(profiles.full_name || 'Študent')
+            });
+            console.log('✅ PRO preklic email poslan na:', authUser.user.email);
+          } catch (emailError) {
+            console.error('❌ Napaka pri pošiljanju preklic emaila:', emailError);
+          }
+        }
       }
     }
     
