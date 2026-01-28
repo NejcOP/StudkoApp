@@ -871,7 +871,7 @@ const Profile = () => {
 
     const handleUpgradeToPro = async () => {
       // Redirect to AI page where subscription upgrade is available
-      navigate('/ai-assistant');
+      navigate('/ai');
     };
 
     const handleManageSubscription = async () => {
