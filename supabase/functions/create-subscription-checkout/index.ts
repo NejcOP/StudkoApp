@@ -70,7 +70,18 @@ serve(async (req) => {
     const sessionConfig: any = {
       payment_method_types: ['card'],
       line_items: [{
-        price: Deno.env.get('STRIPE_PRO_PRICE_ID') || 'price_1QYlp6LqKcILu2NQfGaFT1i2',
+        price_data: {
+          currency: 'eur',
+          product_data: {
+            name: 'Študko PRO Naročnina',
+            description: 'Neomejeni AI pogovori, napredni načini, preverjanje dela in prednostna podpora',
+          },
+          unit_amount: 349, // 3.49 EUR in cents
+          recurring: {
+            interval: 'month',
+            interval_count: 1,
+          },
+        },
         quantity: 1,
       }],
       mode: 'subscription',
