@@ -198,8 +198,8 @@ const Register = () => {
 
           {/* RIGHT SIDE - Register Form Card (order-1 on mobile, order-2 on desktop) */}
           <div className="bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl p-6 sm:p-8 md:p-10 order-1 md:order-2">
-            {/* Mobile Logo - Only visible on mobile */}
-            <div className="flex items-center justify-center gap-3 mb-6 md:hidden">
+            {/* Logo - Visible on all devices */}
+            <div className="flex items-center justify-center gap-3 mb-6">
               <div className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center shadow-lg">
                 <BookOpen className="w-6 h-6 text-white" />
               </div>
