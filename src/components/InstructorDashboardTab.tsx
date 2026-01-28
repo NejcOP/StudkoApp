@@ -111,6 +111,11 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
   };
 
   const analyzeProfile = async () => {
+    if (!hasProAccess) {
+      toast.error('Za AI analizo profila potrebuješ PRO naročnino');
+      return;
+    }
+    
     setAiAnalysisLoading(true);
     try {
       // Fetch tutor profile data
