@@ -131,8 +131,9 @@ const ConfirmEmail = () => {
         return;
       }
 
-      // For signup and recovery, we need the email
-      if (!emailFromUrl) {
+      // For signup, token_hash contains all needed info (no email needed)
+      // For recovery, we still need email
+      if (type === 'recovery' && !emailFromUrl) {
         setStatus("need-email");
         setMessage("Za potrditev potrebujemo še tvoj e-naslov.");
         return;
@@ -140,11 +141,19 @@ const ConfirmEmail = () => {
       
       setStatus("pending");
       setMessage("");
-      const { error } = await supabase.auth.verifyOtp({
+      
+      // Signup only needs token_hash and type
+      const verifyParams: any = {
         token_hash: token,
         type: type as 'signup' | 'recovery',
-        email: emailFromUrl,
-      });
+      };
+      
+      // Only add email for recovery type
+      if (type === 'recovery' && emailFromUrl) {
+        verifyParams.email = emailFromUrl;
+      }
+      
+      const { error } = await supabase.auth.verifyOtp(verifyParams);
       
       if (error) {
         setStatus("error");
@@ -182,11 +191,18 @@ const ConfirmEmail = () => {
     setMessage("");
     
     try {
-      const { error } = await supabase.auth.verifyOtp({
+      // Signup only needs token_hash and type
+      const verifyParams: any = {
         token_hash: token,
         type: type as 'signup' | 'recovery',
-        email,
-      });
+      };
+      
+      // Only add email for recovery type
+      if (type === 'recovery' && email) {
+        verifyParams.email = email;
+      }
+      
+      const { error } = await supabase.auth.verifyOtp(verifyParams);
       
       if (error) {
         setStatus("error");

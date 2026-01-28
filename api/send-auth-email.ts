@@ -49,9 +49,10 @@ export default async function handler(
 
     switch (body.type) {
       case 'signup': {
-        // Email confirmation
+        // Email confirmation - Supabase uses /auth/v1/verify endpoint
         const token = body.token_hash || body.token;
-        confirmLink = `${appUrl}/auth/confirm?token=${token}&type=signup&redirect_to=${encodeURIComponent('/login')}`;
+        const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://xjnffvqtqxnqobqezouv.supabase.co';
+        confirmLink = `${supabaseUrl}/auth/v1/verify?token=${token}&type=signup&redirect_to=${encodeURIComponent(appUrl + '/login')}`;
         
         subject = 'Potrdi svoj e-naslov - Študko';
         emailHtml = confirmEmailTemplate(confirmLink);
@@ -61,7 +62,7 @@ export default async function handler(
       case 'recovery': {
         // Password reset
         const token = body.token_hash || body.token;
-        confirmLink = `${appUrl}/auth/reset-password?token=${token}`;
+        confirmLink = `${appUrl}/auth/confirm?token=${token}&type=recovery&email=${encodeURIComponent(body.email)}`;
         
         subject = 'Ponastavi geslo - Študko';
         emailHtml = resetPasswordTemplate(confirmLink);
