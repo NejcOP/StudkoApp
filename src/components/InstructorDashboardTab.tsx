@@ -118,46 +118,21 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
     
     setAiAnalysisLoading(true);
     try {
-      // Fetch tutor profile data
-      const { data: tutorData } = await supabase
-        .from('tutors')
-        .select('*')
-        .eq('id', tutorId)
-        .single();
+      const { data, error } = await supabase.functions.invoke('analyze-instructor-profile', {
+        body: { tutorId, bookings }
+      });
 
-      // Calculate earnings from current bookings
-      const completedBookings = bookings.filter(b => b.status === 'completed');
-      const netEarnings = completedBookings.reduce((sum, b) => sum + (b.price_eur * 0.80), 0);
-
-      // Simulate AI analysis
-      setTimeout(() => {
-        const avgRating = 4.5; // Could be calculated from reviews
-        const subjects = tutorData?.subjects || ['Ni podatkov'];
-        const hourlyRate = tutorData?.price_per_hour || 20;
-        
-        const analysis = `
-🎯 **Analiza Tvojega Profila**
-
-**Močne točke:**
-• ${completedBookings.length} uspešno opravljenih ur
-• Povprečna ocena: ${avgRating}
-• Predmeti: ${Array.isArray(subjects) ? subjects.join(', ') : subjects}
-
-**Priložnosti za rast:**
-1. **Optimizacija cene**: Tvoja cena ${hourlyRate}€/h je ${hourlyRate < 20 ? 'pod' : 'nad'} povprečjem. Razmisli o povečanju ob dokazanih rezultatih.
-2. **Razširitev ur**: Dodaj večerne termine (18:00-20:00) - to je najbolj iskano obdobje.
-3. **Vizualna privlačnost**: Posodobi profilno fotografijo s profesionalnim ozadjem.
-4. **Specializacija**: Fokusiraj se na maturo - študenti plačujejo 30% več za specialiste.
-
-**Napovedana rast**: S temi izboljšavami lahko pričakuješ +${Math.round(netEarnings * 0.4)}€ dodatnega zaslužka mesečno.
-        `.trim();
-        
-        setAiAnalysis(analysis);
-        setAiAnalysisLoading(false);
-      }, 2000);
+      if (error) throw error;
+      
+      if (data?.analysis) {
+        setAiAnalysis(data.analysis);
+      } else {
+        throw new Error('Ni prejel analize od AI');
+      }
     } catch (error) {
       console.error('Error analyzing profile:', error);
       toast.error('Napaka pri analizi profila');
+    } finally {
       setAiAnalysisLoading(false);
     }
   };
