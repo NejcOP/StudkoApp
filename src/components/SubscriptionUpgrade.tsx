@@ -52,6 +52,8 @@ export default function SubscriptionUpgrade() {
 
     setIsLoading(true);
     try {
+      console.log('Calling create-subscription-checkout with:', { userId: user.id, trialUsed });
+      
       const { data, error } = await supabase.functions.invoke("create-subscription-checkout", {
         body: { 
           userId: user.id,
@@ -59,10 +61,25 @@ export default function SubscriptionUpgrade() {
         },
       });
 
-      if (error) throw error;
+      console.log('Response:', { data, error });
+
+      if (error) {
+        console.error('Function invocation error:', error);
+        throw error;
+      }
+
+      if (data?.error) {
+        console.error('Function returned error:', data.error);
+        toast.error(data.error);
+        return;
+      }
 
       if (data?.url) {
+        console.log('Redirecting to:', data.url);
         window.location.href = data.url;
+      } else {
+        console.error('No URL in response:', data);
+        toast.error('Napaka: ni prejel plačilne povezave');
       }
     } catch (error) {
       console.error('Subscription error:', error);
