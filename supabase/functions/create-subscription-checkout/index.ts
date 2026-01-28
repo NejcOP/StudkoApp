@@ -20,6 +20,8 @@ serve(async (req) => {
   try {
     const { userId, trialUsed } = await req.json();
     
+    console.log('Received request:', { userId, trialUsed });
+    
     if (!userId) {
       return new Response(JSON.stringify({ error: 'Missing userId' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -27,19 +29,42 @@ serve(async (req) => {
       });
     }
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') || '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
-    );
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
+    
+    if (!supabaseUrl || !supabaseKey || !stripeKey) {
+      console.error('Missing environment variables');
+      return new Response(JSON.stringify({ error: 'Server configuration error' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      });
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Get user email
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('full_name')
       .eq('id', userId)
       .single();
 
-    const { data: { user } } = await supabase.auth.admin.getUserById(userId);
+    if (profileError) {
+      console.error('Profile fetch error:', profileError);
+    }
+
+    const { data: { user }, error: userError } = await supabase.auth.admin.getUserById(userId);
+
+    if (userError || !user) {
+      console.error('User fetch error:', userError);
+      return new Response(JSON.stringify({ error: 'User not found' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 404,
+      });
+    }
+
+    console.log('Creating checkout for user:', user.email);
 
     // Determine if user gets trial or not
     const subscription_data: any = {
@@ -71,7 +96,15 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error('Subscription Checkout Error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    return new Response(JSON.stringify({ 
+      error: error.message || 'Unknown error',
+      details: error.stack
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
     });
