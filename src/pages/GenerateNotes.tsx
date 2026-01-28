@@ -21,7 +21,7 @@ const subjects = [
 const grades = [
   "6. razred", "7. razred", "8. razred", "9. razred",
   "1. letnik", "2. letnik", "3. letnik", "4. letnik",
-  "1. leto (Faks)", "2. leto (Faks)", "3. leto (Faks)", "4. leto (Faks)"
+  "1. leto (Fakulteta)", "2. leto (Fakulteta)", "3. leto (Fakulteta)", "4. leto (Fakulteta)"
 ];
 
 const GenerateNotes = () => {
@@ -75,7 +75,7 @@ const GenerateNotes = () => {
         subject,
         level: grade,
         type: 'Povzetek',
-        school_type: grade.includes('Faks') ? 'Faks' : grade.includes('letnik') ? 'Gimnazija' : '',
+        school_type: grade.includes('Fakulteta') ? 'Fakulteta' : grade.includes('letnik') ? 'Gimnazija' : '',
         price: 0,
         file_url: generatedNotes, // Store as text content
       });

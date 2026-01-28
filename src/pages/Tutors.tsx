@@ -270,7 +270,7 @@ export default function Tutors() {
                     <SelectItem value="all">Vse stopnje</SelectItem>
                     {/* Osnovna šola removed */}
                     <SelectItem value="Srednja šola">Srednja šola</SelectItem>
-                    <SelectItem value="Faks">Faks</SelectItem>
+                    <SelectItem value="Fakulteta">Fakulteta</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
