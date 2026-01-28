@@ -331,6 +331,19 @@ const Profile = () => {
         loadProfileData();
       }
       const urlParams = new URLSearchParams(window.location.search);
+      
+      // Handle PRO activation success
+      if (urlParams.get('pro') === 'activated') {
+        toast.success("Dobrodošel v Študko PRO! 🎉", {
+          description: "Tvoja PRO naročnina je bila uspešno aktivirana. Uživaj v vseh PRO funkcijah!",
+          duration: 6000,
+        });
+        // Remove query parameter from URL
+        window.history.replaceState({}, '', '/profile?tab=subscription');
+        setSettingsTab('subscription');
+        setIsSettingsOpen(true);
+      }
+      
       if (urlParams.get('tab') === 'purchased') {
         setMainTab('purchases');
       }
