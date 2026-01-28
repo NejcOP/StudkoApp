@@ -688,10 +688,10 @@ const Profile = () => {
         if (error) throw error;
 
         toast.success(
-          "Preveri svoj novi e-naslov!", 
+          "Zahteva za spremembo emaila poslana! 📧", 
           {
-            description: `Poslali smo potrditveno povezavo na ${emailForm.newEmail}. Klikni nanjo za dokončanje spremembe.`,
-            duration: 10000,
+            description: `Preveri svoj novi email (${emailForm.newEmail}) in potrdi spremembo s klikom na povezavo.`,
+            duration: 8000,
           }
         );
         setEmailForm({ newEmail: "" });

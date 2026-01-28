@@ -78,7 +78,7 @@ const Register = () => {
             .single();
 
           if (!referrerError && referrerProfile) {
-            // Get the new user's ID
+            // Get the new user's ID - but user won't be logged in until email is confirmed
             const { data: { user: newUser } } = await supabase.auth.getUser();
             
             if (newUser) {
@@ -89,25 +89,24 @@ const Register = () => {
                   referrer_id: referrerProfile.id,
                   referred_id: newUser.id,
                 });
-
-              toast({
-                title: "Uspešna registracija!",
-                description: "Dobrodošel v Študko. Tvoj prijatelj bo prejel nagrado za povabilo! 🎉",
-              });
             }
           }
         } catch (referralError) {
           console.error("Error processing referral:", referralError);
           // Don't block registration if referral fails
         }
-      } else {
-        toast({
-          title: "Uspešna registracija!",
-          description: "Dobrodošel v Študko.",
-        });
       }
       
-      navigate('/notes');
+      // Show email confirmation message
+      toast({
+        title: "Registracija uspešna! 📧",
+        description: "Preveri svoj email in potrdi registracijo s klikom na povezavo.",
+        duration: 6000,
+      });
+      
+      setLoading(false);
+      // Don't navigate away - keep user on register page or redirect to login
+      // navigate('/login');
     }
   };
 
