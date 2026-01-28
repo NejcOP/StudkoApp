@@ -1597,8 +1597,8 @@ const Profile = () => {
                       className="rounded-lg text-foreground data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white text-xs sm:text-sm px-2"
                     >
                       <LayoutDashboard className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                      <span className="hidden xs:inline">Inštruktor</span>
-                      <span className="xs:hidden">Inštruk.</span>
+                      <span className="hidden xs:inline">Inštruktor prostor</span>
+                      <span className="xs:hidden">Inštruktor</span>
                     </TabsTrigger>
                   )}
                 </TabsList>
