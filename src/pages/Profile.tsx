@@ -870,37 +870,8 @@ const Profile = () => {
     };
 
     const handleUpgradeToPro = async () => {
-      if (!user) return;
-      setLoadingSubscription(true);
-      try {
-        // Check if trial was already used
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('trial_used, trial_ends_at')
-          .eq('id', user.id)
-          .single();
-
-        const hasUsedTrial = profileData?.trial_used || 
-          (profileData?.trial_ends_at && new Date(profileData.trial_ends_at) < new Date());
-
-        const { data, error } = await supabase.functions.invoke("create-subscription-checkout", {
-          body: {
-            userId: user.id,
-            trialUsed: hasUsedTrial
-          }
-        });
-        
-        if (error) throw error;
-        
-        if (data?.url) {
-          window.location.href = data.url;
-        }
-      } catch (error) {
-        console.error("Error creating checkout:", error);
-        toast.error("Napaka pri ustvarjanju seje");
-      } finally {
-        setLoadingSubscription(false);
-      }
+      // Redirect to AI page where subscription upgrade is available
+      navigate('/ai-assistant');
     };
 
     const handleManageSubscription = async () => {
