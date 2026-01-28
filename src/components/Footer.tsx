@@ -86,6 +86,14 @@ const Footer = () => {
               </li>
               <li>
                 <Link
+                  to="/privacy"
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                >
+                  Politika zasebnosti
+                </Link>
+              </li>
+              <li>
+                <Link
                   to="/about"
                   className="text-muted-foreground hover:text-primary transition-colors"
                 >
