@@ -40,7 +40,7 @@ const PaymentSetupGuide = () => {
           </div>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Korak 1 */}
           <div className="bg-gradient-card rounded-2xl p-6 border border-border shadow-lg">
             <div className="flex items-start gap-4">
