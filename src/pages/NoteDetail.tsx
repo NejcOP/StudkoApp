@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { NotePreview } from "@/components/NotePreview";
 import { format } from "date-fns";
+import { SellerBadge } from "@/components/SellerBadge";
 
 interface Note {
   id: string;
@@ -75,6 +76,7 @@ const NoteDetail = () => {
   const [improvedSuccess, setImprovedSuccess] = useState(false);
   const [fileUrls, setFileUrls] = useState<string[]>([]);
   const [hasExistingFlashcards, setHasExistingFlashcards] = useState(false);
+  const [authorStats, setAuthorStats] = useState({ totalSales: 0, averageRating: 0, isVerified: false });
 
   const fetchNote = useCallback(async () => {
     if (!id) return;
@@ -148,11 +150,49 @@ const NoteDetail = () => {
     }
   }, [user, note]);
 
+  // Fetch author stats for badge
+  const fetchAuthorStats = useCallback(async () => {
+    if (!note?.author_id) return;
+
+    try {
+      // Get total sales count
+      const { count: salesCount } = await supabase
+        .from('note_purchases')
+        .select('*', { count: 'exact', head: true })
+        .eq('buyer_id', note.author_id);
+
+      // Get average rating
+      const { data: reviewsData } = await supabase
+        .from('profile_reviews')
+        .select('rating')
+        .eq('target_profile_id', note.author_id)
+        .eq('is_hidden', false);
+
+      const totalSales = salesCount || 0;
+      const averageRating = reviewsData && reviewsData.length > 0
+        ? reviewsData.reduce((sum, r) => sum + r.rating, 0) / reviewsData.length
+        : 0;
+
+      // Get note count
+      const { count: notesCount } = await supabase
+        .from('notes')
+        .select('*', { count: 'exact', head: true })
+        .eq('author_id', note.author_id);
+
+      const isVerified = totalSales >= 10 && averageRating >= 4.5 && (notesCount || 0) >= 3;
+
+      setAuthorStats({ totalSales, averageRating, isVerified });
+    } catch (error) {
+      console.error('Error fetching author stats:', error);
+    }
+  }, [note?.author_id]);
+
   useEffect(() => {
     fetchNote();
     checkPurchaseStatus();
     checkExistingFlashcards();
-  }, [fetchNote, checkPurchaseStatus, checkExistingFlashcards]);
+    fetchAuthorStats();
+  }, [fetchNote, checkPurchaseStatus, checkExistingFlashcards, fetchAuthorStats]);
 
   const handleDownload = async () => {
     if (fileUrls.length === 0) {
@@ -595,13 +635,33 @@ const NoteDetail = () => {
                   <div className="w-12 h-12 rounded-full bg-gradient-primary flex items-center justify-center shadow-glow-primary">
                     <User className="w-6 h-6 text-white" />
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <p className="font-semibold text-foreground">
                       {note.profiles?.full_name || "Neznan avtor"}
                     </p>
                     <p className="text-sm text-muted-foreground">Študent</p>
                   </div>
                 </div>
+                
+                {/* Seller Badge */}
+                <div className="mb-4">
+                  <SellerBadge 
+                    isVerified={authorStats.isVerified}
+                    totalSales={authorStats.totalSales}
+                    averageRating={authorStats.averageRating}
+                    size="sm"
+                  />
+                </div>
+
+                {/* View Profile Button */}
+                <Button
+                  onClick={() => navigate(`/users/${note.author_id}`)}
+                  variant="outline"
+                  className="w-full"
+                >
+                  <User className="w-4 h-4 mr-2" />
+                  Poglej profil
+                </Button>
               </div>
             </div>
           </div>
