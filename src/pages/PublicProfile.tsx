@@ -10,6 +10,7 @@ import { ProfileReviews } from "@/components/ProfileReviews";
 import { ReviewForm } from "@/components/ReviewForm";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
+import { SellerBadge } from "@/components/SellerBadge";
 
 interface Profile {
   id: string;
@@ -36,6 +37,7 @@ const PublicProfile = () => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshReviews, setRefreshReviews] = useState(0);
+  const [sellerStats, setSellerStats] = useState({ totalSales: 0, averageRating: 0, isVerified: false });
 
   const isOwnProfile = user?.id === userId;
 
@@ -78,6 +80,28 @@ const PublicProfile = () => {
 
       if (notesError) throw notesError;
       setNotes(notesData || []);
+
+      // Fetch seller stats
+      const { count: salesCount } = await supabase
+        .from('note_purchases')
+        .select('*', { count: 'exact', head: true })
+        .eq('buyer_id', userId);
+
+      const { data: reviewsData } = await supabase
+        .from('profile_reviews')
+        .select('rating')
+        .eq('target_profile_id', userId)
+        .eq('is_hidden', false);
+
+      const totalSales = salesCount || 0;
+      const averageRating = reviewsData && reviewsData.length > 0
+        ? reviewsData.reduce((sum, r) => sum + r.rating, 0) / reviewsData.length
+        : 0;
+
+      const notesCount = notesData?.length || 0;
+      const isVerified = totalSales >= 10 && averageRating >= 4.5 && notesCount >= 3;
+
+      setSellerStats({ totalSales, averageRating, isVerified });
     } catch (error) {
       console.error("Error loading profile:", error);
     } finally {
@@ -154,6 +178,16 @@ const PublicProfile = () => {
               <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-2">
                 {profile.full_name}
               </h1>
+              
+              {/* Seller Badge */}
+              <div className="mb-3">
+                <SellerBadge
+                  isVerified={sellerStats.isVerified}
+                  totalSales={sellerStats.totalSales}
+                  averageRating={sellerStats.averageRating}
+                  size="md"
+                />
+              </div>
               
               <div className="flex flex-wrap gap-3 mb-4">
                 <span className="flex items-center gap-1 text-sm text-slate-600 dark:text-slate-400">
