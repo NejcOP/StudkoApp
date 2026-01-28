@@ -292,3 +292,107 @@ export function notificationTemplate(title: string, message: string, actionLink?
   `;
   return emailWrapper(content);
 }
+
+/**
+ * Booking request notification for instructor
+ */
+export function bookingRequestTemplate(
+  instructorName: string,
+  studentName: string,
+  bookingDate: string,
+  bookingTime: string
+): string {
+  const content = `
+    <h2>Nova rezervacija lekcije! 📚</h2>
+    <p>Pozdravljeni, <strong>${instructorName}</strong>!</p>
+    <p>Študent <strong>${studentName}</strong> je rezerviral lekcijo pri tebi.</p>
+    
+    <div class="info-box">
+      <h3 style="margin-top: 0; color: ${BRAND_COLOR};">Podrobnosti rezervacije:</h3>
+      <p style="margin: 5px 0;"><strong>Datum:</strong> ${bookingDate}</p>
+      <p style="margin: 5px 0;"><strong>Čas:</strong> ${bookingTime}</p>
+      <p style="margin: 5px 0;"><strong>Študent:</strong> ${studentName}</p>
+    </div>
+
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="https://studko.si/profile?tab=instructor" class="button">Potrdi ali zavrni</a>
+    </div>
+
+    <div class="divider"></div>
+
+    <p style="font-size: 14px; color: #666;">
+      Prosimo, potrdi ali zavrni rezervacijo čim prej.
+    </p>
+  `;
+  return emailWrapper(content);
+}
+
+/**
+ * Booking confirmed notification for student
+ */
+export function bookingConfirmedTemplate(
+  studentName: string,
+  instructorName: string,
+  bookingDate: string,
+  bookingTime: string
+): string {
+  const content = `
+    <h2>Lekcija potrjena! ✅</h2>
+    <p>Pozdravljeni, <strong>${studentName}</strong>!</p>
+    <p>Tvoja rezervacija pri inštruktorju <strong>${instructorName}</strong> je bila potrjena.</p>
+    
+    <div class="info-box">
+      <h3 style="margin-top: 0; color: ${BRAND_COLOR};">Podrobnosti lekcije:</h3>
+      <p style="margin: 5px 0;"><strong>Datum:</strong> ${bookingDate}</p>
+      <p style="margin: 5px 0;"><strong>Čas:</strong> ${bookingTime}</p>
+      <p style="margin: 5px 0;"><strong>Inštruktor:</strong> ${instructorName}</p>
+    </div>
+
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="https://studko.si/profile?tab=purchases" class="button">Poglej rezervacije</a>
+    </div>
+
+    <div class="divider"></div>
+
+    <p style="font-size: 14px; color: #666;">
+      Lekcija bo potekala ob dogovorjenem času. Veliko uspeha!
+    </p>
+  `;
+  return emailWrapper(content);
+}
+
+/**
+ * Booking rejected notification for student
+ */
+export function bookingRejectedTemplate(
+  studentName: string,
+  instructorName: string,
+  bookingDate: string,
+  bookingTime: string
+): string {
+  const content = `
+    <h2>Rezervacija zavrnjena</h2>
+    <p>Pozdravljeni, <strong>${studentName}</strong>!</p>
+    <p>Žal je inštruktor <strong>${instructorName}</strong> zavrnil rezervacijo.</p>
+    
+    <div class="info-box">
+      <h3 style="margin-top: 0; color: ${BRAND_COLOR};">Zavrnjena rezervacija:</h3>
+      <p style="margin: 5px 0;"><strong>Datum:</strong> ${bookingDate}</p>
+      <p style="margin: 5px 0;"><strong>Čas:</strong> ${bookingTime}</p>
+      <p style="margin: 5px 0;"><strong>Inštruktor:</strong> ${instructorName}</p>
+    </div>
+
+    <p>Lahko poskusiš rezervirati drug termin ali pa izberi drugega inštruktorja.</p>
+
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="https://studko.si/tutors" class="button">Poišči inštruktorje</a>
+    </div>
+
+    <div class="divider"></div>
+
+    <p style="font-size: 14px; color: #666;">
+      Hvala za razumevanje.
+    </p>
+  `;
+  return emailWrapper(content);
+}

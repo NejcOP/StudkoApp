@@ -297,6 +297,32 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
           bookingTime: format(new Date(booking.start_time), 'HH:mm', { locale: sl }),
           bookingId: bookingId
         });
+
+        // Send email notification
+        try {
+          const { data: studentProfile } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('id', booking.student_id)
+            .single();
+
+          const { data: authData } = await supabase.auth.admin.getUserById(booking.student_id);
+          
+          if (authData?.user?.email) {
+            await supabase.functions.invoke('send-booking-email', {
+              body: {
+                to: authData.user.email,
+                type: 'booking_confirmed',
+                studentName: studentProfile?.full_name || 'Študent',
+                instructorName: profileData?.full_name || 'Inštruktor',
+                bookingDate: format(new Date(booking.start_time), 'd. MMMM yyyy', { locale: sl }),
+                bookingTime: format(new Date(booking.start_time), 'HH:mm', { locale: sl })
+              }
+            });
+          }
+        } catch (emailError) {
+          console.error('Error sending email:', emailError);
+        }
       }
 
       toast.success('Rezervacija potrjena!');
@@ -337,6 +363,32 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
           bookingTime: format(new Date(booking.start_time), 'HH:mm', { locale: sl }),
           bookingId: bookingId
         });
+
+        // Send email notification
+        try {
+          const { data: studentProfile } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('id', booking.student_id)
+            .single();
+
+          const { data: authData } = await supabase.auth.admin.getUserById(booking.student_id);
+          
+          if (authData?.user?.email) {
+            await supabase.functions.invoke('send-booking-email', {
+              body: {
+                to: authData.user.email,
+                type: 'booking_rejected',
+                studentName: studentProfile?.full_name || 'Študent',
+                instructorName: profileData?.full_name || 'Inštruktor',
+                bookingDate: format(new Date(booking.start_time), 'd. MMMM yyyy', { locale: sl }),
+                bookingTime: format(new Date(booking.start_time), 'HH:mm', { locale: sl })
+              }
+            });
+          }
+        } catch (emailError) {
+          console.error('Error sending email:', emailError);
+        }
       }
 
       toast.success('Rezervacija zavrnjena');

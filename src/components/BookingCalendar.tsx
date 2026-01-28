@@ -145,6 +145,32 @@ export const BookingCalendar = ({ tutorId, tutorName, pricePerHour = 20 }: Booki
           bookingTime: format(startTime, 'HH:mm', { locale: sl }),
           bookingId: bookingData.id
         });
+
+        // Send email notification to instructor
+        try {
+          const { data: instructorProfile } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('id', tutorData.user_id)
+            .single();
+
+          const { data: authData } = await supabase.auth.admin.getUserById(tutorData.user_id);
+          
+          if (authData?.user?.email) {
+            await supabase.functions.invoke('send-booking-email', {
+              body: {
+                to: authData.user.email,
+                type: 'booking_request',
+                instructorName: instructorProfile?.full_name || 'Inštruktor',
+                studentName: profileData?.full_name || 'Študent',
+                bookingDate: format(startTime, 'd. MMMM yyyy', { locale: sl }),
+                bookingTime: format(startTime, 'HH:mm', { locale: sl })
+              }
+            });
+          }
+        } catch (emailError) {
+          console.error('Error sending email:', emailError);
+        }
       }
 
       toast.success('Rezervacija poslana! Tutor jo bo moral potrditi.');
