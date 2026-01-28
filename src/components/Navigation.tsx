@@ -1,13 +1,20 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Brain, User, Menu, X, LogOut, GraduationCap, Zap } from "lucide-react";
-import { useState, useEffect, useRef, useMemo } from "react";
+import { BookOpen, Brain, User, Menu, LogOut, GraduationCap, Zap } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { NotificationBell } from "@/components/NotificationBell";
 import { useProAccess } from "@/hooks/useProAccess";
 import { ReferralDropdown } from "@/components/ReferralDropdown";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 const Navigation = () => {
   const location = useLocation();
@@ -145,38 +152,35 @@ const Navigation = () => {
   ];
 
   return (
-    <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border shadow-sm">
-      <div className="container mx-auto px-3 sm:px-4">
-        <div className="flex items-center justify-between h-14 sm:h-16">
+    <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border shadow-sm">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-full overflow-x-hidden">
+        <div className="flex items-center justify-between h-16 sm:h-18">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2 group -ml-1">
+          <Link to="/" className="flex items-center space-x-2 group">
             <img 
               src="/logo.svg" 
               alt="Študko Logo" 
-              className="h-12 sm:h-16 w-auto object-contain opacity-90 hover:opacity-100 transition-opacity"
+              className="h-12 sm:h-14 w-auto object-contain opacity-90 hover:opacity-100 transition-opacity"
             />
           </Link>
 
           {/* Desktop Navigation */}
           {user && (
-            <div className="hidden md:flex items-center space-x-1">
+            <div className="hidden lg:flex items-center space-x-2">
               {navLinks.map((link) => {
                 const Icon = link.icon;
                 return (
                   <Link
                     key={link.path}
                     to={link.path}
-                    className={`relative px-4 py-2 rounded-lg transition-all duration-300 flex items-center gap-2 ${
+                    className={`relative px-4 py-2.5 rounded-xl transition-all duration-300 flex items-center gap-2 ${
                       isActive(link.path)
-                        ? "text-primary font-semibold"
-                        : "text-muted-foreground hover:text-foreground"
+                        ? "text-primary font-semibold bg-primary/10"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
                     }`}
                   >
-                    <Icon className="w-4 h-4" />
-                    {link.label}
-                    {isActive(link.path) && (
-                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-primary rounded-full" />
-                    )}
+                    <Icon className="w-5 h-5" />
+                    <span className="text-sm font-medium">{link.label}</span>
                   </Link>
                 );
               })}
@@ -184,7 +188,7 @@ const Navigation = () => {
           )}
 
           {/* Desktop Auth Buttons */}
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden lg:flex items-center gap-3">
             {user ? (
               <>
                 <NotificationBell />
@@ -193,7 +197,7 @@ const Navigation = () => {
                   variant="ghost" 
                   size="sm" 
                   onClick={handleSignOut}
-                  className="gap-2"
+                  className="gap-2 rounded-xl"
                 >
                   <LogOut className="w-4 h-4" />
                   Odjava
@@ -202,10 +206,10 @@ const Navigation = () => {
             ) : (
               <>
                 <Link to="/login">
-                  <Button variant="ghost">Prijava</Button>
+                  <Button variant="ghost" className="rounded-xl">Prijava</Button>
                 </Link>
                 <Link to="/register">
-                  <Button variant="hero" size="sm">
+                  <Button variant="hero" size="sm" className="rounded-xl">
                     Registracija
                   </Button>
                 </Link>
@@ -214,94 +218,118 @@ const Navigation = () => {
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="md:hidden flex items-center gap-2">
+          <div className="lg:hidden flex items-center gap-3">
             {user && <NotificationBell />}
-            <button
-              className="p-2 text-foreground hover:bg-muted rounded-lg transition-colors"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              aria-label="Toggle menu"
-            >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-xl"
+                  aria-label="Toggle menu"
+                >
+                  <Menu className="w-6 h-6" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[85vw] sm:w-[400px] p-0 overflow-y-auto">
+                <SheetHeader className="px-6 py-6 border-b border-border bg-gradient-to-br from-primary/5 to-accent/5">
+                  <SheetTitle className="text-left">
+                    {user ? (
+                      <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-primary/20">
+                          {userName ? userName.charAt(0).toUpperCase() : "U"}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-lg text-foreground truncate">{userName || "Uporabnik"}</p>
+                          {hasProAccess && (
+                            <div className="flex items-center gap-1.5 mt-1">
+                              <Zap className="w-3.5 h-3.5 text-primary" />
+                              <span className="text-xs text-primary font-semibold">PRO član</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-xl font-bold">Meni</span>
+                    )}
+                  </SheetTitle>
+                </SheetHeader>
+
+                <div className="px-6 py-6 space-y-3">
+                  {user ? (
+                    <>
+                      {/* View Profile Button */}
+                      <Link to="/profile" onClick={() => setMobileMenuOpen(false)}>
+                        <Button variant="outline" className="w-full gap-3 py-6 rounded-2xl justify-start text-base font-medium hover:bg-primary/5 hover:border-primary/30 transition-all">
+                          <User className="w-5 h-5" />
+                          Poglej profil
+                        </Button>
+                      </Link>
+
+                      {/* Referral Section */}
+                      <div className="py-2">
+                        <ReferralDropdown userName={userName || "Uporabnik"} hasProAccess={hasProAccess} isMobile={true} />
+                      </div>
+
+                      <div className="border-t border-border my-4"></div>
+
+                      {/* Navigation Links */}
+                      <div className="space-y-2">
+                        {navLinks.map((link) => {
+                          const Icon = link.icon;
+                          return (
+                            <Link
+                              key={link.path}
+                              to={link.path}
+                              onClick={() => setMobileMenuOpen(false)}
+                              className={`flex items-center gap-4 px-5 py-4 rounded-2xl transition-all min-h-[60px] ${
+                                isActive(link.path)
+                                  ? "bg-gradient-to-r from-primary/15 to-accent/15 text-primary font-bold shadow-sm border border-primary/20"
+                                  : "text-muted-foreground hover:bg-muted active:bg-muted/80 hover:text-foreground"
+                              }`}
+                            >
+                              <div className={`p-2 rounded-xl ${isActive(link.path) ? "bg-primary/20" : "bg-muted"}`}>
+                                <Icon className="w-6 h-6" />
+                              </div>
+                              <span className="text-base font-medium">{link.label}</span>
+                            </Link>
+                          );
+                        })}
+                      </div>
+
+                      <div className="border-t border-border my-4"></div>
+
+                      {/* Logout Button */}
+                      <Button 
+                        variant="ghost" 
+                        className="w-full gap-3 py-6 rounded-2xl justify-start text-base font-medium hover:bg-red-50 dark:hover:bg-red-950/20 hover:text-red-600 dark:hover:text-red-400 transition-all" 
+                        onClick={handleSignOut}
+                      >
+                        <div className="p-2 rounded-xl bg-muted">
+                          <LogOut className="w-6 h-6" />
+                        </div>
+                        Odjava
+                      </Button>
+                    </>
+                  ) : (
+                    <div className="flex flex-col gap-3">
+                      <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
+                        <Button variant="outline" className="w-full py-6 rounded-2xl text-base font-medium">
+                          Prijava
+                        </Button>
+                      </Link>
+                      <Link to="/register" onClick={() => setMobileMenuOpen(false)}>
+                        <Button variant="hero" className="w-full py-6 rounded-2xl text-base font-medium">
+                          Registracija
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
-
-        {/* Mobile Menu Dropdown */}
-        {mobileMenuOpen && (
-          <div className="md:hidden py-4 space-y-2 border-t border-border animate-in slide-in-from-top-5 duration-200 max-h-[calc(100vh-4rem)] overflow-y-auto">
-            {user && (
-              <>
-                {/* User info with referral system */}
-                <div className="px-4 py-2 mb-2">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center text-white font-semibold">
-                      {userName ? userName.charAt(0).toUpperCase() : "U"}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-foreground truncate">{userName || "Uporabnik"}</p>
-                      {hasProAccess && (
-                        <span className="text-xs text-primary font-medium">PRO član</span>
-                      )}
-                    </div>
-                  </div>
-                  <Link to="/profile" onClick={() => setMobileMenuOpen(false)}>
-                    <Button variant="outline" className="w-full gap-2 mb-3 justify-start">
-                      <User className="w-4 h-4" />
-                      Poglej profil
-                    </Button>
-                  </Link>
-                  <ReferralDropdown userName={userName || "Uporabnik"} hasProAccess={hasProAccess} isMobile={true} />
-                </div>
-                
-                <div className="border-t border-border my-2"></div>
-                
-                {navLinks.map((link) => {
-                  const Icon = link.icon;
-                  return (
-                    <Link
-                      key={link.path}
-                      to={link.path}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all min-h-[48px] ${
-                        isActive(link.path)
-                          ? "bg-primary/10 text-primary font-semibold"
-                          : "text-muted-foreground hover:bg-muted active:bg-muted/80"
-                      }`}
-                    >
-                      <Icon className="w-5 h-5" />
-                      <span className="text-base">{link.label}</span>
-                    </Link>
-                  );
-                })}
-                
-                <div className="border-t border-border mt-2 pt-2">
-                  <Button 
-                    variant="ghost" 
-                    className="w-full gap-2 min-h-[48px] text-base justify-start px-4" 
-                    onClick={handleSignOut}
-                  >
-                    <LogOut className="w-5 h-5" />
-                    Odjava
-                  </Button>
-                </div>
-              </>
-            )}
-            {!user && (
-              <div className="flex flex-col gap-3 pt-2">
-                  <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
-                    <Button variant="ghost" className="w-full min-h-[48px] text-base">
-                      Prijava
-                    </Button>
-                  </Link>
-                  <Link to="/register" onClick={() => setMobileMenuOpen(false)}>
-                    <Button variant="hero" className="w-full min-h-[48px] text-base">
-                      Registracija
-                    </Button>
-                  </Link>
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </nav>
   );
