@@ -66,29 +66,35 @@ serve(async (req) => {
 
     console.log('Creating checkout for user:', user.email);
 
-    // Determine if user gets trial or not
-    const subscription_data: any = {
-      trial_period_days: trialUsed ? undefined : 7,
-    };
-
-    // Create Stripe checkout session for subscription
-    const session = await stripe.checkout.sessions.create({
+    // Create checkout session configuration
+    const sessionConfig: any = {
       payment_method_types: ['card'],
       line_items: [{
-        price: Deno.env.get('STRIPE_PRO_PRICE_ID') || 'price_1QYlp6LqKcILu2NQfGaFT1i2', // PRO monthly price
+        price: Deno.env.get('STRIPE_PRO_PRICE_ID') || 'price_1QYlp6LqKcILu2NQfGaFT1i2',
         quantity: 1,
       }],
       mode: 'subscription',
       customer_email: user?.email,
       client_reference_id: userId,
-      subscription_data: subscription_data,
       metadata: {
         user_id: userId,
         trial_used: trialUsed ? 'true' : 'false',
       },
       success_url: `${req.headers.get('origin')}/profile?pro=activated&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.get('origin')}/profile?tab=subscription`,
-    });
+    };
+
+    // Add trial only if not used
+    if (!trialUsed) {
+      sessionConfig.subscription_data = {
+        trial_period_days: 7,
+      };
+    }
+
+    console.log('Session config:', JSON.stringify(sessionConfig, null, 2));
+
+    // Create Stripe checkout session for subscription
+    const session = await stripe.checkout.sessions.create(sessionConfig);
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
