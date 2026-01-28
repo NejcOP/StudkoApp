@@ -87,3 +87,8 @@ enabled = true
 verify_jwt = false
 import_map = "./functions/send-auth-email/deno.json"
 entrypoint = "./functions/send-auth-email/index.ts"
+
+[functions.check-trial-expiry]
+enabled = true
+verify_jwt = false
+schedule = "0 9 * * *"  # Run daily at 9:00 AM UTC (10:00 CET)
