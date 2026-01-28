@@ -33,6 +33,7 @@ import TutorAvailability from "./pages/TutorAvailability";
 import MyTutorBookings from "./pages/MyTutorBookings";
 import About from "./pages/About";
 import Terms from "./pages/Terms";
+import PaymentSetupGuide from "./pages/PaymentSetupGuide";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -74,6 +75,7 @@ const App = () => (
               <Route path="/confirm-email" element={<ConfirmEmail />} />
               <Route path="/about" element={<About />} />
               <Route path="/terms" element={<Terms />} />
+              <Route path="/payment-setup-guide" element={<PaymentSetupGuide />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
