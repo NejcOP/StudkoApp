@@ -118,7 +118,12 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
     
     setAiAnalysisLoading(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
       const { data, error } = await supabase.functions.invoke('analyze-instructor-profile', {
+        headers: {
+          Authorization: `Bearer ${session?.access_token}`
+        },
         body: { tutorId, bookings }
       });
 

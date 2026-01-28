@@ -51,7 +51,8 @@ serve(async (req) => {
     const { data: reviews } = await supabaseClient
       .from('profile_reviews')
       .select('rating')
-      .eq('reviewed_user_id', user.id);
+      .eq('target_profile_id', user.id)
+      .eq('is_hidden', false);
     
     const avgRating = reviews && reviews.length > 0
       ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
