@@ -118,6 +118,14 @@ const Login = () => {
 
           {/* RIGHT SIDE - Login Form Card (order-1 on mobile, order-2 on desktop) */}
           <div className="bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl p-6 sm:p-8 md:p-10 order-1 md:order-2">
+            {/* Mobile Logo - Only visible on mobile */}
+            <div className="flex items-center justify-center gap-3 mb-6 md:hidden">
+              <div className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center shadow-lg">
+                <BookOpen className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Študko</span>
+            </div>
+
             <div className="mb-6 sm:mb-8">
               <h2 className="text-3xl font-bold text-gray-900 mb-2">Prijava</h2>
               <p className="text-gray-600">Vpiši svoje podatke za prijavo</p>
