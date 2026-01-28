@@ -192,7 +192,15 @@ const Navigation = () => {
             {user ? (
               <>
                 <NotificationBell />
-                <ReferralDropdown userName={userName || "Uporabnik"} hasProAccess={hasProAccess} />
+                <div className="relative">
+                  <ReferralDropdown userName={userName || "Uporabnik"} hasProAccess={hasProAccess} />
+                  <div className="absolute -top-1 -right-1 flex items-center justify-center">
+                    <span className="relative flex h-3 w-3">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500 shadow-lg"></span>
+                    </span>
+                  </div>
+                </div>
                 <Button 
                   variant="ghost" 
                   size="sm" 
@@ -268,6 +276,13 @@ const Navigation = () => {
 
                       {/* Referral Section */}
                       <div className="py-2">
+                        <div className="flex items-center gap-2 mb-3 px-2">
+                          <div className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                          </div>
+                          <span className="text-xs font-semibold text-muted-foreground">🎁 Nagrade in povabila</span>
+                        </div>
                         <ReferralDropdown userName={userName || "Uporabnik"} hasProAccess={hasProAccess} isMobile={true} />
                       </div>
 

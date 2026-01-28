@@ -350,7 +350,7 @@ export const ReferralDropdown = ({ userName, hasProAccess, isMobile = false }: {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="gap-2 relative">
+        <Button variant="ghost" size="sm" className="gap-2 relative group hover:bg-primary/5 transition-colors">
           <User className="w-4 h-4" />
           <span className="hidden sm:inline">{userName}</span>
           {hasProAccess && (
@@ -358,6 +358,7 @@ export const ReferralDropdown = ({ userName, hasProAccess, isMobile = false }: {
               PRO
             </span>
           )}
+          <Gift className="w-3.5 h-3.5 text-green-500 group-hover:scale-110 transition-transform" />
           {stats.successfulReferrals > 0 && stats.successfulReferrals < stats.goal && (
             <span className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-orange-500 to-pink-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse">
               {stats.successfulReferrals}
