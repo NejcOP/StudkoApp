@@ -13,11 +13,14 @@ serve(async (req) => {
   }
 
   try {
+    console.log('[AI] Function started');
     const GOOGLE_API_KEY = Deno.env.get("GOOGLE_AI_API_KEY") || Deno.env.get("GOOGLE_API_KEY");
     
     if (!GOOGLE_API_KEY) {
+      console.error('[AI] Missing API key');
       throw new Error('API ključ manjka! Dodaj GOOGLE_AI_API_KEY v Supabase Secrets.');
     }
+    console.log('[AI] API key found');
 
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -29,9 +32,14 @@ serve(async (req) => {
     
     const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError || !user) throw new Error("Unauthorized");
+    if (userError || !user) {
+      console.error('[AI] Auth error:', userError);
+      throw new Error("Unauthorized");
+    }
+    console.log('[AI] User authenticated:', user.id);
 
     const { tutorId, bookings } = await req.json();
+    console.log('[AI] tutorId:', tutorId, 'bookings count:', bookings?.length);
 
     // Fetch tutor data
     const { data: tutorData, error: tutorError } = await supabaseClient
@@ -40,7 +48,11 @@ serve(async (req) => {
       .eq('id', tutorId)
       .single();
 
-    if (tutorError) throw tutorError;
+    if (tutorError) {
+      console.error('[AI] Tutor fetch error:', tutorError);
+      throw tutorError;
+    }
+    console.log('[AI] Tutor data fetched');
 
     // Calculate statistics
     const completedBookings = bookings.filter((b: any) => b.status === 'completed');
@@ -79,6 +91,7 @@ Ustvari **kratko in jedrnato analizo** v slovenščini z naslednjimi elementi:
 Odgovor mora biti formatiran z Markdown (**bold**, bullet points). Bodi kratek, konkreten in uporaben.`;
 
     // Call AI API
+    console.log('[AI] Calling Google AI API...');
     const aiResponse = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GOOGLE_API_KEY}`,
       {
@@ -92,8 +105,11 @@ Odgovor mora biti formatiran z Markdown (**bold**, bullet points). Bodi kratek, 
     );
 
     if (!aiResponse.ok) {
+      const errorText = await aiResponse.text();
+      console.error('[AI] API error:', aiResponse.status, errorText);
       throw new Error(`AI API error: ${aiResponse.status}`);
     }
+    console.log('[AI] API response received');
 
     const aiData = await aiResponse.json();
     const analysis = aiData.candidates?.[0]?.content?.parts?.[0]?.text || "Napaka pri generiranju analize";
