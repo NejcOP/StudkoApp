@@ -760,45 +760,30 @@ const Profile = () => {
           return;
         }
 
-        // Store new password and send confirmation email
-        localStorage.setItem('pendingPassword', passwordForm.newPassword);
-        localStorage.setItem('pendingPasswordType', 'change'); // Mark as password change, not recovery
-        
-        const isProduction = import.meta.env.PROD;
-        const redirectUrl = isProduction
-          ? 'https://studko.vercel.app/confirm-email'
-          : `${window.location.origin}/confirm-email`;
-        
-        const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
-          redirectTo: redirectUrl,
+        // Directly update password (no email confirmation needed)
+        const { error: updateError } = await supabase.auth.updateUser({
+          password: passwordForm.newPassword,
         });
 
-        if (error) throw error;
+        if (updateError) throw updateError;
 
-        toast.success("Zahteva za spremembo gesla poslana! 📧", {
-          description: `Preveri svoj email (${user.email}) in potrdi spremembo gesla s klikom na povezavo.`,
-          duration: 8000,
+        // Update last password change timestamp
+        await supabase
+          .from('profiles')
+          .update({ last_password_change_at: new Date().toISOString() })
+          .eq('id', user.id);
+
+        toast.success("Geslo uspešno posodobljeno! 🎉", {
+          description: "Tvoje geslo je bilo uspešno spremenjeno.",
+          duration: 6000,
         });
         
         setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
-        setPasswordResetEmailSent(true);
-        
-        setTimeout(() => {
-          setPasswordResetEmailSent(false);
-        }, 300000);
         
       } catch (error: unknown) {
-        console.error("Error sending password reset email:", error);
-        let errorMessage = error instanceof Error ? error.message : "Napaka pri pošiljanju e-pošte";
-        
-        // Handle rate limit error specifically
-        if (errorMessage.includes('rate limit') || errorMessage.includes('Email rate limit exceeded')) {
-          errorMessage = "Preč pogosto pošiljanje emailov. Poskusi znova čez 10 minut.";
-        }
-        
+        console.error("Error updating password:", error);
+        let errorMessage = error instanceof Error ? error.message : "Napaka pri posodobitvi gesla";
         toast.error(errorMessage);
-        localStorage.removeItem('pendingPassword');
-        localStorage.removeItem('pendingPasswordType');
       } finally {
         setSaving(false);
       }
@@ -1288,7 +1273,7 @@ const Profile = () => {
                           </Button>
                           <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-3 border border-blue-200 dark:border-blue-800">
                             <p className="text-sm text-blue-700 dark:text-blue-300">
-                              <strong>Opomba:</strong> Geslo lahko spremeniš samo enkrat na 30 dni. Po kliku na gumb boš prejel potrditveno povezavo po e-pošti.
+                              <strong>Opomba:</strong> Geslo lahko spremeniš samo enkrat na 30 dni.
                             </p>
                           </div>
                         </TabsContent>
