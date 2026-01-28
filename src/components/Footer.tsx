@@ -71,7 +71,7 @@ const Footer = () => {
               <li>
                 <Link
                   to="/payment-setup-guide"
-                  className="text-muted-foreground hover:text-primary transition-colors inline-block py-2 min-h-[44px] flex items-center"
+                  className="text-muted-foreground hover:text-primary transition-colors"
                 >
                   Navodila za plačila
                 </Link>
@@ -79,7 +79,7 @@ const Footer = () => {
               <li>
                 <Link
                   to="/terms"
-                  className="text-muted-foreground hover:text-primary transition-colors inline-block py-2 min-h-[44px] flex items-center"
+                  className="text-muted-foreground hover:text-primary transition-colors"
                 >
                   Pogoji uporabe
                 </Link>
@@ -87,7 +87,7 @@ const Footer = () => {
               <li>
                 <Link
                   to="/about"
-                  className="text-muted-foreground hover:text-primary transition-colors inline-block py-2 min-h-[44px] flex items-center"
+                  className="text-muted-foreground hover:text-primary transition-colors"
                 >
                   O nas
                 </Link>
