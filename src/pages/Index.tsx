@@ -1,11 +1,21 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Brain, DollarSign, Zap, Upload, ShieldCheck } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import heroImage from "@/assets/hero-study-illustration.jpg";
+import { useAuth } from "@/hooks/useAuth";
+import { useEffect } from "react";
 
 const Index = () => {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && user) {
+      navigate('/notes');
+    }
+  }, [user, loading, navigate]);
   const features = [
     {
       icon: BookOpen,
