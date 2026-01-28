@@ -500,13 +500,28 @@ const Profile = () => {
             stripe_onboarding_complete: true
           })
           .eq('id', user.id)
-          .then(({ error }) => {
+          .then(async ({ error }) => {
             if (error) {
               console.error('Error updating profile:', error);
               toast.error('Napaka pri posodabljanju profila');
             } else {
+              // Clear cache to force reload
+              try {
+                sessionStorage.removeItem(`profile_${user.id}`);
+                sessionStorage.removeItem(`my_notes_${user.id}`);
+                sessionStorage.removeItem(`purchased_notes_${user.id}`);
+              } catch (err) {
+                console.error('Error clearing cache:', err);
+              }
+              
               toast.success('Stripe račun uspešno povezan!');
-              loadProfileData(); // Reload profile data
+              
+              // Force reload profile data
+              await loadProfileData(true);
+              
+              // Update profile state immediately with the new account_id
+              setProfile(prev => prev ? { ...prev, stripe_connect_id: accountId, stripe_onboarding_complete: true } : null);
+              
               // Clean up URL
               window.history.replaceState({}, document.title, window.location.pathname);
             }
