@@ -73,15 +73,17 @@ serve(async (req) => {
 
     switch (type) {
       case 'signup': {
-        // Email confirmation for new signups - include email in URL
-        confirmLink = `${APP_URL}/auth/confirm?token=${tokenValue}&type=signup&email=${encodeURIComponent(email)}&redirect_to=${encodeURIComponent(redirect_to || '/notes')}`
+        // Email confirmation - use Supabase verify endpoint directly
+        const supabaseUrl = Deno.env.get('SUPABASE_URL') || 'https://xjnffvqtqxnqobqezouv.supabase.co'
+        confirmLink = `${supabaseUrl}/auth/v1/verify?token=${tokenValue}&type=signup&redirect_to=${encodeURIComponent(APP_URL + '/login')}`
         subject = '🎉 Dobrodošel v Študko!'
         break
       }
 
       case 'recovery': {
-        // Password reset
-        confirmLink = `${APP_URL}/auth/reset-password?token=${tokenValue}`
+        // Password reset - use Supabase verify endpoint
+        const supabaseUrl = Deno.env.get('SUPABASE_URL') || 'https://xjnffvqtqxnqobqezouv.supabase.co'
+        confirmLink = `${supabaseUrl}/auth/v1/verify?token=${tokenValue}&type=recovery&redirect_to=${encodeURIComponent(APP_URL + '/profile?tab=password&reset=true')}`
         subject = '🔐 Ponastavi geslo - Študko'
         break
       }
