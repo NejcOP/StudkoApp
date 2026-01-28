@@ -12,9 +12,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
-import { User, Copy, Share2, MessageCircle, Instagram, Sparkles, Gift } from "lucide-react";
+import { User, Copy, Share2, MessageCircle, Instagram, Sparkles, Gift, ChevronDown, ChevronUp } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import confetti from "canvas-confetti";import { TikTokChallenge } from "@/components/TikTokChallenge";
+import confetti from "canvas-confetti";
+import { TikTokChallenge } from "@/components/TikTokChallenge";
 interface ReferralStats {
   referralCode: string;
   successfulReferrals: number;
@@ -36,6 +37,7 @@ export const ReferralDropdown = ({ userName, hasProAccess, isMobile = false }: {
   });
   const [loading, setLoading] = useState(true);
   const [claiming, setClaiming] = useState(false);
+  const [mobileExpanded, setMobileExpanded] = useState(false);
 
   const getRewardText = (tier: number) => {
     const rewards: { [key: number]: string } = {
@@ -231,117 +233,138 @@ export const ReferralDropdown = ({ userName, hasProAccess, isMobile = false }: {
   const progressPercentage = (stats.successfulReferrals / stats.goal) * 100;
   const remaining = stats.goal - stats.successfulReferrals;
 
-  // Mobile inline version (no dropdown)
+  // Mobile inline version (collapsible)
   if (isMobile) {
     return (
-      <div className="bg-gradient-to-r from-primary/5 to-accent/5 rounded-xl p-3 space-y-2 border border-primary/20">
-        <div className="flex items-center gap-2">
-          <Gift className="w-4 h-4 text-primary" />
-          <span className="font-bold text-sm">Povabi prijatelje</span>
-        </div>
-
-        {stats.maxReached ? (
-          <div className="text-center py-1">
-            <p className="text-xs font-bold text-yellow-600">🏆 Maksimum dosežen!</p>
-            <p className="text-xs text-muted-foreground">
-              Prejeli si že vse možne nagrade! ❤️
-            </p>
+      <div className="bg-gradient-to-r from-primary/5 to-accent/5 rounded-xl border border-primary/20 overflow-hidden">
+        {/* Header - Always visible, clickable */}
+        <button
+          onClick={() => setMobileExpanded(!mobileExpanded)}
+          className="w-full p-3 flex items-center justify-between hover:bg-primary/5 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <Gift className="w-4 h-4 text-primary" />
+            <span className="font-bold text-sm">Povabi prijatelje</span>
+            {!stats.maxReached && (
+              <span className="text-xs text-primary font-semibold">
+                ({remaining > 0 ? `${remaining} do nagrade` : "🎉"})
+              </span>
+            )}
           </div>
-        ) : (
-          <>
-            <div className="text-center">
-              <p className="text-xs font-semibold text-foreground">
-                {remaining > 0 ? (
-                  <>
-                    Povabi še <span className="text-primary font-bold">{remaining}</span>{" "}
-                    {remaining === 1 ? "sošolca" : "sošolce"} za
-                  </>
-                ) : (
-                  <span className="text-green-600 font-bold">🎉 Cilj dosežen!</span>
-                )}
-              </p>
-              {remaining > 0 && (
-                <p className="text-primary font-bold text-xs">{getRewardText(stats.rewardTier)}</p>
-              )}
-            </div>
+          {mobileExpanded ? (
+            <ChevronUp className="w-4 h-4 text-muted-foreground" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-muted-foreground" />
+          )}
+        </button>
 
-            {remaining > 0 ? (
-              <div className="space-y-1">
-                <Progress value={progressPercentage} className="h-1.5" />
-                <div className="flex justify-between items-center text-xs text-muted-foreground">
-                  <span>{stats.successfulReferrals} / {stats.goal} povabil</span>
-                  <span className="flex items-center gap-1">
-                    <Sparkles className="w-3 h-3 text-yellow-500" />
-                    {progressPercentage.toFixed(0)}%
-                  </span>
-                </div>
+        {/* Expanded Content */}
+        {mobileExpanded && (
+          <div className="px-3 pb-3 space-y-2 border-t border-primary/10">
+            {stats.maxReached ? (
+              <div className="text-center py-2">
+                <p className="text-xs font-bold text-yellow-600">🏆 Maksimum dosežen!</p>
+                <p className="text-xs text-muted-foreground">
+                  Prejeli si že vse možne nagrade! ❤️
+                </p>
               </div>
             ) : (
-              <Button 
-                onClick={handleClaimReward} 
-                disabled={claiming}
-                className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-2 text-xs shadow-lg"
-              >
-                {claiming ? "Prevzemam..." : (
-                  <>
-                    <Gift className="w-3 h-3 mr-1" />
-                    Prevzemi PRO! 🎉
-                  </>
+              <>
+                <div className="text-center pt-2">
+                  <p className="text-xs font-semibold text-foreground">
+                    {remaining > 0 ? (
+                      <>
+                        Povabi še <span className="text-primary font-bold">{remaining}</span>{" "}
+                        {remaining === 1 ? "sošolca" : "sošolce"} za
+                      </>
+                    ) : (
+                      <span className="text-green-600 font-bold">🎉 Cilj dosežen!</span>
+                    )}
+                  </p>
+                  {remaining > 0 && (
+                    <p className="text-primary font-bold text-xs">{getRewardText(stats.rewardTier)}</p>
+                  )}
+                </div>
+
+                {remaining > 0 ? (
+                  <div className="space-y-1">
+                    <Progress value={progressPercentage} className="h-1.5" />
+                    <div className="flex justify-between items-center text-xs text-muted-foreground">
+                      <span>{stats.successfulReferrals} / {stats.goal} povabil</span>
+                      <span className="flex items-center gap-1">
+                        <Sparkles className="w-3 h-3 text-yellow-500" />
+                        {progressPercentage.toFixed(0)}%
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <Button 
+                    onClick={handleClaimReward} 
+                    disabled={claiming}
+                    className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-2 text-xs shadow-lg"
+                  >
+                    {claiming ? "Prevzemam..." : (
+                      <>
+                        <Gift className="w-3 h-3 mr-1" />
+                        Prevzemi PRO! 🎉
+                      </>
+                    )}
+                  </Button>
                 )}
-              </Button>
+
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    readOnly
+                    value={loading ? "Nalaganje..." : getReferralLink()}
+                    className="flex-1 px-3 py-2 text-xs bg-background rounded-md border border-border truncate"
+                  />
+                  <Button size="sm" variant="secondary" onClick={copyReferralLink}>
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </div>
+
+                <div className="grid grid-cols-3 gap-1.5">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex flex-col gap-0.5 h-auto py-1.5"
+                    onClick={shareToWhatsApp}
+                  >
+                    <MessageCircle className="w-3.5 h-3.5 text-green-600" />
+                    <span className="text-xs">WhatsApp</span>
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex flex-col gap-0.5 h-auto py-1.5"
+                    onClick={shareToMessenger}
+                  >
+                    <MessageCircle className="w-3.5 h-3.5 text-blue-600" />
+                    <span className="text-xs">Messenger</span>
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex flex-col gap-0.5 h-auto py-1.5"
+                    onClick={shareToInstagram}
+                  >
+                    <Instagram className="w-3.5 h-3.5 text-pink-600" />
+                    <span className="text-xs">Instagram</span>
+                  </Button>
+                </div>
+              </>
             )}
 
-            <div className="flex gap-2">
-              <input
-                type="text"
-                readOnly
-                value={loading ? "Nalaganje..." : getReferralLink()}
-                className="flex-1 px-3 py-2 text-xs bg-background rounded-md border border-border truncate"
-              />
-              <Button size="sm" variant="secondary" onClick={copyReferralLink}>
-                <Copy className="w-4 h-4" />
-              </Button>
+            {/* TikTok Challenge */}
+            <div className="pt-2 border-t border-border mt-2">
+              <p className="text-xs font-semibold text-muted-foreground mb-1.5 text-center">
+                🎁 Dodatna nagrada
+              </p>
+              <TikTokChallenge />
             </div>
-
-            <div className="grid grid-cols-3 gap-1.5">
-              <Button
-                size="sm"
-                variant="outline"
-                className="flex flex-col gap-0.5 h-auto py-1.5"
-                onClick={shareToWhatsApp}
-              >
-                <MessageCircle className="w-3.5 h-3.5 text-green-600" />
-                <span className="text-xs">WhatsApp</span>
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="flex flex-col gap-0.5 h-auto py-1.5"
-                onClick={shareToMessenger}
-              >
-                <MessageCircle className="w-3.5 h-3.5 text-blue-600" />
-                <span className="text-xs">Messenger</span>
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="flex flex-col gap-0.5 h-auto py-1.5"
-                onClick={shareToInstagram}
-              >
-                <Instagram className="w-3.5 h-3.5 text-pink-600" />
-                <span className="text-xs">Instagram</span>
-              </Button>
-            </div>
-          </>
+          </div>
         )}
-
-        {/* TikTok Challenge */}
-        <div className="pt-2 border-t border-border mt-2">
-          <p className="text-xs font-semibold text-muted-foreground mb-1.5 text-center">
-            🎁 Dodatna nagrada
-          </p>
-          <TikTokChallenge />
-        </div>
       </div>
     );
   }
