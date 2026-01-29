@@ -433,8 +433,9 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
     const upcomingBookings = confirmedBookings.filter(b => new Date(b.start_time) > new Date());
     const completedBookings = bookings.filter(b => b.status === 'completed');
     
-    const totalEarnings = completedBookings
-      .filter(b => b.paid)
+    // Calculate earnings from ALL paid bookings (not just completed)
+    const paidBookings = bookings.filter(b => b.paid);
+    const totalEarnings = paidBookings
       .reduce((sum, b) => sum + (b.price_eur || 0), 0);
     
     const platformFee = totalEarnings * 0.20;
