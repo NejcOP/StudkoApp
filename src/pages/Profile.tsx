@@ -1580,7 +1580,7 @@ const Profile = () => {
           <div className={mainTab === 'instructor' ? 'w-full' : 'lg:col-span-2'}>
             <Tabs value={mainTab} onValueChange={setMainTab} className="w-full">
               <div className="overflow-x-auto -mx-2 px-2 sm:mx-0 sm:px-0 mb-4 sm:mb-6">
-                <TabsList className={`grid w-full ${showInstructorTab ? 'grid-cols-4' : 'grid-cols-3'} bg-muted rounded-xl p-1 h-12 min-w-[500px] sm:min-w-0`}>
+                <TabsList className={`grid w-full ${showInstructorTab ? 'grid-cols-3' : 'grid-cols-3'} bg-muted rounded-xl p-1 h-12 min-w-[500px] sm:min-w-0`}>
                   <TabsTrigger
                     value="my-notes"
                     className="rounded-lg text-foreground data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white text-xs sm:text-sm px-2"
@@ -1597,14 +1597,16 @@ const Profile = () => {
                     <span className="hidden xs:inline">Kupljeni zapiski</span>
                     <span className="xs:hidden">Kupljeni</span>
                   </TabsTrigger>
-                  <TabsTrigger
-                    value="bookings"
-                    className="rounded-lg text-foreground data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white text-xs sm:text-sm px-2"
-                  >
-                    <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                    <span className="hidden xs:inline">Moje rezervacije</span>
-                    <span className="xs:hidden">Rezervacije</span>
-                  </TabsTrigger>
+                  {!showInstructorTab && (
+                    <TabsTrigger
+                      value="bookings"
+                      className="rounded-lg text-foreground data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white text-xs sm:text-sm px-2"
+                    >
+                      <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                      <span className="hidden xs:inline">Moje rezervacije</span>
+                      <span className="xs:hidden">Rezervacije</span>
+                    </TabsTrigger>
+                  )}
                   {showInstructorTab && (
                     <TabsTrigger
                       value="instructor"
@@ -1757,22 +1759,24 @@ const Profile = () => {
                 )}
               </TabsContent>
 
-              {/* My Bookings Tab */}
-              <TabsContent value="bookings" className="space-y-4">
-                <div className="text-center py-8 bg-card dark:bg-card backdrop-blur rounded-2xl border border-border">
-                  <Calendar className="w-16 h-16 text-primary mx-auto mb-4" />
-                  <p className="text-foreground mb-2 font-medium text-lg">Moje rezervacije</p>
-                  <p className="text-sm text-muted-foreground mb-6">
-                    Poglej vse svoje rezervirane termine pri inštruktorjih.
-                  </p>
-                  <Link to="/my-tutor-bookings">
-                    <Button size="lg" className="gap-2">
-                      <Calendar className="w-4 h-4" />
-                      Odpri moje rezervacije
-                    </Button>
-                  </Link>
-                </div>
-              </TabsContent>
+              {/* My Bookings Tab - Only for non-instructors */}
+              {!showInstructorTab && (
+                <TabsContent value="bookings" className="space-y-4">
+                  <div className="text-center py-8 bg-card dark:bg-card backdrop-blur rounded-2xl border border-border">
+                    <Calendar className="w-16 h-16 text-primary mx-auto mb-4" />
+                    <p className="text-foreground mb-2 font-medium text-lg">Moje rezervacije</p>
+                    <p className="text-sm text-muted-foreground mb-6">
+                      Poglej vse svoje rezervirane termine pri inštruktorjih.
+                    </p>
+                    <Link to="/my-tutor-bookings">
+                      <Button size="lg" className="gap-2">
+                        <Calendar className="w-4 h-4" />
+                        Odpri moje rezervacije
+                      </Button>
+                    </Link>
+                  </div>
+                </TabsContent>
+              )}
 
               {/* Instructor Dashboard Tab */}
               {showInstructorTab && (
