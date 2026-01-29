@@ -57,6 +57,29 @@ export const BookingsList = ({ userId }: { userId: string }) => {
     }
   }, [searchParams, bookings]);
 
+  // Reload bookings after successful payment
+  useEffect(() => {
+    const paymentStatus = searchParams.get('payment');
+    if (paymentStatus === 'success') {
+      console.log('Payment successful, reloading bookings');
+      toast.success('Plačilo uspešno! 🎉');
+      // Wait a bit for webhook to process
+      setTimeout(() => {
+        loadBookings();
+      }, 1000);
+      // Remove payment parameter from URL
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('payment');
+      newParams.delete('booking');
+      navigate(`/profile?tab=bookings${newParams.toString() ? '&' + newParams.toString() : ''}`, { replace: true });
+    } else if (paymentStatus === 'cancelled') {
+      toast.error('Plačilo preklicano');
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('payment');
+      navigate(`/profile?tab=bookings${newParams.toString() ? '&' + newParams.toString() : ''}`, { replace: true });
+    }
+  }, [searchParams]);
+
   const loadBookings = async () => {
     try {
       const { data: bookingsData, error } = await supabase
