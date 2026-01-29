@@ -287,23 +287,33 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
         try {
           const { data: studentProfile } = await supabase
             .from('profiles')
-            .select('full_name')
+            .select('full_name, email')
             .eq('id', booking.student_id)
             .single();
-
-          const { data: authData } = await supabase.auth.admin.getUserById(booking.student_id);
           
-          if (authData?.user?.email) {
-            await supabase.functions.invoke('send-booking-email', {
+          console.log('Pošiljam potrditveni email študentu:', studentProfile?.email);
+          
+          if (studentProfile?.email) {
+            const emailResponse = await supabase.functions.invoke('send-booking-email', {
               body: {
-                to: authData.user.email,
+                to: studentProfile.email,
                 type: 'booking_confirmed',
-                studentName: studentProfile?.full_name || 'Študent',
+                studentName: studentProfile.full_name || 'Študent',
                 instructorName: profileData?.full_name || 'Inštruktor',
                 bookingDate: format(new Date(booking.start_time), 'd. MMMM yyyy', { locale: sl }),
                 bookingTime: format(new Date(booking.start_time), 'HH:mm', { locale: sl })
               }
             });
+            
+            console.log('Email response:', emailResponse);
+            
+            if (emailResponse.error) {
+              console.error('Email send error:', emailResponse.error);
+            } else {
+              console.log('Potrditveni email uspešno poslan!');
+            }
+          } else {
+            console.warn('Študent nima emaila v profilu!');
           }
         } catch (emailError) {
           console.error('Error sending email:', emailError);
@@ -353,23 +363,33 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
         try {
           const { data: studentProfile } = await supabase
             .from('profiles')
-            .select('full_name')
+            .select('full_name, email')
             .eq('id', booking.student_id)
             .single();
-
-          const { data: authData } = await supabase.auth.admin.getUserById(booking.student_id);
           
-          if (authData?.user?.email) {
-            await supabase.functions.invoke('send-booking-email', {
+          console.log('Pošiljam email o zavrnitvi študentu:', studentProfile?.email);
+          
+          if (studentProfile?.email) {
+            const emailResponse = await supabase.functions.invoke('send-booking-email', {
               body: {
-                to: authData.user.email,
+                to: studentProfile.email,
                 type: 'booking_rejected',
-                studentName: studentProfile?.full_name || 'Študent',
+                studentName: studentProfile.full_name || 'Študent',
                 instructorName: profileData?.full_name || 'Inštruktor',
                 bookingDate: format(new Date(booking.start_time), 'd. MMMM yyyy', { locale: sl }),
                 bookingTime: format(new Date(booking.start_time), 'HH:mm', { locale: sl })
               }
             });
+            
+            console.log('Email response:', emailResponse);
+            
+            if (emailResponse.error) {
+              console.error('Email send error:', emailResponse.error);
+            } else {
+              console.log('Email o zavrnitvi uspešno poslan!');
+            }
+          } else {
+            console.warn('Študent nima emaila v profilu!');
           }
         } catch (emailError) {
           console.error('Error sending email:', emailError);

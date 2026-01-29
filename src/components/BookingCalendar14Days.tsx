@@ -250,8 +250,10 @@ export const BookingCalendar14Days = ({
             .eq('id', tutorData.user_id)
             .single();
           
+          console.log('Pošiljam email instruktorju:', instructorProfile?.email);
+          
           if (instructorProfile?.email) {
-            await supabase.functions.invoke('send-booking-email', {
+            const emailResponse = await supabase.functions.invoke('send-booking-email', {
               body: {
                 to: instructorProfile.email,
                 type: 'booking_request',
@@ -261,9 +263,25 @@ export const BookingCalendar14Days = ({
                 bookingTime: `${selectedSlot.start_time} - ${selectedSlot.end_time}`
               }
             });
+            
+            console.log('Email response:', emailResponse);
+            
+            if (emailResponse.error) {
+              console.error('Email send error:', emailResponse.error);
+              toast.error('Napaka pri pošiljanju emaila instruktorju', {
+                description: 'Rezervacija je bila ustvarjena, ampak email ni bil poslan.'
+              });
+            } else {
+              console.log('Email uspešno poslan instruktorju!');
+            }
+          } else {
+            console.warn('Instruktor nima emaila v profilu!');
           }
         } catch (emailError) {
-          console.error('Error sending email:', emailError);
+          console.error('Error sending email to instructor:', emailError);
+          toast.error('Napaka pri pošiljanju emaila', {
+            description: 'Rezervacija je bila ustvarjena, ampak email ni bil poslan.'
+          });
         }
       }
 
