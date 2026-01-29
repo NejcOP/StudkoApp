@@ -225,10 +225,16 @@ export const BookingCalendar14Days = ({
       if (error) throw error;
 
       // Mark slot as booked
-      await supabase
+      const { error: updateError } = await supabase
         .from('tutor_availability_dates')
         .update({ is_booked: true })
         .eq('id', selectedSlot.id);
+
+      if (updateError) {
+        console.error('Error marking slot as booked:', updateError);
+      } else {
+        console.log('Slot marked as booked:', selectedSlot.id);
+      }
 
       // Send notification to tutor
       if (tutorData?.user_id) {
@@ -289,13 +295,21 @@ export const BookingCalendar14Days = ({
         description: 'Inštruktor jo bo pregledal in potrdil.'
       });
       
-      // First reload data to update the slot list
+      // Wait a bit for database to update, then reload
+      await new Promise(resolve => setTimeout(resolve, 500));
       await loadData();
       
-      // Then close dialog and reset form (keep selectedDate to show updated slots)
+      // Then close dialog and reset form
       setShowBookingDialog(false);
       setBookingNotes("");
       setSelectedSlot(null);
+      
+      // Force re-select the day to show updated slots
+      if (selectedDate) {
+        const dateStr = format(selectedDate, 'yyyy-MM-dd');
+        const daySlots = availability.filter(s => s.available_date === dateStr);
+        console.log('Slots after reload:', daySlots.filter(s => !s.is_booked).length, 'available');
+      }
     } catch (error) {
       console.error('Error creating booking:', error);
       toast.error('Napaka pri rezervaciji');
