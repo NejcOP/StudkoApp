@@ -20,7 +20,9 @@ serve(async (req) => {
       instructorName, 
       studentName, 
       bookingDate, 
-      bookingTime 
+      bookingTime,
+      bookingId,
+      priceEur
     } = await req.json()
 
     if (!to || !type) {
@@ -126,6 +128,42 @@ serve(async (req) => {
 
         <p style="font-size: 14px; color: #666;">
           Prosimo, potrdi ali zavrni rezervacijo čim prej.
+        </p>
+      `
+      html = emailWrapper(content)
+    } else if (type === 'booking_confirmed_payment') {
+      subject = 'Lekcija potrjena - Plačaj zdaj! 💳'
+      const content = `
+        <h2>Lekcija potrjena! ✅</h2>
+        <p>Pozdravljeni, <strong>${studentName}</strong>!</p>
+        <p>Tvoja rezervacija pri inštruktorju <strong>${instructorName}</strong> je bila <strong>potrjena</strong>!</p>
+        
+        <div class="info-box">
+          <h3 style="margin-top: 0; color: ${BRAND_COLOR};">Podrobnosti lekcije:</h3>
+          <p style="margin: 5px 0;"><strong>Datum:</strong> ${bookingDate}</p>
+          <p style="margin: 5px 0;"><strong>Čas:</strong> ${bookingTime}</p>
+          <p style="margin: 5px 0;"><strong>Inštruktor:</strong> ${instructorName}</p>
+          <p style="margin: 15px 0 5px; font-size: 24px; color: ${BRAND_COLOR};"><strong>Cena: ${priceEur} €</strong></p>
+        </div>
+
+        <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px;">
+          <p style="margin: 0; color: #856404;"><strong>⚠️ Pomembno:</strong> Za dostop do videoklica moraš najprej plačati lekcijo.</p>
+        </div>
+
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="https://studko.si/my-tutor-bookings" class="button" style="font-size: 18px; padding: 16px 40px;">
+            💳 Plačaj zdaj
+          </a>
+        </div>
+
+        <div class="divider"></div>
+
+        <p style="font-size: 14px; color: #666;">
+          Po plačilu boš prejel dostop do videoklica in lahko se pristopiš lekciji ob dogovorjenem času.
+        </p>
+
+        <p style="font-size: 14px; color: #666; margin-top: 20px;">
+          <strong>Način plačila:</strong> Varno plačilo prek Stripe (sprejemamo kartice Visa, Mastercard, American Express).
         </p>
       `
       html = emailWrapper(content)
