@@ -65,6 +65,28 @@ export const InstructorAvailabilityManager = ({ tutorId }: InstructorAvailabilit
 
   useEffect(() => {
     loadAvailability();
+
+    // Subscribe to real-time updates for availability slots
+    const channel = supabase
+      .channel('availability-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'tutor_availability_dates',
+          filter: `tutor_id=eq.${tutorId}`
+        },
+        (payload) => {
+          console.log('Availability changed:', payload);
+          loadAvailability();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [tutorId]);
 
   const loadAvailability = async () => {
