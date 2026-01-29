@@ -61,17 +61,31 @@ export const BookingsList = ({ userId }: { userId: string }) => {
   useEffect(() => {
     const paymentStatus = searchParams.get('payment');
     if (paymentStatus === 'success') {
-      console.log('Payment successful, reloading bookings');
+      console.log('Payment successful, reloading bookings with polling');
       toast.success('Plačilo uspešno! 🎉');
-      // Wait a bit for webhook to process
-      setTimeout(() => {
-        loadBookings();
-      }, 1000);
-      // Remove payment parameter from URL
+      
+      // Remove payment parameter from URL immediately
       const newParams = new URLSearchParams(searchParams);
       newParams.delete('payment');
       newParams.delete('booking');
       navigate(`/profile?tab=bookings${newParams.toString() ? '&' + newParams.toString() : ''}`, { replace: true });
+      
+      // Poll for updated booking status (webhook might take a moment)
+      let pollCount = 0;
+      const pollInterval = setInterval(async () => {
+        pollCount++;
+        console.log(`Polling for booking update, attempt ${pollCount}/10`);
+        await loadBookings();
+        
+        // Stop polling after 10 attempts (20 seconds)
+        if (pollCount >= 10) {
+          clearInterval(pollInterval);
+          console.log('Polling stopped');
+        }
+      }, 2000);
+      
+      // Cleanup on unmount
+      return () => clearInterval(pollInterval);
     } else if (paymentStatus === 'cancelled') {
       toast.error('Plačilo preklicano');
       const newParams = new URLSearchParams(searchParams);
