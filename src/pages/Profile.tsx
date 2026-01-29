@@ -10,7 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Skeleton } from "@/components/ui/skeleton";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import { User, BookOpen, ShoppingBag, Edit, ExternalLink, Settings, Trash2, Sun, Moon, CheckCircle2, MessageSquare, LayoutDashboard, GraduationCap, Wallet, Euro, Loader2 } from "lucide-react";
+import { User, BookOpen, ShoppingBag, Edit, ExternalLink, Settings, Trash2, Sun, Moon, CheckCircle2, MessageSquare, LayoutDashboard, GraduationCap, Wallet, Euro, Loader2, Calendar } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -1580,7 +1580,7 @@ const Profile = () => {
           <div className={mainTab === 'instructor' ? 'w-full' : 'lg:col-span-2'}>
             <Tabs value={mainTab} onValueChange={setMainTab} className="w-full">
               <div className="overflow-x-auto -mx-2 px-2 sm:mx-0 sm:px-0 mb-4 sm:mb-6">
-                <TabsList className={`grid w-full ${showInstructorTab ? 'grid-cols-3' : 'grid-cols-2'} bg-muted rounded-xl p-1 h-12 min-w-[400px] sm:min-w-0`}>
+                <TabsList className={`grid w-full ${showInstructorTab ? 'grid-cols-4' : 'grid-cols-3'} bg-muted rounded-xl p-1 h-12 min-w-[500px] sm:min-w-0`}>
                   <TabsTrigger
                     value="my-notes"
                     className="rounded-lg text-foreground data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white text-xs sm:text-sm px-2"
@@ -1596,6 +1596,14 @@ const Profile = () => {
                     <ShoppingBag className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                     <span className="hidden xs:inline">Kupljeni zapiski</span>
                     <span className="xs:hidden">Kupljeni</span>
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="bookings"
+                    className="rounded-lg text-foreground data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white text-xs sm:text-sm px-2"
+                  >
+                    <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    <span className="hidden xs:inline">Moje rezervacije</span>
+                    <span className="xs:hidden">Rezervacije</span>
                   </TabsTrigger>
                   {showInstructorTab && (
                     <TabsTrigger
@@ -1747,6 +1755,23 @@ const Profile = () => {
                     </p>
                   </div>
                 )}
+              </TabsContent>
+
+              {/* My Bookings Tab */}
+              <TabsContent value="bookings" className="space-y-4">
+                <div className="text-center py-8 bg-card dark:bg-card backdrop-blur rounded-2xl border border-border">
+                  <Calendar className="w-16 h-16 text-primary mx-auto mb-4" />
+                  <p className="text-foreground mb-2 font-medium text-lg">Moje rezervacije</p>
+                  <p className="text-sm text-muted-foreground mb-6">
+                    Poglej vse svoje rezervirane termine pri inštruktorjih.
+                  </p>
+                  <Link to="/my-tutor-bookings">
+                    <Button size="lg" className="gap-2">
+                      <Calendar className="w-4 h-4" />
+                      Odpri moje rezervacije
+                    </Button>
+                  </Link>
+                </div>
               </TabsContent>
 
               {/* Instructor Dashboard Tab */}

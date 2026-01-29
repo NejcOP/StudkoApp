@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Brain, User, Menu, LogOut, GraduationCap, Zap, Calendar } from "lucide-react";
+import { BookOpen, Brain, User, Menu, LogOut, GraduationCap, Zap } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -201,16 +201,6 @@ const Navigation = () => {
                     </span>
                   </div>
                 </div>
-                <Link to="/my-tutor-bookings">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="gap-2 rounded-xl"
-                  >
-                    <Calendar className="w-4 h-4" />
-                    Moje rezervacije
-                  </Button>
-                </Link>
                 <Button 
                   variant="ghost" 
                   size="sm" 
@@ -281,14 +271,6 @@ const Navigation = () => {
                         <Button variant="outline" className="w-full gap-3 py-6 rounded-2xl justify-start text-base font-medium hover:bg-primary/5 hover:border-primary/30 transition-all">
                           <User className="w-5 h-5" />
                           Poglej profil
-                        </Button>
-                      </Link>
-
-                      {/* My Bookings Button */}
-                      <Link to="/my-tutor-bookings" onClick={() => setMobileMenuOpen(false)}>
-                        <Button variant="outline" className="w-full gap-3 py-6 rounded-2xl justify-start text-base font-medium hover:bg-primary/5 hover:border-primary/30 transition-all">
-                          <Calendar className="w-5 h-5" />
-                          Moje rezervacije
                         </Button>
                       </Link>
 
