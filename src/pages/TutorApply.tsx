@@ -133,10 +133,6 @@ export default function TutorApply() {
     setSubmitting(true);
 
     try {
-      const methodologyArray = formData.methodology
-        .split('\n')
-        .map(line => line.trim())
-        .filter(line => line !== '');
       const { error } = await supabase.from("tutor_applications").insert({
         user_id: user.id,
         full_name: formData.full_name,
@@ -151,11 +147,6 @@ export default function TutorApply() {
         mode: formData.mode,
         bio: formData.bio,
         experience: formData.experience || null,
-        languages: formData.languages,
-        methodology: methodologyArray,
-        video_url: videoTab === 'url' ? formData.video_url : '',
-        video_file_url: videoTab === 'file' ? formData.video_file_url : '',
-        discount_info: formData.discount_info,
       });
 
       if (error) throw error;
