@@ -150,18 +150,16 @@ export const BookingCalendar = ({ tutorId, tutorName, pricePerHour = 20 }: Booki
         try {
           const { data: instructorProfile } = await supabase
             .from('profiles')
-            .select('full_name')
+            .select('full_name, email')
             .eq('id', tutorData.user_id)
             .single();
-
-          const { data: authData } = await supabase.auth.admin.getUserById(tutorData.user_id);
           
-          if (authData?.user?.email) {
+          if (instructorProfile?.email) {
             await supabase.functions.invoke('send-booking-email', {
               body: {
-                to: authData.user.email,
+                to: instructorProfile.email,
                 type: 'booking_request',
-                instructorName: instructorProfile?.full_name || 'Inštruktor',
+                instructorName: instructorProfile.full_name || 'Inštruktor',
                 studentName: profileData?.full_name || 'Študent',
                 bookingDate: format(startTime, 'd. MMMM yyyy', { locale: sl }),
                 bookingTime: format(startTime, 'HH:mm', { locale: sl })

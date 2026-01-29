@@ -158,19 +158,17 @@ export const TutorBookingRequests = ({ tutorId }: TutorBookingRequestsProps) => 
         try {
           const { data: studentProfile } = await supabase
             .from('profiles')
-            .select('full_name')
+            .select('full_name, email')
             .eq('id', booking.student_id)
             .single();
-
-          const { data: authData } = await supabase.auth.admin.getUserById(booking.student_id);
           
-          if (authData?.user?.email) {
+          if (studentProfile?.email) {
             await supabase.functions.invoke('send-booking-email', {
               body: {
-                to: authData.user.email,
+                to: studentProfile.email,
                 type: 'booking_confirmed_payment',
                 instructorName: profileData?.full_name || 'Inštruktor',
-                studentName: studentProfile?.full_name || 'Študent',
+                studentName: studentProfile.full_name || 'Študent',
                 bookingDate: format(new Date(booking.start_time), 'd. MMMM yyyy', { locale: sl }),
                 bookingTime: format(new Date(booking.start_time), 'HH:mm', { locale: sl }),
                 bookingId: bookingId,
@@ -222,6 +220,30 @@ export const TutorBookingRequests = ({ tutorId }: TutorBookingRequestsProps) => 
           bookingTime: format(new Date(booking.start_time), 'HH:mm', { locale: sl }),
           bookingId: bookingId
         });
+
+        // Send email to student about rejection
+        try {
+          const { data: studentProfile } = await supabase
+            .from('profiles')
+            .select('full_name, email')
+            .eq('id', booking.student_id)
+            .single();
+          
+          if (studentProfile?.email) {
+            await supabase.functions.invoke('send-booking-email', {
+              body: {
+                to: studentProfile.email,
+                type: 'booking_rejected',
+                instructorName: profileData?.full_name || 'Inštruktor',
+                studentName: studentProfile.full_name || 'Študent',
+                bookingDate: format(new Date(booking.start_time), 'd. MMMM yyyy', { locale: sl }),
+                bookingTime: format(new Date(booking.start_time), 'HH:mm', { locale: sl })
+              }
+            });
+          }
+        } catch (emailError) {
+          console.error('Error sending rejection email:', emailError);
+        }
       }
 
       toast.success('Rezervacija zavrnjena');
