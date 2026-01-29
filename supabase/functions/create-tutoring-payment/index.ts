@@ -92,14 +92,14 @@ serve(async (req) => {
     // Get tutor's stripe connect account from profiles
     const { data: tutorProfile, error: profileError } = await supabaseClient
       .from("profiles")
-      .select("stripe_connect_account_id")
+      .select("stripe_connect_id")
       .eq("id", tutor.user_id)
       .single();
 
-    if (profileError || !tutorProfile?.stripe_connect_account_id) {
+    if (profileError || !tutorProfile?.stripe_connect_id) {
       logStep("Tutor payout not setup", { 
         profileError, 
-        hasConnectId: !!tutorProfile?.stripe_connect_account_id 
+        hasConnectId: !!tutorProfile?.stripe_connect_id 
       });
       return new Response(
         JSON.stringify({ error: "Inštruktor še ni nastavil izplačil. Prosim kontaktiraj inštruktorja." }),
@@ -109,7 +109,7 @@ serve(async (req) => {
 
     logStep("Tutor found", { 
       tutorName: tutor.full_name, 
-      connectAccountId: tutorProfile.stripe_connect_account_id 
+      connectAccountId: tutorProfile.stripe_connect_id 
     });
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
@@ -126,7 +126,7 @@ serve(async (req) => {
       payment_intent_data: {
         application_fee_amount: applicationFee,
         transfer_data: {
-          destination: tutorProfile.stripe_connect_account_id,
+          destination: tutorProfile.stripe_connect_id,
         },
         metadata: {
           booking_id: bookingId,
