@@ -64,6 +64,28 @@ export const BookingCalendar14Days = ({
 
   useEffect(() => {
     loadData();
+
+    // Subscribe to real-time changes
+    const channel = supabase
+      .channel('tutor-availability-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'tutor_availability_dates',
+          filter: `tutor_id=eq.${tutorId}`
+        },
+        () => {
+          console.log('Availability changed, reloading...');
+          loadData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [tutorId]);
 
   const loadData = async () => {
@@ -379,27 +401,22 @@ export const BookingCalendar14Days = ({
                 {format(selectedDayData.date, 'EEEE, d. MMMM', { locale: sl })}
               </h4>
               
-              {selectedDayData.slots.length === 0 ? (
+              {selectedDayData.slots.filter(slot => !slot.is_booked).length === 0 ? (
                 <p className="text-sm text-muted-foreground">Ni prostih terminov za ta dan.</p>
               ) : (
                 <div className="flex flex-col gap-2">
-                  {selectedDayData.slots.map((slot) => (
+                  {selectedDayData.slots
+                    .filter(slot => !slot.is_booked)
+                    .map((slot) => (
                     <Button
                       key={slot.id}
-                      variant={slot.is_booked ? "secondary" : "outline"}
+                      variant="outline"
                       size="sm"
-                      disabled={slot.is_booked}
                       onClick={() => handleSlotSelect(slot)}
-                      className={cn(
-                        "justify-start w-full",
-                        !slot.is_booked && "hover:bg-primary hover:text-primary-foreground"
-                      )}
+                      className="justify-start w-full hover:bg-primary hover:text-primary-foreground"
                     >
                       <Clock className="w-3 h-3 mr-2" />
                       {slot.start_time.substring(0, 5)} - {slot.end_time.substring(0, 5)}
-                      {slot.is_booked && (
-                        <Badge variant="secondary" className="ml-auto text-[10px]">Zasedeno</Badge>
-                      )}
                     </Button>
                   ))}
                 </div>
