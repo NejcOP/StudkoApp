@@ -272,11 +272,14 @@ export const BookingCalendar14Days = ({
       toast.success('Rezervacija poslana!', {
         description: 'Inštruktor jo bo pregledal in potrdil.'
       });
+      
+      // First reload data to update the slot list
+      await loadData();
+      
+      // Then close dialog and reset form (keep selectedDate to show updated slots)
       setShowBookingDialog(false);
       setBookingNotes("");
       setSelectedSlot(null);
-      setSelectedDate(null);
-      loadData();
     } catch (error) {
       console.error('Error creating booking:', error);
       toast.error('Napaka pri rezervaciji');
