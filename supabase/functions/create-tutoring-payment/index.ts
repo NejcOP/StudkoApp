@@ -21,17 +21,27 @@ serve(async (req) => {
     const { bookingId } = await req.json();
     logStep("Request received", { bookingId });
 
+    if (!bookingId) {
+      throw new Error("Missing bookingId parameter");
+    }
+
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header");
+    if (!authHeader) {
+      logStep("Missing auth header");
+      throw new Error("No authorization header");
+    }
 
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError || !userData.user) throw new Error("Unauthorized");
+    if (userError || !userData.user) {
+      logStep("Auth failed", { userError });
+      throw new Error("Unauthorized");
+    }
     logStep("User authenticated", { userId: userData.user.id });
 
     // Get booking details with tutor info
@@ -43,15 +53,26 @@ serve(async (req) => {
 
     if (bookingError || !booking) {
       logStep("Booking not found", { bookingError });
-      throw new Error("Booking not found");
+      return new Response(
+        JSON.stringify({ error: "Booking not found" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 404 }
+      );
     }
 
     if (booking.student_id !== userData.user.id) {
-      throw new Error("Not your booking");
+      logStep("Not user's booking", { bookingStudentId: booking.student_id, userId: userData.user.id });
+      return new Response(
+        JSON.stringify({ error: "Not your booking" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 403 }
+      );
     }
 
     if (booking.paid) {
-      throw new Error("Booking already paid");
+      logStep("Already paid", { bookingId });
+      return new Response(
+        JSON.stringify({ error: "Booking already paid" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
     }
 
     logStep("Booking found", { bookingId: booking.id, tutorId: booking.tutor_id });
@@ -76,8 +97,14 @@ serve(async (req) => {
       .single();
 
     if (profileError || !tutorProfile?.stripe_connect_account_id) {
-      logStep("Tutor payout not setup", { profileError });
-      throw new Error("Tutor has not set up payouts. Please contact the tutor.");
+      logStep("Tutor payout not setup", { 
+        profileError, 
+        hasConnectId: !!tutorProfile?.stripe_connect_account_id 
+      });
+      return new Response(
+        JSON.stringify({ error: "Inštruktor še ni nastavil izplačil. Prosim kontaktiraj inštruktorja." }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
     }
 
     logStep("Tutor found", { 

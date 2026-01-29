@@ -128,19 +128,35 @@ const MyTutorBookings = () => {
   const handlePayment = async (bookingId: string) => {
     setPaying(bookingId);
     try {
+      console.log('Creating payment for booking:', bookingId);
       const { data, error } = await supabase.functions.invoke('create-tutoring-payment', {
         body: { bookingId }
       });
 
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      console.log('Payment response:', { data, error });
+
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
+      
+      if (data?.error) {
+        console.error('Payment creation error:', data.error);
+        throw new Error(data.error);
+      }
 
       if (data?.url) {
+        console.log('Redirecting to payment:', data.url);
         window.location.href = data.url;
+      } else {
+        throw new Error('Ni dobljen payment URL');
       }
     } catch (error: any) {
       console.error('Error creating payment:', error);
-      toast.error(error.message || 'Napaka pri ustvarjanju plačila');
+      const errorMessage = error.message || 'Napaka pri ustvarjanju plačila';
+      toast.error(errorMessage, {
+        description: 'Prosim poskusi znova ali kontaktiraj inštruktorja.'
+      });
     } finally {
       setPaying(null);
     }
