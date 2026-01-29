@@ -84,6 +84,17 @@ serve(async (req) => {
         });
 
         if (bookingId) {
+          // Get booking details first
+          const { data: booking, error: bookingError } = await supabaseClient
+            .from("tutor_bookings")
+            .select("*, tutors!inner(user_id)")
+            .eq("id", bookingId)
+            .single();
+
+          if (bookingError) {
+            logStep("Error fetching booking", { error: bookingError });
+          }
+
           // Mark booking as paid
           const { error } = await supabaseClient
             .from("tutor_bookings")
@@ -97,6 +108,55 @@ serve(async (req) => {
             logStep("Error updating booking from checkout", { error });
           } else {
             logStep("Booking marked as paid via checkout", { bookingId });
+            
+            // Send email to instructor
+            if (booking) {
+              try {
+                // Get instructor profile
+                const { data: instructorProfile } = await supabaseClient
+                  .from("profiles")
+                  .select("full_name, email")
+                  .eq("id", booking.tutors.user_id)
+                  .single();
+
+                // Get student profile
+                const { data: studentProfile } = await supabaseClient
+                  .from("profiles")
+                  .select("full_name")
+                  .eq("id", booking.student_id)
+                  .single();
+
+                if (instructorProfile?.email) {
+                  const bookingDate = new Date(booking.start_time).toLocaleDateString('sl-SI', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                  });
+                  const bookingTime = new Date(booking.start_time).toLocaleTimeString('sl-SI', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  });
+
+                  await supabaseClient.functions.invoke('send-booking-email', {
+                    body: {
+                      to: instructorProfile.email,
+                      type: 'payment_received',
+                      instructorName: instructorProfile.full_name || 'Inštruktor',
+                      studentName: studentProfile?.full_name || 'Študent',
+                      bookingDate: bookingDate,
+                      bookingTime: bookingTime,
+                      priceEur: booking.price_eur
+                    }
+                  });
+                  
+                  logStep("Payment confirmation email sent to instructor", { 
+                    email: instructorProfile.email 
+                  });
+                }
+              } catch (emailError: any) {
+                logStep("Error sending email to instructor", { error: emailError.message });
+              }
+            }
           }
         }
         break;

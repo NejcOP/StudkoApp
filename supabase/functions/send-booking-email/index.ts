@@ -192,6 +192,36 @@ serve(async (req) => {
         </p>
       `
       html = emailWrapper(content)
+    } else if (type === 'payment_received') {
+      subject = 'Plačilo prejeto - Lekcija plačana! 💰'
+      const content = `
+        <h2>Plačilo prejeto! 💰</h2>
+        <p>Pozdravljeni, <strong>${instructorName}</strong>!</p>
+        <p>Študent <strong>${studentName}</strong> je uspešno plačal lekcijo.</p>
+        
+        <div class="info-box">
+          <h3 style="margin-top: 0; color: ${BRAND_COLOR};">Podrobnosti plačila:</h3>
+          <p style="margin: 5px 0;"><strong>Datum lekcije:</strong> ${bookingDate}</p>
+          <p style="margin: 5px 0;"><strong>Čas:</strong> ${bookingTime}</p>
+          <p style="margin: 5px 0;"><strong>Študent:</strong> ${studentName}</p>
+          <p style="margin: 15px 0 5px; font-size: 24px; color: ${BRAND_COLOR};"><strong>Znesek: ${priceEur} €</strong></p>
+        </div>
+
+        <div style="background-color: #d4edda; border-left: 4px solid #28a745; padding: 15px; margin: 20px 0; border-radius: 4px;">
+          <p style="margin: 0; color: #155724;"><strong>✅ Plačilo uspešno:</strong> Sredstva bodo nakazana na tvoj Stripe račun.</p>
+        </div>
+
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="https://studko.si/profile?tab=instructor" class="button">Preglej rezervacije</a>
+        </div>
+
+        <div class="divider"></div>
+
+        <p style="font-size: 14px; color: #666;">
+          Lekcija bo potekala ob dogovorjenem času. Dobiček bo avtomatsko nakazan na tvoj Stripe Connect račun po uspešno zaključeni lekciji.
+        </p>
+      `
+      html = emailWrapper(content)
     } else if (type === 'booking_rejected') {
       subject = 'Rezervacija zavrnjena'
       const content = `
