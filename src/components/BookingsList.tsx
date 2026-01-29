@@ -224,7 +224,7 @@ export const BookingsList = ({ userId }: { userId: string }) => {
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        {booking.status === 'confirmed' && !booking.paid && (
+                        {booking.status === 'confirmed' && !booking.paid && booking.tutor_id !== userId && (
                           <Button
                             onClick={() => handlePayment(booking.id)}
                             disabled={paying === booking.id}
