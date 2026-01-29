@@ -42,6 +42,28 @@ export const BookingsList = ({ userId }: { userId: string }) => {
   useEffect(() => {
     if (userId) {
       loadBookings();
+      
+      // Set up realtime subscription for booking updates
+      const channel = supabase
+        .channel('booking-updates')
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'tutor_bookings',
+            filter: `student_id=eq.${userId}`
+          },
+          (payload) => {
+            console.log('Booking updated via realtime:', payload);
+            loadBookings();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [userId]);
 
@@ -61,8 +83,10 @@ export const BookingsList = ({ userId }: { userId: string }) => {
   useEffect(() => {
     const paymentStatus = searchParams.get('payment');
     if (paymentStatus === 'success') {
-      console.log('Payment successful, reloading bookings with polling');
-      toast.success('Plačilo uspešno! 🎉');
+      console.log('Payment successful, waiting for webhook to update database');
+      toast.success('Plačilo uspešno! 🎉', {
+        description: 'Rezervacija se posodablja...'
+      });
       
       // Remove payment parameter from URL immediately
       const newParams = new URLSearchParams(searchParams);
@@ -70,21 +94,18 @@ export const BookingsList = ({ userId }: { userId: string }) => {
       newParams.delete('booking');
       navigate(`/profile?tab=bookings${newParams.toString() ? '&' + newParams.toString() : ''}`, { replace: true });
       
-      // Poll for updated booking status (webhook might take a moment)
+      // Fallback: poll for updates in case realtime subscription doesn't work
       let pollCount = 0;
       const pollInterval = setInterval(async () => {
         pollCount++;
-        console.log(`Polling for booking update, attempt ${pollCount}/10`);
+        console.log(`Fallback polling attempt ${pollCount}/15`);
         await loadBookings();
         
-        // Stop polling after 10 attempts (20 seconds)
-        if (pollCount >= 10) {
+        if (pollCount >= 15) {
           clearInterval(pollInterval);
-          console.log('Polling stopped');
         }
       }, 2000);
       
-      // Cleanup on unmount
       return () => clearInterval(pollInterval);
     } else if (paymentStatus === 'cancelled') {
       toast.error('Plačilo preklicano');
