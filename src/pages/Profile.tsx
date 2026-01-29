@@ -22,6 +22,7 @@ import { TutorBookingRequests } from "@/components/TutorBookingRequests";
 import { StripeConnectButton } from "@/components/StripeConnectButton";
 import { InstructorDashboardTab } from "@/components/InstructorDashboardTab";
 import { PayoutSettingsModal } from "@/components/PayoutSettingsModal";
+import { BookingsList } from "@/components/BookingsList";
 
 interface PayoutInfo {
   method?: 'stripe' | 'iban' | 'paypal' | 'revolut';
@@ -1763,19 +1764,7 @@ const Profile = () => {
 
               {/* My Bookings Tab - Visible for everyone */}
               <TabsContent value="bookings" className="space-y-4">
-                <div className="text-center py-8 bg-card dark:bg-card backdrop-blur rounded-2xl border border-border">
-                  <Calendar className="w-16 h-16 text-primary mx-auto mb-4" />
-                  <p className="text-foreground mb-2 font-medium text-lg">Moje rezervacije</p>
-                  <p className="text-sm text-muted-foreground mb-6">
-                    Poglej vse svoje rezervirane termine pri inštruktorjih.
-                  </p>
-                  <Link to="/my-tutor-bookings">
-                    <Button size="lg" className="gap-2">
-                      <Calendar className="w-4 h-4" />
-                      Odpri moje rezervacije
-                    </Button>
-                  </Link>
-                </div>
+                <BookingsList userId={user?.id || ''} />
               </TabsContent>
 
               {/* Instructor Dashboard Tab */}
