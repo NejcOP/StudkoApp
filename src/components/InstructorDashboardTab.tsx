@@ -297,11 +297,13 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
             const emailResponse = await supabase.functions.invoke('send-booking-email', {
               body: {
                 to: studentProfile.email,
-                type: 'booking_confirmed',
+                type: 'booking_confirmed_payment',
                 studentName: studentProfile.full_name || 'Študent',
                 instructorName: profileData?.full_name || 'Inštruktor',
                 bookingDate: format(new Date(booking.start_time), 'd. MMMM yyyy', { locale: sl }),
-                bookingTime: format(new Date(booking.start_time), 'HH:mm', { locale: sl })
+                bookingTime: format(new Date(booking.start_time), 'HH:mm', { locale: sl }),
+                bookingId: booking.id,
+                priceEur: booking.price_eur
               }
             });
             
@@ -310,7 +312,7 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
             if (emailResponse.error) {
               console.error('Email send error:', emailResponse.error);
             } else {
-              console.log('Potrditveni email uspešno poslan!');
+              console.log('Potrditveni email z plačilom uspešno poslan!');
             }
           } else {
             console.warn('Študent nima emaila v profilu!');
