@@ -349,9 +349,9 @@ const Profile = () => {
         setMainTab('purchases');
       }
 
-      // Polling for payment success
+      // Polling for payment success (only for note purchases, not tutoring)
       let pollingInterval: NodeJS.Timeout | null = null;
-      if (urlParams.get('payment') === 'success' && user) {
+      if (urlParams.get('payment') === 'success' && urlParams.get('tab') !== 'bookings' && user) {
         setLoading(true);
         toast.info('Preverjam nakup...');
         let pollCount = 0;
