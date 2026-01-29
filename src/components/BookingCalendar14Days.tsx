@@ -382,7 +382,7 @@ export const BookingCalendar14Days = ({
               {selectedDayData.slots.length === 0 ? (
                 <p className="text-sm text-muted-foreground">Ni prostih terminov za ta dan.</p>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                <div className="flex flex-col gap-2">
                   {selectedDayData.slots.map((slot) => (
                     <Button
                       key={slot.id}
@@ -391,12 +391,12 @@ export const BookingCalendar14Days = ({
                       disabled={slot.is_booked}
                       onClick={() => handleSlotSelect(slot)}
                       className={cn(
-                        "justify-start",
+                        "justify-start w-full",
                         !slot.is_booked && "hover:bg-primary hover:text-primary-foreground"
                       )}
                     >
                       <Clock className="w-3 h-3 mr-2" />
-                      {slot.start_time} - {slot.end_time}
+                      {slot.start_time.substring(0, 5)} - {slot.end_time.substring(0, 5)}
                       {slot.is_booked && (
                         <Badge variant="secondary" className="ml-auto text-[10px]">Zasedeno</Badge>
                       )}

@@ -198,7 +198,7 @@ export const TutorAvailabilityDates = ({ tutorId }: TutorAvailabilityDatesProps)
                     {format(parseISO(slot.available_date), "EEEE, d. MMMM yyyy", { locale: sl })}
                   </p>
                   <p className="text-sm text-slate-600 dark:text-slate-300">
-                    {slot.start_time} - {slot.end_time}
+                    {slot.start_time.substring(0, 5)} - {slot.end_time.substring(0, 5)}
                     {slot.is_booked && <span className="ml-2 text-xs text-primary">(Rezervirano)</span>}
                   </p>
                 </div>
