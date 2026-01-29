@@ -30,7 +30,6 @@ import VideoCall from "./pages/VideoCall";
 import TutorManagement from "./pages/TutorManagement";
 import TutorDashboard from "./pages/TutorDashboard";
 import TutorAvailability from "./pages/TutorAvailability";
-import MyTutorBookings from "./pages/MyTutorBookings";
 import About from "./pages/About";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
@@ -69,7 +68,6 @@ const App = () => (
               <Route path="/tutors/manage" element={<ProtectedRoute><TutorManagement /></ProtectedRoute>} />
               <Route path="/tutor/dashboard" element={<ProtectedRoute><TutorDashboard /></ProtectedRoute>} />
               <Route path="/tutor/availability" element={<ProtectedRoute><TutorAvailability /></ProtectedRoute>} />
-              <Route path="/my-tutor-bookings" element={<ProtectedRoute><MyTutorBookings /></ProtectedRoute>} />
               <Route path="/call/:bookingId" element={<ProtectedRoute><VideoCall /></ProtectedRoute>} />
               <Route path="/admin/notes" element={<ProtectedRoute><AdminNotes /></ProtectedRoute>} />
               <Route path="/auth/confirm" element={<ConfirmEmail />} />

@@ -148,8 +148,8 @@ serve(async (req) => {
         },
       ],
       mode: "payment",
-      success_url: `${req.headers.get("origin")}/my-tutor-bookings?payment=success`,
-      cancel_url: `${req.headers.get("origin")}/my-tutor-bookings?payment=cancelled`,
+      success_url: `${req.headers.get("origin")}/profile?tab=bookings&payment=success`,
+      cancel_url: `${req.headers.get("origin")}/profile?tab=bookings&payment=cancelled`,
       metadata: {
         booking_id: bookingId,
       },

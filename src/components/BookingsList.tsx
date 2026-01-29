@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -34,6 +34,7 @@ interface Booking {
 
 export const BookingsList = ({ userId }: { userId: string }) => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState<string | null>(null);
@@ -43,6 +44,18 @@ export const BookingsList = ({ userId }: { userId: string }) => {
       loadBookings();
     }
   }, [userId]);
+
+  // Auto-trigger payment if booking parameter is in URL
+  useEffect(() => {
+    const bookingId = searchParams.get('booking');
+    if (bookingId && bookings.length > 0 && !paying) {
+      const booking = bookings.find(b => b.id === bookingId);
+      if (booking && !booking.paid && booking.status === 'confirmed') {
+        console.log('Auto-triggering payment for booking:', bookingId);
+        handlePayment(bookingId);
+      }
+    }
+  }, [searchParams, bookings]);
 
   const loadBookings = async () => {
     try {
@@ -154,8 +167,8 @@ export const BookingsList = ({ userId }: { userId: string }) => {
     if (booking.status === 'confirmed' && !booking.paid) {
       return <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">Čaka plačilo</Badge>;
     }
-    if (booking.status === 'confirmed') {
-      return <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Potrjeno</Badge>;
+    if (booking.status === 'confirmed' && booking.paid) {
+      return <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Plačano</Badge>;
     }
     if (booking.status === 'completed') {
       return <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">Zaključeno</Badge>;
