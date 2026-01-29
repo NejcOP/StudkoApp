@@ -239,22 +239,6 @@ export const BookingsList = ({ userId }: { userId: string }) => {
 
   return (
     <div className="space-y-6">
-      {awaitingPayment.length > 0 && (
-        <Card className="border-orange-500/50 bg-orange-50 dark:bg-orange-950/30">
-          <CardContent className="flex items-center gap-4 py-4">
-            <AlertCircle className="w-8 h-8 text-orange-600" />
-            <div className="flex-1">
-              <p className="font-semibold text-orange-900 dark:text-orange-200">
-                Imaš {awaitingPayment.length} potrjen{awaitingPayment.length === 1 ? 'o' : 'e'} rezervacij{awaitingPayment.length === 1 ? 'o' : 'e'}, ki čaka{awaitingPayment.length === 1 ? '' : 'jo'} plačilo
-              </p>
-              <p className="text-sm text-orange-800 dark:text-orange-300">
-                Plačaj pred začetkom ure, da zagotoviš svoje mesto.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       <Tabs defaultValue="upcoming" className="space-y-6">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="upcoming">
