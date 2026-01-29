@@ -151,7 +151,7 @@ serve(async (req) => {
         </div>
 
         <div style="text-align: center; margin: 30px 0;">
-          <a href="https://studko.si/my-tutor-bookings" class="button" style="font-size: 18px; padding: 16px 40px;">
+          <a href="https://studko.si/my-tutor-bookings?booking=${bookingId}" class="button" style="font-size: 18px; padding: 16px 40px;">
             💳 Plačaj zdaj
           </a>
         </div>

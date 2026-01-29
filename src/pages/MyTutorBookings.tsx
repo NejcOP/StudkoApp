@@ -62,6 +62,21 @@ const MyTutorBookings = () => {
     loadBookings();
   }, [user]);
 
+  // Auto-trigger payment if booking parameter is in URL
+  useEffect(() => {
+    const bookingId = searchParams.get('booking');
+    if (bookingId && bookings.length > 0 && !paying) {
+      const booking = bookings.find(b => b.id === bookingId);
+      if (booking && booking.status === 'confirmed' && !booking.paid) {
+        console.log('Auto-triggering payment for booking:', bookingId);
+        // Small delay to let page load
+        setTimeout(() => {
+          handlePayment(bookingId);
+        }, 500);
+      }
+    }
+  }, [searchParams, bookings, paying]);
+
   // Reload bookings when app becomes visible
   useEffect(() => {
     const handleVisibilityChange = () => {
