@@ -24,6 +24,76 @@ export default async function handler(req, res) {
       const session = event.data.object;
       console.log('Prejeti metadata:', session.metadata);
       
+      // Handle tutoring payment (one-time payment with booking_id)
+      if (session.mode === 'payment' && session.metadata?.booking_id) {
+        console.log('💰 Tutoring plačilo za booking:', session.metadata.booking_id);
+        
+        const { error: bookingError } = await supabase
+          .from('tutor_bookings')
+          .update({
+            paid: true,
+            stripe_payment_intent_id: session.payment_intent
+          })
+          .eq('id', session.metadata.booking_id);
+
+        if (bookingError) {
+          console.error('❌ Napaka pri posodobitvi booking:', bookingError);
+        } else {
+          console.log('✅ Booking označen kot plačan');
+          
+          // Send email to instructor
+          try {
+            const { data: booking } = await supabase
+              .from('tutor_bookings')
+              .select('*, tutors!inner(user_id)')
+              .eq('id', session.metadata.booking_id)
+              .single();
+
+            if (booking) {
+              const { data: instructorProfile } = await supabase
+                .from('profiles')
+                .select('full_name, email')
+                .eq('id', booking.tutors.user_id)
+                .single();
+
+              const { data: studentProfile } = await supabase
+                .from('profiles')
+                .select('full_name')
+                .eq('id', booking.student_id)
+                .single();
+
+              if (instructorProfile?.email) {
+                const bookingDate = new Date(booking.start_time).toLocaleDateString('sl-SI', {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric'
+                });
+                const bookingTime = new Date(booking.start_time).toLocaleTimeString('sl-SI', {
+                  hour: '2-digit',
+                  minute: '2-digit'
+                });
+
+                await supabase.functions.invoke('send-booking-email', {
+                  body: {
+                    to: instructorProfile.email,
+                    type: 'payment_received',
+                    instructorName: instructorProfile.full_name || 'Inštruktor',
+                    studentName: studentProfile?.full_name || 'Študent',
+                    bookingDate: bookingDate,
+                    bookingTime: bookingTime,
+                    priceEur: booking.price_eur
+                  }
+                });
+                
+                console.log('✅ Email poslan inštruktorju:', instructorProfile.email);
+              }
+            }
+          } catch (emailError) {
+            console.error('❌ Napaka pri pošiljanju emaila:', emailError);
+          }
+        }
+      }
+      
       // Handle note purchase (one-time payment)
       if (session.mode === 'payment' && session.metadata?.note_id && session.metadata?.user_id) {
         console.log('Poskušam vpisati v tabelo note_purchases...');
