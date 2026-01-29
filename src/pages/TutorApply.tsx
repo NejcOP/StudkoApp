@@ -160,6 +160,34 @@ export default function TutorApply() {
 
       if (error) throw error;
 
+      // Send email notification to admin
+      try {
+        await supabase.functions.invoke('send-notification', {
+          body: {
+            to: 'info@studko.si',
+            subject: `Nova prijava za inštruktorja - ${formData.full_name}`,
+            html: `
+              <h2>Nova prijava za inštruktorja</h2>
+              <p><strong>Ime:</strong> ${formData.full_name}</p>
+              <p><strong>Email:</strong> ${formData.email}</p>
+              <p><strong>Telefon:</strong> ${formData.phone || 'Ni podano'}</p>
+              <p><strong>Stopnja izobrazbe:</strong> ${formData.education_level}</p>
+              <p><strong>Šola:</strong> ${formData.school_type}</p>
+              <p><strong>Predmeti:</strong> ${formData.subjects.join(', ')}</p>
+              <p><strong>Način poučevanja:</strong> ${formData.mode}</p>
+              <p><strong>Cena na uro:</strong> ${formData.price_per_hour}€</p>
+              <p><strong>Kratek opis:</strong> ${formData.bio}</p>
+              ${formData.experience ? `<p><strong>Izkušnje:</strong> ${formData.experience}</p>` : ''}
+              <hr>
+              <p>Preglej prijavo v admin panelu.</p>
+            `
+          }
+        });
+      } catch (emailError) {
+        console.error('Error sending admin notification:', emailError);
+        // Don't fail the whole submission if email fails
+      }
+
       toast({
         title: "Uspešno poslano!",
         description: "Tvoja prijava je bila poslana. Kontaktirali te bomo po emailu.",
