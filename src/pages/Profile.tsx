@@ -1052,10 +1052,14 @@ const Profile = () => {
     };
 
     // Check if user should see Instructor Dashboard tab
-    const showInstructorTab = useMemo(() => 
-      profile?.is_instructor || isApprovedTutor,
-      [profile?.is_instructor, isApprovedTutor]
-    );
+    const showInstructorTab = useMemo(() => {
+      const result = profile?.is_instructor || isApprovedTutor;
+      console.log('showInstructorTab:', result, { 
+        is_instructor: profile?.is_instructor, 
+        isApprovedTutor 
+      });
+      return result;
+    }, [profile?.is_instructor, isApprovedTutor]);
     
     // Memoize computed Pro status
     const isPro = useMemo(() => 
