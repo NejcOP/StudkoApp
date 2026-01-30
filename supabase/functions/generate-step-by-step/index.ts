@@ -11,9 +11,9 @@ serve(async (req) => {
   }
 
   try {
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    const GOOGLE_AI_API_KEY = Deno.env.get("GOOGLE_AI_API_KEY");
+    if (!GOOGLE_AI_API_KEY) {
+      throw new Error("GOOGLE_AI_API_KEY is not configured");
     }
 
     const { text } = await req.json();
@@ -21,54 +21,38 @@ serve(async (req) => {
       throw new Error("Text is required");
     }
 
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GOOGLE_AI_API_KEY}`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          {
-            role: "system",
-            content: "You are a study assistant that explains concepts step by step. Create numbered steps with clear explanations, practical examples, and common mistakes to avoid. Return ONLY valid JSON."
-          },
-          {
-            role: "user",
-            content: `Explain this step by step:\n\n${text}`
-          }
-        ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "create_explanation",
-              description: "Create a step-by-step explanation",
-              parameters: {
-                type: "object",
-                properties: {
-                  steps: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        number: { type: "number" },
-                        title: { type: "string" },
-                        explanation: { type: "string" }
-                      },
-                      required: ["number", "title", "explanation"]
-                    }
-                  },
-                  examples: { type: "array", items: { type: "string" } },
-                  common_mistakes: { type: "array", items: { type: "string" } }
-                },
-                required: ["steps", "examples", "common_mistakes"]
-              }
-            }
-          }
-        ],
-        tool_choice: { type: "function", function: { name: "create_explanation" } }
+        contents: [{
+          parts: [{
+            text: `You are a study assistant that explains concepts step by step. Create numbered steps with clear explanations, practical examples, and common mistakes to avoid.
+
+Return ONLY a valid JSON object in this format:
+{
+  "steps": [
+    {
+      "number": 1,
+      "title": "Step title",
+      "explanation": "Detailed explanation"
+    }
+  ],
+  "summary": "Overall summary",
+  "tips": ["Tip 1", "Tip 2"]
+}
+
+Explain this step by step:
+
+${text}`
+          }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 2048,
+        }
       }),
     });
 
@@ -82,13 +66,22 @@ serve(async (req) => {
     }
 
     const aiData = await aiResponse.json();
-    let result;
     
-    if (aiData.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments) {
-      result = JSON.parse(aiData.choices[0].message.tool_calls[0].function.arguments);
-    } else {
+    if (!aiData.candidates?.[0]?.content?.parts?.[0]?.text) {
       throw new Error("Invalid AI response format");
     }
+
+    const responseText = aiData.candidates[0].content.parts[0].text;
+    let cleanedText = responseText.trim();
+    cleanedText = cleanedText.replace(/^```(?:json)?\s*\n?/i, '');
+    cleanedText = cleanedText.replace(/\n?```\s*$/i, '');
+    const jsonStart = cleanedText.indexOf('{');
+    const jsonEnd = cleanedText.lastIndexOf('}');
+    if (jsonStart !== -1 && jsonEnd !== -1) {
+      cleanedText = cleanedText.substring(jsonStart, jsonEnd + 1);
+    }
+    
+    const result = JSON.parse(cleanedText);
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

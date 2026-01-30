@@ -52,22 +52,15 @@ serve(async (req) => {
     
     // Validate API Keys
     const GOOGLE_API_KEY = Deno.env.get("GOOGLE_AI_API_KEY") || Deno.env.get("GOOGLE_API_KEY");
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     
     console.log("GOOGLE_API_KEY exists:", !!GOOGLE_API_KEY);
-    console.log("LOVABLE_API_KEY exists:", !!LOVABLE_API_KEY);
     
-    if (!GOOGLE_API_KEY && !LOVABLE_API_KEY) {
+    if (!GOOGLE_API_KEY) {
       console.error("Missing API Key");
-      throw new Error('API ključ manjka! Dodaj LOVABLE_API_KEY ali GOOGLE_AI_API_KEY v Supabase Secrets.');
+      throw new Error('API ključ manjka! Dodaj GOOGLE_AI_API_KEY v Supabase Secrets.');
     }
     
-    const API_KEY = LOVABLE_API_KEY || GOOGLE_API_KEY;
-    const API_ENDPOINT = LOVABLE_API_KEY 
-      ? "https://ai.gateway.lovable.dev/v1/chat/completions"
-      : "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent";
-    
-    console.log("Using API:", LOVABLE_API_KEY ? "Lovable Gateway" : "Direct Google Gemini");
+    console.log("Using API: Direct Google Gemini");
 
     // Parse request body
     let requestBody;
@@ -103,77 +96,16 @@ serve(async (req) => {
       try {
         console.log(`Attempt ${attempt}/${maxAttempts}: Calling AI API...`);
         
-        // Use Lovable Gateway if available, otherwise direct Google Gemini
-        let aiResponse;
-        
-        if (LOVABLE_API_KEY) {
-          console.log("Using Lovable AI Gateway");
-          aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${API_KEY}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              model: "google/gemini-1.5-flash",
-              messages: [
-                {
-                  role: "system",
-                  content: `You are a JSON generator. Output MUST be valid JSON only. No markdown. No conversational text.
-
-Generate 10 quiz questions from the provided text.
-            
-Mix these question types:
-- multiple_choice: 4 options (label them A, B, C, D)
-- true_false: only 2 options ("Drži" and "Ne drži")
-
-IMPORTANT: Return ONLY raw JSON, no introductory text or markdown tags. Do not wrap the response in markdown code blocks.
-
-Return ONLY a valid JSON object in this exact format:
-{
-  "questions": [
-    {
-      "id": 1,
-      "type": "multiple_choice",
-      "question": "Question text?",
-      "options": ["A) Option 1", "B) Option 2", "C) Option 3", "D) Option 4"],
-      "correct_answer": "A) Option 1",
-      "explanation": "Brief explanation why this is correct"
-    },
-    {
-      "id": 2,
-      "type": "true_false",
-      "question": "Statement to evaluate?",
-      "options": ["Drži", "Ne drži"],
-      "correct_answer": "Drži",
-      "explanation": "Brief explanation"
-    }
-  ]
-}
-
-Make sure all JSON is valid and complete.`
-                },
-                {
-                  role: "user",
-                  content: `Create a quiz from this text:\n\n${text.substring(0, 8000)}`
-                }
-              ],
-              temperature: 0.7,
-              response_format: { type: "json_object" }
-            }),
-          });
-        } else {
-          console.log("Using Direct Google Gemini API");
-          // Direct Google Gemini API call
-          aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${API_KEY}`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              contents: [{
-                parts: [{
-                  text: `You are a JSON generator. Output MUST be valid JSON only. No markdown. No conversational text.
+        console.log("Using Direct Google Gemini API");
+        const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GOOGLE_API_KEY}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{
+                text: `You are a JSON generator. Output MUST be valid JSON only. No markdown. No conversational text.
 
 Generate 10 quiz questions from the provided text.
 
@@ -208,15 +140,14 @@ Return ONLY a valid JSON object in this exact format:
 Create a quiz from this text:
 
 ${text.substring(0, 8000)}`
-                }]
-              }],
-              generationConfig: {
-                temperature: 0.7,
-                maxOutputTokens: 2048,
-              }
-            }),
-          });
-        }
+              }]
+            }],
+            generationConfig: {
+              temperature: 0.7,
+              maxOutputTokens: 2048,
+            }
+          }),
+        });
 
         console.log("AI API response status:", aiResponse.status);
         console.log("AI API response ok:", aiResponse.ok);
@@ -237,28 +168,15 @@ ${text.substring(0, 8000)}`
         console.log("Full AI Response:", JSON.stringify(aiData, null, 2));
 
         // Extract questions from response
-        let content;
+        console.log("Extracting from Google Gemini format...");
+        console.log("candidates:", aiData.candidates);
         
-        if (LOVABLE_API_KEY) {
-          // Lovable Gateway format (OpenAI-like)
-          console.log("Extracting from Lovable format...");
-          console.log("choices:", aiData.choices);
-          if (aiData.choices?.[0]?.message?.content) {
-            content = aiData.choices[0].message.content;
-          } else {
-            console.error("Missing content. Response structure:", JSON.stringify(aiData, null, 2));
-            throw new Error("Missing choices[0].message.content in Lovable response");
-          }
+        let content;
+        if (aiData.candidates?.[0]?.content?.parts?.[0]?.text) {
+          content = aiData.candidates[0].content.parts[0].text;
         } else {
-          // Google Gemini format
-          console.log("Extracting from Google Gemini format...");
-          console.log("candidates:", aiData.candidates);
-          if (aiData.candidates?.[0]?.content?.parts?.[0]?.text) {
-            content = aiData.candidates[0].content.parts[0].text;
-          } else {
-            console.error("Missing content. Response structure:", JSON.stringify(aiData, null, 2));
-            throw new Error("Missing candidates[0].content.parts[0].text in Google response");
-          }
+          console.error("Missing content. Response structure:", JSON.stringify(aiData, null, 2));
+          throw new Error("Missing candidates[0].content.parts[0].text in Google response");
         }
         
         console.log("=== Extracted Content ===");

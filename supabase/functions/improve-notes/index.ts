@@ -18,30 +18,29 @@ serve(async (req) => {
       throw new Error('Content is required');
     }
     
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY not configured');
+    const GOOGLE_AI_API_KEY = Deno.env.get('GOOGLE_AI_API_KEY');
+    if (!GOOGLE_AI_API_KEY) {
+      throw new Error('GOOGLE_AI_API_KEY not configured');
     }
 
-    // Call AI to improve notes
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    // Call Google AI to improve notes
+    const prompt = `You are an expert at improving study notes in Slovenian. Rewrite notes with: 1) Clean formatting with headers and sections 2) Fixed grammar and spelling 3) Bullet points for key concepts 4) A clear summary at the top 5) Study-friendly structure. IMPORTANT: Respond in Slovenian language. Keep all important content but make it clearer and more organized.
+
+Please improve these study notes:
+
+${content}`;
+
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GOOGLE_AI_API_KEY}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are an expert at improving study notes in Slovenian. Rewrite notes with: 1) Clean formatting with headers and sections 2) Fixed grammar and spelling 3) Bullet points for key concepts 4) A clear summary at the top 5) Study-friendly structure. IMPORTANT: Respond in Slovenian language. Keep all important content but make it clearer and more organized.'
-          },
-          {
-            role: 'user',
-            content: `Please improve these study notes:\n\n${content}`
-          }
-        ],
+        contents: [{
+          parts: [{
+            text: prompt
+          }]
+        }]
       }),
     });
 
@@ -52,7 +51,7 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    const improvedContent = data.choices[0].message.content;
+    const improvedContent = data.candidates[0].content.parts[0].text;
 
     // If noteId is provided, update the note (backward compatibility)
     if (noteId) {
