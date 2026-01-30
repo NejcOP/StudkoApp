@@ -104,54 +104,23 @@ export default function AdminTikTokChallenges() {
 
       if (claimError) throw claimError;
 
-      // Grant PRO access
+      // Grant PRO access for 1 month
+      const oneMonthFromNow = new Date();
+      oneMonthFromNow.setMonth(oneMonthFromNow.getMonth() + 1);
+
       const { error: profileError } = await supabase
         .from("profiles")
         .update({
           subscription_status: "active",
-          trial_ends_at: null,
+          trial_ends_at: oneMonthFromNow.toISOString(),
         })
         .eq("id", userId);
 
       if (profileError) throw profileError;
 
-      // Send approval email
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        await fetch('/api/send-notification', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session?.access_token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            to: claim.profiles?.email,
-            title: '🎉 Tvoj TikTok izziv je bil odobren!',
-            message: `
-              <h2>Čestitamo! 🎊</h2>
-              <p>Tvoja prijava za TikTok izziv je bila odobrena!</p>
-              <p>Zdaj imaš <strong>brezplačen PRO dostop</strong> do vseh funkcij na Študko platformi!</p>
-              <h3>Kaj to pomeni?</h3>
-              <ul>
-                <li>✨ Neomejeno generiranje zapiskov z AI</li>
-                <li>📚 Dostop do vseh premium funkcij</li>
-                <li>🎯 Prednostna podpora</li>
-                <li>🚀 Vse nove funkcije brezplačno</li>
-              </ul>
-              <p>Hvala za podporo! 💜</p>
-            `,
-            actionLink: 'https://studko.si/ai',
-            actionText: 'Preizkusi PRO funkcije',
-          }),
-        });
-      } catch (emailError) {
-        console.error('Error sending approval email:', emailError);
-      }
-
       toast({
         title: "Uspešno!",
-        description: "TikTok izziv je bil odobren in uporabnik je dobil PRO dostop.",
+        description: "TikTok izziv je bil odobren in uporabnik je dobil 1 mesec PRO dostopa.",
       });
 
       fetchClaims();
@@ -184,34 +153,6 @@ export default function AdminTikTokChallenges() {
         .eq("id", selectedClaim);
 
       if (error) throw error;
-
-      // Send rejection email
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        await fetch('/api/send-notification', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session?.access_token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            to: claim.profiles?.email,
-            title: 'Glede tvojega TikTok izziva',
-            message: `
-              <h2>O tvojem TikTok izzivu</h2>
-              <p>Tvoja prijava za TikTok izziv žal ni bila odobrena.</p>
-              ${rejectionNotes ? `
-                <h3>Razlog:</h3>
-                <p>${rejectionNotes}</p>
-              ` : ''}
-              <p>Če imaš kakršna koli vprašanja, nas lahko kontaktiraš na info@studko.si.</p>
-            `,
-          }),
-        });
-      } catch (emailError) {
-        console.error('Error sending rejection email:', emailError);
-      }
 
       toast({
         title: "Zavrnjeno",
