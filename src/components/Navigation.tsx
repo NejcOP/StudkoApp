@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Brain, User, Menu, LogOut, GraduationCap, Zap } from "lucide-react";
+import { BookOpen, Brain, User, Menu, LogOut, GraduationCap, Zap, Shield } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -23,6 +23,7 @@ const Navigation = () => {
   const { toast } = useToast();
   const { hasProAccess } = useProAccess();
   const [userName, setUserName] = useState<string>("");
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [loadingProfile, setLoadingProfile] = useState(false);
   const lastProfileCheckRef = useRef<number>(0);
   
@@ -80,7 +81,7 @@ const Navigation = () => {
     try {
       const { data: profile, error } = await supabase
         .from("profiles")
-        .select("subscription_status, trial_ends_at, full_name")
+        .select("subscription_status, trial_ends_at, full_name, is_admin")
         .eq("id", user.id)
         .single();
 
@@ -100,6 +101,7 @@ const Navigation = () => {
         // Use profile name or fallback to metadata
         const displayName = profile?.full_name || user.user_metadata?.full_name || "Uživatelj";
         setUserName(displayName);
+        setIsAdmin(profile?.is_admin || false);
         
         // Cache the profile data
         try {
@@ -184,6 +186,19 @@ const Navigation = () => {
                   </Link>
                 );
               })}
+              {isAdmin && (
+                <Link
+                  to="/admin/tutor-applications"
+                  className={`relative px-4 py-2.5 rounded-xl transition-all duration-300 flex items-center gap-2 ${
+                    isActive("/admin/tutor-applications")
+                      ? "text-primary font-semibold bg-primary/10"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  }`}
+                >
+                  <Shield className="w-5 h-5" />
+                  <span className="text-sm font-medium">Admin</span>
+                </Link>
+              )}
             </div>
           )}
 
@@ -310,6 +325,22 @@ const Navigation = () => {
                             </Link>
                           );
                         })}
+                        {isAdmin && (
+                          <Link
+                            to="/admin/tutor-applications"
+                            onClick={() => setMobileMenuOpen(false)}
+                            className={`flex items-center gap-4 px-5 py-4 rounded-2xl transition-all min-h-[60px] ${
+                              isActive("/admin/tutor-applications")
+                                ? "bg-gradient-to-r from-primary/15 to-accent/15 text-primary font-bold shadow-sm border border-primary/20"
+                                : "text-muted-foreground hover:bg-muted active:bg-muted/80 hover:text-foreground"
+                            }`}
+                          >
+                            <div className={`p-2 rounded-xl ${isActive("/admin/tutor-applications") ? "bg-primary/20" : "bg-muted"}`}>
+                              <Shield className="w-6 h-6" />
+                            </div>
+                            <span className="text-base font-medium">Admin - Prijave</span>
+                          </Link>
+                        )}
                       </div>
 
                       <div className="border-t border-border my-4"></div>
