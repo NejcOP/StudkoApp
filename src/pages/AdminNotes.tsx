@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import { Check, X, Eye } from "lucide-react";
+import { Eye } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const AdminNotes = () => {
   // Mock data - will be replaced with real data later
@@ -26,14 +27,6 @@ const AdminNotes = () => {
     },
   ];
 
-  const handleApprove = (id: number) => {
-    console.log("Approving note:", id);
-  };
-
-  const handleReject = (id: number) => {
-    console.log("Rejecting note:", id);
-  };
-
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -44,23 +37,19 @@ const AdminNotes = () => {
             Pregled zapiskov
           </h1>
           <p className="text-muted-foreground">
-            Preglej in odobri nove zapiske pred objavo
+            Pregled vseh objavljenih zapiskov na platformi
           </p>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <div className="bg-gradient-card rounded-2xl p-6 border border-border shadow-lg">
-            <p className="text-muted-foreground text-sm mb-1">V čakanju</p>
+            <p className="text-muted-foreground text-sm mb-1">Skupaj zapiskov</p>
             <p className="text-3xl font-bold text-primary">{pendingNotes.length}</p>
           </div>
           <div className="bg-gradient-card rounded-2xl p-6 border border-border shadow-lg">
-            <p className="text-muted-foreground text-sm mb-1">Odobrenih danes</p>
+            <p className="text-muted-foreground text-sm mb-1">Danes dodanih</p>
             <p className="text-3xl font-bold text-accent">0</p>
-          </div>
-          <div className="bg-gradient-card rounded-2xl p-6 border border-border shadow-lg">
-            <p className="text-muted-foreground text-sm mb-1">Zavrnjenih danes</p>
-            <p className="text-3xl font-bold text-destructive">0</p>
           </div>
         </div>
 
@@ -106,29 +95,15 @@ const AdminNotes = () => {
                     </td>
                     <td className="p-4">
                       <div className="flex justify-end gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="hover:bg-primary/10"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleApprove(note.id)}
-                          className="hover:bg-accent/10 hover:text-accent hover:border-accent"
-                        >
-                          <Check className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleReject(note.id)}
-                          className="hover:bg-destructive/10 hover:text-destructive hover:border-destructive"
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
+                        <Link to={`/notes/${note.id}`}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="hover:bg-primary/10"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                        </Link>
                       </div>
                     </td>
                   </tr>
