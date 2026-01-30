@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Brain, User, Menu, LogOut, GraduationCap, Zap, Shield } from "lucide-react";
+import { BookOpen, Brain, User, Menu, LogOut, GraduationCap, Zap, Shield, ChevronDown, Video, FileText } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -15,6 +15,12 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Navigation = () => {
   const location = useLocation();
@@ -191,17 +197,41 @@ const Navigation = () => {
                 );
               })}
               {isAdmin && (
-                <Link
-                  to="/admin/tutor-applications"
-                  className={`relative px-4 py-2.5 rounded-xl transition-all duration-300 flex items-center gap-2 ${
-                    isActive("/admin/tutor-applications")
-                      ? "text-primary font-semibold bg-primary/10"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                  }`}
-                >
-                  <Shield className="w-5 h-5" />
-                  <span className="text-sm font-medium">Admin</span>
-                </Link>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      className={`relative px-4 py-2.5 rounded-xl transition-all duration-300 flex items-center gap-2 ${
+                        location.pathname.startsWith("/admin")
+                          ? "text-primary font-semibold bg-primary/10"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                      }`}
+                    >
+                      <Shield className="w-5 h-5" />
+                      <span className="text-sm font-medium">Admin</span>
+                      <ChevronDown className="w-4 h-4" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin/tutor-applications" className="flex items-center gap-2 cursor-pointer">
+                        <GraduationCap className="w-4 h-4" />
+                        <span>Prijave inštruktorjev</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin/tiktok-challenges" className="flex items-center gap-2 cursor-pointer">
+                        <Video className="w-4 h-4" />
+                        <span>TikTok izzivi</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin/notes" className="flex items-center gap-2 cursor-pointer">
+                        <FileText className="w-4 h-4" />
+                        <span>Zapiski</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               )}
             </div>
           )}
@@ -330,20 +360,54 @@ const Navigation = () => {
                           );
                         })}
                         {isAdmin && (
-                          <Link
-                            to="/admin/tutor-applications"
-                            onClick={() => setMobileMenuOpen(false)}
-                            className={`flex items-center gap-4 px-5 py-4 rounded-2xl transition-all min-h-[60px] ${
-                              isActive("/admin/tutor-applications")
-                                ? "bg-gradient-to-r from-primary/15 to-accent/15 text-primary font-bold shadow-sm border border-primary/20"
-                                : "text-muted-foreground hover:bg-muted active:bg-muted/80 hover:text-foreground"
-                            }`}
-                          >
-                            <div className={`p-2 rounded-xl ${isActive("/admin/tutor-applications") ? "bg-primary/20" : "bg-muted"}`}>
-                              <Shield className="w-6 h-6" />
+                          <>
+                            <div className="text-xs font-semibold text-muted-foreground px-2 mt-4 mb-2 flex items-center gap-2">
+                              <Shield className="h-4 w-4" />
+                              AdminPanel
                             </div>
-                            <span className="text-base font-medium">Admin - Prijave</span>
-                          </Link>
+                            <Link
+                              to="/admin/tutor-applications"
+                              onClick={() => setMobileMenuOpen(false)}
+                              className={`flex items-center gap-4 px-5 py-4 rounded-2xl transition-all min-h-[60px] ${
+                                isActive("/admin/tutor-applications")
+                                  ? "bg-gradient-to-r from-primary/15 to-accent/15 text-primary font-bold shadow-sm border border-primary/20"
+                                  : "text-muted-foreground hover:bg-muted active:bg-muted/80 hover:text-foreground"
+                              }`}
+                            >
+                              <div className={`p-2 rounded-xl ${isActive("/admin/tutor-applications") ? "bg-primary/20" : "bg-muted"}`}>
+                                <GraduationCap className="w-6 h-6" />
+                              </div>
+                              <span className="text-base font-medium">Prijave inštruktorjev</span>
+                            </Link>
+                            <Link
+                              to="/admin/tiktok-challenges"
+                              onClick={() => setMobileMenuOpen(false)}
+                              className={`flex items-center gap-4 px-5 py-4 rounded-2xl transition-all min-h-[60px] ${
+                                isActive("/admin/tiktok-challenges")
+                                  ? "bg-gradient-to-r from-primary/15 to-accent/15 text-primary font-bold shadow-sm border border-primary/20"
+                                  : "text-muted-foreground hover:bg-muted active:bg-muted/80 hover:text-foreground"
+                              }`}
+                            >
+                              <div className={`p-2 rounded-xl ${isActive("/admin/tiktok-challenges") ? "bg-primary/20" : "bg-muted"}`}>
+                                <Video className="w-6 h-6" />
+                              </div>
+                              <span className="text-base font-medium">TikTok izzivi</span>
+                            </Link>
+                            <Link
+                              to="/admin/notes"
+                              onClick={() => setMobileMenuOpen(false)}
+                              className={`flex items-center gap-4 px-5 py-4 rounded-2xl transition-all min-h-[60px] ${
+                                isActive("/admin/notes")
+                                  ? "bg-gradient-to-r from-primary/15 to-accent/15 text-primary font-bold shadow-sm border border-primary/20"
+                                  : "text-muted-foreground hover:bg-muted active:bg-muted/80 hover:text-foreground"
+                              }`}
+                            >
+                              <div className={`p-2 rounded-xl ${isActive("/admin/notes") ? "bg-primary/20" : "bg-muted"}`}>
+                                <FileText className="w-6 h-6" />
+                              </div>
+                              <span className="text-base font-medium">Zapiski</span>
+                            </Link>
+                          </>
                         )}
                       </div>
 

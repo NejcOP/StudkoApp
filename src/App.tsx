@@ -23,6 +23,7 @@ import PublicProfile from "./pages/PublicProfile";
 import AIAssistant from "./pages/AIAssistant";
 import AdminNotes from "./pages/AdminNotes";
 import AdminTutorApplications from "./pages/AdminTutorApplications";
+import AdminTikTokChallenges from "./pages/AdminTikTokChallenges";
 import Tutors from "./pages/Tutors";
 import TutorDetail from "./pages/TutorDetail";
 import TutorApply from "./pages/TutorApply";
@@ -72,6 +73,7 @@ const App = () => (
               <Route path="/call/:bookingId" element={<ProtectedRoute><VideoCall /></ProtectedRoute>} />
               <Route path="/admin/notes" element={<ProtectedRoute><AdminNotes /></ProtectedRoute>} />
               <Route path="/admin/tutor-applications" element={<ProtectedRoute><AdminTutorApplications /></ProtectedRoute>} />
+              <Route path="/admin/tiktok-challenges" element={<ProtectedRoute><AdminTikTokChallenges /></ProtectedRoute>} />
               <Route path="/auth/confirm" element={<ConfirmEmail />} />
               <Route path="/confirm-email" element={<ConfirmEmail />} />
               <Route path="/about" element={<About />} />
