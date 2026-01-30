@@ -4,11 +4,12 @@ import {
   Layers, 
   HelpCircle,
   FileText,
+  Sparkles,
 } from "lucide-react";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 // Essential AI modes for students
-export type AIMode = "chat" | "flashcards" | "quiz" | "summary";
+export type AIMode = "chat" | "flashcards" | "quiz" | "summary" | "improve";
 
 interface AIModeSelectorProps {
   mode: AIMode;
@@ -20,6 +21,7 @@ const modes: { id: AIMode; label: string; icon: React.ReactNode }[] = [
   { id: "flashcards", label: "Kartice", icon: <Layers className="w-4 h-4" /> },
   { id: "quiz", label: "Kviz", icon: <HelpCircle className="w-4 h-4" /> },
   { id: "summary", label: "Povzetek", icon: <FileText className="w-4 h-4" /> },
+  { id: "improve", label: "Izboljšaj", icon: <Sparkles className="w-4 h-4" /> },
 ];
 
 export const AIModeSelector = ({ mode, onModeChange }: AIModeSelectorProps) => {

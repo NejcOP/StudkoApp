@@ -63,6 +63,7 @@ import ChatMessage, { TypingIndicator } from "@/components/ai/ChatMessage";
 import QuickActions from "@/components/ai/QuickActions";
 import QuizMode from "@/components/ai/modes/QuizMode";
 import SummaryMode from "@/components/ai/modes/SummaryMode";
+import ImproveMode from "@/components/ai/modes/ImproveMode";
 import AiFileAttachment from "@/components/ai/AiFileAttachment";
 import { uploadAiFile } from "@/lib/aiFileUpload";
 import { FlashcardCarousel } from "@/components/FlashcardCarousel";
@@ -1648,6 +1649,10 @@ const AIAssistant = () => {
 
                   {mode === "summary" && (
                     <SummaryMode isLoading={isLoading} setIsLoading={setIsLoading} />
+                  )}
+
+                  {mode === "improve" && (
+                    <ImproveMode />
                   )}
                 </div>
               </div>

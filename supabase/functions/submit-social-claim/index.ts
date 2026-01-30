@@ -98,21 +98,17 @@ serve(async (req) => {
               </div>
             ` : ''}
             
-            <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #ffc107;">
-              <p style="margin: 0; color: #856404;">
+            <div style="background: #fff3cd; padding: 20px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #ffc107; text-align: center;">
+              <p style="margin: 0 0 15px 0; color: #856404;">
                 <strong>⚠️ Dejanje potrebno:</strong><br>
-                Preveri videoposnetke in ročno podaljšaj PRO status uporabniku v Supabase Dashboard.
+                Preveri videoposnetke in potrdi ali zavrni prijavo.
               </p>
-            </div>
-            
-            <div style="margin-top: 20px; padding: 15px; background: #e8f4f8; border-radius: 8px;">
-              <p style="margin: 0; color: #0c5460; font-size: 14px;">
-                <strong>Kako podaljšati PRO:</strong><br>
-                1. Pojdi v Supabase Dashboard → profiles tabelo<br>
-                2. Najdi uporabnika z ID: <code>${userId}</code><br>
-                3. Nastavi: <code>pro_status = true</code> in <code>pro_expires_at</code> na +30 dni<br>
-                4. Označi claim v <code>social_claims</code> tabeli kot <code>approved</code>
-              </p>
+              <a href="https://studko.si/admin/tiktok" 
+                 style="display: inline-block; background: linear-gradient(135deg, #00f2ea 0%, #0891b2 100%); 
+                        color: white; padding: 12px 30px; text-decoration: none; border-radius: 8px; 
+                        font-weight: bold; font-size: 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                🎥 Odpri Admin Panel
+              </a>
             </div>
           </div>
           <p style="text-align: center; color: #999; font-size: 12px; margin-top: 20px;">

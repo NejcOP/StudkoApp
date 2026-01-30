@@ -14,6 +14,10 @@ serve(async (req) => {
   try {
     const { noteId, content } = await req.json();
     
+    if (!content || typeof content !== 'string') {
+      throw new Error('Content is required');
+    }
+    
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
       throw new Error('LOVABLE_API_KEY not configured');
@@ -31,7 +35,7 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'You are an expert at improving study notes. Rewrite notes with: 1) Clean formatting with headers and sections 2) Fixed grammar and spelling 3) Bullet points for key concepts 4) A clear summary at the top 5) Study-friendly structure. Keep all important content but make it clearer and more organized.'
+            content: 'You are an expert at improving study notes in Slovenian. Rewrite notes with: 1) Clean formatting with headers and sections 2) Fixed grammar and spelling 3) Bullet points for key concepts 4) A clear summary at the top 5) Study-friendly structure. IMPORTANT: Respond in Slovenian language. Keep all important content but make it clearer and more organized.'
           },
           {
             role: 'user',
@@ -50,21 +54,23 @@ serve(async (req) => {
     const data = await response.json();
     const improvedContent = data.choices[0].message.content;
 
-    // Store improved version
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    // If noteId is provided, update the note (backward compatibility)
+    if (noteId) {
+      const supabaseClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      );
 
-    const { error: updateError } = await supabaseClient
-      .from('notes')
-      .update({ improved_file_url: improvedContent })
-      .eq('id', noteId);
+      const { error: updateError } = await supabaseClient
+        .from('notes')
+        .update({ improved_file_url: improvedContent })
+        .eq('id', noteId);
 
-    if (updateError) throw updateError;
+      if (updateError) throw updateError;
+    }
 
     return new Response(
-      JSON.stringify({ success: true, improvedContent }),
+      JSON.stringify({ success: true, improved: improvedContent }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
