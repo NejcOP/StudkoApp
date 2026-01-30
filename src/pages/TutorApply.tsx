@@ -153,11 +153,18 @@ export default function TutorApply() {
 
       // Send email notification to admin
       try {
-        await supabase.functions.invoke('send-notification', {
-          body: {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        await fetch('/api/send-notification', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session?.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
             to: 'info@studko.si',
-            subject: `Nova prijava za inštruktorja - ${formData.full_name}`,
-            html: `
+            title: `Nova prijava za inštruktorja - ${formData.full_name}`,
+            message: `
               <h2>Nova prijava za inštruktorja</h2>
               <p><strong>Ime:</strong> ${formData.full_name}</p>
               <p><strong>Email:</strong> ${formData.email}</p>
@@ -171,8 +178,8 @@ export default function TutorApply() {
               ${formData.experience ? `<p><strong>Izkušnje:</strong> ${formData.experience}</p>` : ''}
               <hr>
               <p>Preglej prijavo v admin panelu.</p>
-            `
-          }
+            `,
+          }),
         });
       } catch (emailError) {
         console.error('Error sending admin notification:', emailError);
