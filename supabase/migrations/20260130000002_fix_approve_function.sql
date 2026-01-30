@@ -1,13 +1,5 @@
--- Disable auto-approval of tutors
--- Applications will now stay in 'pending' state until manually approved by admin
+-- Fix approve_tutor_application function - remove updated_at column reference
 
--- Drop the auto-approve trigger
-DROP TRIGGER IF EXISTS on_tutor_application_created ON public.tutor_applications;
-
--- Drop the auto-approve function
-DROP FUNCTION IF EXISTS public.auto_approve_tutor();
-
--- Create manual approval function that admin can call
 CREATE OR REPLACE FUNCTION public.approve_tutor_application(application_id uuid)
 RETURNS void
 LANGUAGE plpgsql
@@ -17,8 +9,7 @@ AS $$
 DECLARE
   app_record RECORD;
 BEGIN
-  -- Check if user is admin (you can customize this check)
-  -- For now, only allow if user has is_admin=true in profiles
+  -- Check if user is admin
   IF NOT EXISTS (
     SELECT 1 FROM public.profiles 
     WHERE id = auth.uid() AND is_admin = true
@@ -106,63 +97,3 @@ BEGIN
 
 END;
 $$;
-
--- Grant execute to authenticated users (admin check is inside the function)
-GRANT EXECUTE ON FUNCTION public.approve_tutor_application(uuid) TO authenticated;
-
--- Add rejection function as well
-CREATE OR REPLACE FUNCTION public.reject_tutor_application(application_id uuid, rejection_reason text DEFAULT NULL)
-RETURNS void
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public, pg_temp
-AS $$
-BEGIN
-  -- Check if user is admin
-  IF NOT EXISTS (
-    SELECT 1 FROM public.profiles 
-    WHERE id = auth.uid() AND is_admin = true
-  ) THEN
-    RAISE EXCEPTION 'Only administrators can reject tutor applications';
-  END IF;
-
-  -- Update application status
-  UPDATE public.tutor_applications
-  SET 
-    status = 'rejected',
-    rejection_reason = COALESCE(reject_tutor_application.rejection_reason, 'No reason provided')
-  WHERE id = application_id AND status = 'pending';
-
-  IF NOT FOUND THEN
-    RAISE EXCEPTION 'Application not found or already processed';
-  END IF;
-END;
-$$;
-
-GRANT EXECUTE ON FUNCTION public.reject_tutor_application(uuid, text) TO authenticated;
-
--- Add rejection_reason column if it doesn't exist
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns 
-    WHERE table_name = 'tutor_applications' 
-    AND column_name = 'rejection_reason'
-  ) THEN
-    ALTER TABLE public.tutor_applications 
-    ADD COLUMN rejection_reason TEXT;
-  END IF;
-END $$;
-
--- Add is_admin column to profiles if it doesn't exist
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns 
-    WHERE table_name = 'profiles' 
-    AND column_name = 'is_admin'
-  ) THEN
-    ALTER TABLE public.profiles 
-    ADD COLUMN is_admin BOOLEAN DEFAULT false;
-  END IF;
-END $$;
