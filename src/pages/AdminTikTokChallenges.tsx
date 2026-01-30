@@ -51,7 +51,7 @@ export default function AdminTikTokChallenges() {
         .from("social_claims")
         .select(`
           *,
-          profiles:user_id (
+          profiles!user_id (
             full_name,
             email
           )
