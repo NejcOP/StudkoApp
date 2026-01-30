@@ -176,9 +176,9 @@ const Navigation = () => {
             />
           </Link>
 
-          {/* Desktop Navigation */}
+          {/* Desktop Navigation - Centered */}
           {user && (
-            <div className="hidden lg:flex items-center space-x-2">
+            <div className="hidden lg:flex items-center space-x-2 absolute left-1/2 transform -translate-x-1/2">{navLinks.map((link) => {
               {navLinks.map((link) => {
                 const Icon = link.icon;
                 return (
