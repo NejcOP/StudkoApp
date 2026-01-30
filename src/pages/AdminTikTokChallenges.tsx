@@ -47,20 +47,35 @@ export default function AdminTikTokChallenges() {
 
   const fetchClaims = async () => {
     try {
-      const { data, error } = await supabase
+      // First get all social claims
+      const { data: claimsData, error: claimsError } = await supabase
         .from("social_claims")
-        .select(`
-          *,
-          profiles!user_id (
-            full_name,
-            email
-          )
-        `)
+        .select("*")
         .eq("claim_type", "tiktok_challenge")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
-      setClaims(data || []);
+      if (claimsError) throw claimsError;
+
+      // Then get profiles for each user_id
+      if (claimsData && claimsData.length > 0) {
+        const userIds = claimsData.map(claim => claim.user_id);
+        const { data: profilesData, error: profilesError } = await supabase
+          .from("profiles")
+          .select("id, full_name, email")
+          .in("id", userIds);
+
+        if (profilesError) throw profilesError;
+
+        // Merge profiles into claims
+        const claimsWithProfiles = claimsData.map(claim => ({
+          ...claim,
+          profiles: profilesData?.find(p => p.id === claim.user_id) || null
+        }));
+
+        setClaims(claimsWithProfiles);
+      } else {
+        setClaims([]);
+      }
     } catch (error: any) {
       toast({
         title: "Napaka",
