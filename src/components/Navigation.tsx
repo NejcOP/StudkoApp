@@ -59,6 +59,7 @@ const Navigation = () => {
       const cached = getCachedProfile();
       if (cached && cached.full_name) {
         setUserName(cached.full_name);
+        setIsAdmin(cached.is_admin || false);
       }
       
       // Only fetch if no cache or cache is old
@@ -68,6 +69,7 @@ const Navigation = () => {
       }
     } else {
       setUserName("");
+      setIsAdmin(false);
     }
   }, [user?.id]);
 
@@ -100,13 +102,14 @@ const Navigation = () => {
       } else {
         // Use profile name or fallback to metadata
         const displayName = profile?.full_name || user.user_metadata?.full_name || "Uživatelj";
+        const adminStatus = profile?.is_admin || false;
         setUserName(displayName);
-        setIsAdmin(profile?.is_admin || false);
+        setIsAdmin(adminStatus);
         
         // Cache the profile data
         try {
           localStorage.setItem(`profile_${user.id}`, JSON.stringify({
-            data: { full_name: displayName },
+            data: { full_name: displayName, is_admin: adminStatus },
             timestamp: Date.now()
           }));
         } catch (err) {
@@ -128,6 +131,7 @@ const Navigation = () => {
   const handleSignOut = async () => {
     // Immediately clear UI state
     setUserName("");
+    setIsAdmin(false);
     setMobileMenuOpen(false);
     
     // Show toast
