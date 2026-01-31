@@ -225,7 +225,7 @@ POMEMBNO: Ne ponavljaj vedno iste strukture strogo. Prilagodi se vprašanju in t
       };
     });
 
-    const requestBody = {
+    const geminiRequestBody = {
       contents: geminiMessages,
       systemInstruction: {
         parts: [{ text: systemPrompt }]
@@ -251,7 +251,7 @@ POMEMBNO: Ne ponavljaj vedno iste strukture strogo. Prilagodi se vprašanju in t
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(requestBody),
+      body: JSON.stringify(geminiRequestBody),
     });
 
     console.log('Gemini API response status:', aiResponse.status);
