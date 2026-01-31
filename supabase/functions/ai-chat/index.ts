@@ -225,21 +225,11 @@ POMEMBNO: Ne ponavljaj vedno iste strukture strogo. Prilagodi se vprašanju in t
       };
     });
 
-    // Add system prompt as first message (v1 API doesn't support systemInstruction)
-    const contentsWithSystem = [
-      {
-        role: 'user',
+    const geminiRequestBody = {
+      contents: geminiMessages,
+      systemInstruction: {
         parts: [{ text: systemPrompt }]
       },
-      {
-        role: 'model',
-        parts: [{ text: 'Razumem. Sem Študko AI - vrhunski slovenski študijski mentor. Pripravljen sem pomagati z razlagami po Feynmanovi tehniki. Kako ti lahko pomagam?' }]
-      },
-      ...geminiMessages
-    ];
-
-    const geminiRequestBody = {
-      contents: contentsWithSystem,
       generationConfig: {
         temperature: 0.7,
         topP: 0.95,
@@ -248,13 +238,22 @@ POMEMBNO: Ne ponavljaj vedno iste strukture strogo. Prilagodi se vprašanju in t
       }
     };
     
-    console.log('Calling Gemini API with:', JSON.stringify({ messageCount: geminiMessages.length }));
+    console.log('Calling Gemini API with:', JSON.stringify({ 
+      messageCount: geminiMessages.length,
+      hasSystemPrompt: true,
+      contentsStructure: geminiMessages.map(m => ({ role: m.role, partsCount: m.parts.length }))
+    }));
     
-    // Use gemini-1.5-flash-latest with v1 API
-    const modelName = "gemini-1.5-flash-latest";
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1/models/${modelName}:streamGenerateContent?key=${GOOGLE_AI_API_KEY}`;
+    // Use v1beta API with gemini-1.5-flash
+    const modelName = "gemini-1.5-flash";
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:streamGenerateContent?key=${GOOGLE_AI_API_KEY}`;
     
     console.log('Gemini API URL (without key):', geminiUrl.replace(/key=.*$/, 'key=***'));
+    console.log('Request body structure:', JSON.stringify({
+      contentsCount: geminiRequestBody.contents.length,
+      hasSystemInstruction: !!geminiRequestBody.systemInstruction,
+      hasGenerationConfig: !!geminiRequestBody.generationConfig
+    }));
     
     const aiResponse = await fetch(geminiUrl, {
       method: "POST",
@@ -264,20 +263,31 @@ POMEMBNO: Ne ponavljaj vedno iste strukture strogo. Prilagodi se vprašanju in t
       body: JSON.stringify(geminiRequestBody),
     });
 
-    console.log('Gemini API response status:', aiResponse.status);
+    console.log('=== Gemini API Response ===');
+    console.log('Status:', aiResponse.status);
+    console.log('Status Text:', aiResponse.statusText);
+    console.log('OK:', aiResponse.ok);
 
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
-      console.error('Gemini API error:', { status: aiResponse.status, error: errorText });
+      console.error('===========================================');
+      console.error('❌ GEMINI API ERROR');
+      console.error('===========================================');
+      console.error('Status:', aiResponse.status);
+      console.error('Status Text:', aiResponse.statusText);
+      console.error('Response Headers:', Object.fromEntries(aiResponse.headers.entries()));
+      console.error('Full Error Body:', errorText);
+      console.error('Error Body Length:', errorText.length);
+      console.error('===========================================');
       
       let errorMessage = `AI API napaka: ${aiResponse.status}`;
       
       try {
         const errorJson = JSON.parse(errorText);
-        errorMessage = errorJson.error?.message || errorMessage;
-        console.error('Parsed Gemini error:', errorJson);
-      } catch {
-        // Not JSON, use text as is
+        console.error('Parsed Error JSON:', JSON.stringify(errorJson, null, 2));
+        errorMessage = errorJson.error?.message || errorJson[0]?.error?.message || errorMessage;
+      } catch (parseError) {
+        console.error('Failed to parse error as JSON:', parseError);
         errorMessage = errorText.substring(0, 200) || errorMessage;
       }
       
