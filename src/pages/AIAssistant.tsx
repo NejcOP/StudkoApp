@@ -613,11 +613,23 @@ const AIAssistant = () => {
         }
         
         const functionUrl = `${supabaseUrl}/functions/v1/ai-chat`;
-        console.log('=== AI Chat Request Debug ===');
-        console.log('URL:', functionUrl);
-        console.log('Access Token (first 20 chars):', accessToken?.substring(0, 20) + '...');
-        console.log('API Key (first 20 chars):', supabaseKey?.substring(0, 20) + '...');
-        console.log('Message count:', [...conversation, newUserMessage].length);
+        console.log('===========================================');
+        console.log('🚀 AI CHAT REQUEST - ZAČETEK');
+        console.log('===========================================');
+        console.log('📍 Full URL:', functionUrl);
+        console.log('🔑 Access Token EXISTS:', !!accessToken);
+        console.log('🔑 Access Token (first 30 chars):', accessToken?.substring(0, 30) + '...');
+        console.log('🔑 Access Token (last 10 chars):', '...' + accessToken?.substring(accessToken.length - 10));
+        console.log('🔑 API Key EXISTS:', !!supabaseKey);
+        console.log('🔑 API Key (first 30 chars):', supabaseKey?.substring(0, 30) + '...');
+        console.log('💬 Message count:', [...conversation, newUserMessage].length);
+        console.log('💬 Messages being sent:', [...conversation, newUserMessage].map(m => ({ role: m.role, content: m.content?.substring(0, 50) + '...' })));
+        console.log('🆔 Conversation ID:', convId);
+        
+        const requestBody = {
+          messages: [...conversation, newUserMessage],
+          conversationId: convId,
+        };
         
         const requestHeaders = {
           "Content-Type": "application/json",
@@ -625,29 +637,49 @@ const AIAssistant = () => {
           "apikey": supabaseKey,
         };
         
-        console.log('Headers being sent:', Object.keys(requestHeaders));
+        console.log('📋 Headers:', Object.keys(requestHeaders));
+        console.log('📦 Request Body:', JSON.stringify(requestBody).substring(0, 200) + '...');
+        console.log('===========================================');
         
         const response = await fetch(functionUrl, {
           method: "POST",
           headers: requestHeaders,
-          body: JSON.stringify({
-            messages: [...conversation, newUserMessage],
-            conversationId: convId,
-          }),
+          body: JSON.stringify(requestBody),
         });
 
-        console.log('=== AI Chat Response ===');
-        console.log('Status:', response.status);
-        console.log('Status Text:', response.statusText);
-        console.log('Headers:', Object.fromEntries(response.headers.entries()));
+        console.log('===========================================');
+        console.log('📥 AI CHAT RESPONSE');
+        console.log('===========================================');
+        console.log('📊 Status:', response.status);
+        console.log('📊 Status Text:', response.statusText);
+        console.log('📊 Response OK:', response.ok);
+        console.log('📋 Response Headers:', Object.fromEntries(response.headers.entries()));
+        console.log('===========================================');
 
         if (!response.ok) {
           // Try to read response body for more details
-          const responseText = await response.text();
-          console.log('Error Response Body:', responseText);
+          let responseText = '';
+          try {
+            responseText = await response.text();
+            console.error('❌ ERROR Response Body:', responseText);
+            console.error('❌ ERROR Response Body Length:', responseText.length);
+          } catch (readError) {
+            console.error('❌ Could not read error response:', readError);
+          }
           
           if (response.status === 404) {
-            console.error('AI API 404 Error - Function not found or not deployed:', functionUrl);
+            console.error('===========================================');
+            console.error('❌ 404 NOT FOUND ERROR');
+            console.error('===========================================');
+            console.error('URL that failed:', functionUrl);
+            console.error('Function name: ai-chat');
+            console.error('Project ID:', supabaseUrl.match(/https:\/\/(.*?)\.supabase\.co/)?.[1]);
+            console.error('Possible causes:');
+            console.error('1. Function not deployed to Supabase');
+            console.error('2. Wrong function name (should be "ai-chat")');
+            console.error('3. Function deleted or renamed');
+            console.error('4. Wrong Supabase URL');
+            console.error('===========================================');
             toast.error('AI funkcija ni na voljo. Preverite namestitev.');
             setIsLoading(false);
             return;
