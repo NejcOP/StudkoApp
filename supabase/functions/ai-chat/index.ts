@@ -9,8 +9,16 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log('===========================================');
+  console.log('🚀 AI-CHAT FUNCTION INVOKED');
+  console.log('===========================================');
+  console.log('📍 Method:', req.method);
+  console.log('📍 URL:', req.url);
+  console.log('📍 Headers:', Object.fromEntries(req.headers.entries()));
+  
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
+    console.log('✅ CORS Preflight - Returning 200');
     return new Response(null, { 
       status: 200,
       headers: corsHeaders 
@@ -18,21 +26,29 @@ serve(async (req) => {
   }
 
   try {
+    console.log('🔍 Checking GOOGLE_AI_API_KEY...');
     const GOOGLE_AI_API_KEY = Deno.env.get("GOOGLE_AI_API_KEY");
     if (!GOOGLE_AI_API_KEY) {
+      console.error('❌ GOOGLE_AI_API_KEY is NOT configured!');
       throw new Error("GOOGLE_AI_API_KEY is not configured");
     }
+    console.log('✅ GOOGLE_AI_API_KEY exists');
 
+    console.log('🔍 Checking Authorization header...');
     const authHeader = req.headers.get("Authorization");
+    console.log('📋 Auth Header exists:', !!authHeader);
+    console.log('📋 Auth Header starts with Bearer:', authHeader?.startsWith('Bearer '));
     
     // Validate auth header exists
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.error('❌ Missing or invalid authorization header');
       return new Response(
         JSON.stringify({ error: "Missing or invalid authorization header" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
     
+    console.log('🔍 Creating Supabase client...');
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
@@ -40,6 +56,7 @@ serve(async (req) => {
     );
 
     // Verify user authentication
+    console.log('🔍 Verifying user authentication...');
     let user;
     let userId;
     
@@ -47,7 +64,7 @@ serve(async (req) => {
       const { data: { user: authUser }, error: userError } = await supabaseClient.auth.getUser();
       
       if (userError || !authUser) {
-        console.error('Auth error:', userError);
+        console.error('❌ Auth error:', userError);
         return new Response(
           JSON.stringify({ error: "Authentication failed. Please sign in again." }),
           { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -56,15 +73,32 @@ serve(async (req) => {
       
       user = authUser;
       userId = user.id;
+      console.log('✅ User authenticated:', userId);
     } catch (authException) {
-      console.error('Auth exception:', authException);
+      console.error('❌ Auth exception:', authException);
       return new Response(
         JSON.stringify({ error: "Invalid authentication token." }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const { messages, conversationId, quickAction, lastResponse } = await req.json();
+    console.log('🔍 Reading request body...');
+    let requestBody;
+    try {
+      requestBody = await req.json();
+      console.log('✅ Request body parsed successfully');
+      console.log('📦 Body keys:', Object.keys(requestBody));
+      console.log('📦 Messages count:', requestBody.messages?.length);
+      console.log('📦 Conversation ID:', requestBody.conversationId);
+    } catch (parseError) {
+      console.error('❌ Failed to parse request body:', parseError);
+      return new Response(
+        JSON.stringify({ error: "Invalid request body" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const { messages, conversationId, quickAction, lastResponse } = requestBody;
 
     let systemPrompt = `Ti si Študko AI – vrhunski slovenski študijski mentor, ki uporablja Feynmanovo tehniko razlaganja. Tvoj cilj je snov razložiti tako, da jo razume VSAKDO, nato pa postopoma dvigovati težavnost.
 
