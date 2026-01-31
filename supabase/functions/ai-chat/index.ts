@@ -225,11 +225,21 @@ POMEMBNO: Ne ponavljaj vedno iste strukture strogo. Prilagodi se vprašanju in t
       };
     });
 
-    const geminiRequestBody = {
-      contents: geminiMessages,
-      systemInstruction: {
+    // Add system prompt as first message (v1 API doesn't support systemInstruction)
+    const contentsWithSystem = [
+      {
+        role: 'user',
         parts: [{ text: systemPrompt }]
       },
+      {
+        role: 'model',
+        parts: [{ text: 'Razumem. Sem Študko AI - vrhunski slovenski študijski mentor. Pripravljen sem pomagati z razlagami po Feynmanovi tehniki. Kako ti lahko pomagam?' }]
+      },
+      ...geminiMessages
+    ];
+
+    const geminiRequestBody = {
+      contents: contentsWithSystem,
       generationConfig: {
         temperature: 0.7,
         topP: 0.95,
