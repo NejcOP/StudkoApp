@@ -433,9 +433,38 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
     const upcomingBookings = confirmedBookings.filter(b => new Date(b.start_time) > new Date());
     const completedBookings = bookings.filter(b => b.status === 'completed');
     
-    // Calculate earnings from ALL paid bookings (not just completed)
-    const paidBookings = bookings.filter(b => b.paid);
-    const totalEarnings = paidBookings
+    // Calculate earnings from ALL paid bookings (not just completed) - ALL TIME
+    const allPaidBookings = bookings.filter(b => b.paid);
+    const allTimeTotalEarnings = allPaidBookings
+      .reduce((sum, b) => sum + (b.price_eur || 0), 0);
+    
+    const allTimePlatformFee = allTimeTotalEarnings * 0.20;
+    const allTimeNetEarnings = allTimeTotalEarnings - allTimePlatformFee;
+    
+    // Calculate filtered earnings based on timeFilter
+    const now = new Date();
+    const filteredPaidBookings = allPaidBookings.filter(b => {
+      const bookingDate = new Date(b.start_time);
+      const diffMs = now.getTime() - bookingDate.getTime();
+      const diffHours = diffMs / (1000 * 60 * 60);
+      const diffDays = diffHours / 24;
+
+      switch (timeFilter) {
+        case '24h':
+          return diffHours <= 24 && diffHours >= 0;
+        case '7d':
+          return diffDays <= 7 && diffDays >= 0;
+        case '30d':
+          return diffDays <= 30 && diffDays >= 0;
+        case '1y':
+          return diffDays <= 365 && diffDays >= 0;
+        case 'all':
+        default:
+          return true;
+      }
+    });
+    
+    const totalEarnings = filteredPaidBookings
       .reduce((sum, b) => sum + (b.price_eur || 0), 0);
     
     const platformFee = totalEarnings * 0.20;
@@ -455,9 +484,13 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
       totalEarnings,
       platformFee,
       netEarnings,
-      totalHours
+      totalHours,
+      // All time stats
+      allTimeTotalEarnings,
+      allTimePlatformFee,
+      allTimeNetEarnings
     };
-  }, [bookings]);
+  }, [bookings, timeFilter]);
 
   const chartData = useMemo(() => {
     const now = new Date();
@@ -1125,6 +1158,31 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
                 <p className="text-xs text-muted-foreground mt-2">
                   Izplačila prejmete preko Stripe na vaš povezan bančni račun.
                 </p>
+              </div>
+
+              {/* All Time Earnings Section */}
+              <div className="border-t border-border pt-6 mt-6">
+                <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-primary" />
+                  Celotni zaslužek (vse obdobje)
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-muted/50 dark:bg-muted/50 rounded-xl p-4">
+                    <p className="text-sm text-muted-foreground mb-1">Bruto zaslužek</p>
+                    <p className="text-2xl font-bold text-foreground">{stats.allTimeTotalEarnings.toFixed(2)}€</p>
+                  </div>
+                  <div className="bg-muted/50 dark:bg-muted/50 rounded-xl p-4">
+                    <p className="text-sm text-muted-foreground mb-1">Provizija (20%)</p>
+                    <p className="text-2xl font-bold text-red-600 dark:text-red-400">-{stats.allTimePlatformFee.toFixed(2)}€</p>
+                  </div>
+                </div>
+                <div className="bg-gradient-to-r from-emerald-500/10 to-blue-500/10 rounded-xl p-6 mt-4">
+                  <p className="text-sm text-muted-foreground mb-1">Neto zaslužek</p>
+                  <p className="text-4xl font-bold text-emerald-600 dark:text-emerald-400">{stats.allTimeNetEarnings.toFixed(2)}€</p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Skupni zaslužek od začetka uporabe platforme
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
