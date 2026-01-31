@@ -61,48 +61,48 @@ const Dashboard = () => {
       <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
         {/* Welcome Header */}
         <div className="mb-6 sm:mb-8 lg:mb-12">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent break-words">
             Dobrodošel nazaj! 👋
           </h1>
-          <p className="text-slate-600 dark:text-slate-400 text-sm sm:text-base lg:text-lg">
+          <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm lg:text-base xl:text-lg">
             Kako lahko danes pomagamo pri tvojem učenju?
           </p>
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 mb-6 sm:mb-8 lg:mb-12">
-          <div className="bg-white/90 dark:bg-slate-800/90 rounded-xl sm:rounded-2xl p-4 sm:p-5 lg:p-6 border border-slate-200 dark:border-slate-700 shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm mb-1">Skupaj zapiskov</p>
-                <p className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100">0</p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8 lg:mb-12">
+          <div className="bg-white/90 dark:bg-slate-800/90 rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 border border-slate-200 dark:border-slate-700 shadow-lg">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm mb-1 truncate">Skupaj zapiskov</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-800 dark:text-slate-100">0</p>
               </div>
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-primary to-primary-light rounded-lg sm:rounded-xl flex items-center justify-center shadow-glow-primary">
-                <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white/90 dark:bg-slate-800/90 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-600 dark:text-slate-400 text-sm mb-1">Kupljenih</p>
-                <p className="text-3xl font-bold text-slate-800 dark:text-slate-100">0</p>
-              </div>
-              <div className="w-12 h-12 bg-gradient-to-br from-accent to-primary rounded-xl flex items-center justify-center shadow-glow-accent">
-                <ShoppingBag className="w-6 h-6 text-white" />
+              <div className="w-9 h-9 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-primary to-primary-light rounded-lg sm:rounded-xl flex items-center justify-center shadow-glow-primary flex-shrink-0">
+                <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-white" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white/90 dark:bg-slate-800/90 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-600 dark:text-slate-400 text-sm mb-1">Zasluženega</p>
-                <p className="text-3xl font-bold text-slate-800 dark:text-slate-100">0€</p>
+          <div className="bg-white/90 dark:bg-slate-800/90 rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 border border-slate-200 dark:border-slate-700 shadow-lg">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm mb-1 truncate">Kupljenih</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-800 dark:text-slate-100">0</p>
               </div>
-              <div className="w-12 h-12 bg-gradient-to-br from-primary-light to-accent rounded-xl flex items-center justify-center shadow-glow-primary">
-                <TrendingUp className="w-6 h-6 text-white" />
+              <div className="w-9 h-9 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-accent to-primary rounded-lg sm:rounded-xl flex items-center justify-center shadow-glow-accent flex-shrink-0">
+                <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-white" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white/90 dark:bg-slate-800/90 rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 border border-slate-200 dark:border-slate-700 shadow-lg">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm mb-1 truncate">Zasluženega</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-800 dark:text-slate-100">0€</p>
+              </div>
+              <div className="w-9 h-9 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-primary-light to-accent rounded-lg sm:rounded-xl flex items-center justify-center shadow-glow-primary flex-shrink-0">
+                <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-white" />
               </div>
             </div>
           </div>

@@ -1114,10 +1114,10 @@ const Profile = () => {
         <div className="max-w-5xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
           {/* Page Header */}
           <div className="mb-4 sm:mb-6 lg:mb-8">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-purple-500 bg-clip-text text-transparent mb-2">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-purple-500 bg-clip-text text-transparent mb-2 break-words">
               Moj profil
             </h1>
-            <p className="text-sm sm:text-base text-muted-foreground">
+            <p className="text-xs sm:text-sm lg:text-base text-muted-foreground">
               Uredi svoje podatke in poglej svoje zapiske.
             </p>
           </div>
@@ -1128,12 +1128,12 @@ const Profile = () => {
               <div className="lg:col-span-1">
                 <div className="bg-card dark:bg-card backdrop-blur rounded-2xl p-6 shadow-xl border border-border">
                   {/* Avatar */}
-                  <div className="flex flex-col items-center mb-6">
-                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-indigo-600 via-purple-600 to-purple-500 flex items-center justify-center text-white text-2xl font-bold shadow-lg mb-4">
+                  <div className="flex flex-col items-center mb-4 sm:mb-6">
+                    <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-indigo-600 via-purple-600 to-purple-500 flex items-center justify-center text-white text-xl sm:text-2xl font-bold shadow-lg mb-3 sm:mb-4">
                       {getInitials(profile.full_name)}
                     </div>
-                    <h2 className="text-xl font-bold text-foreground">{profile.full_name}</h2>
-                    <p className="text-sm text-muted-foreground">{user.email}</p>
+                    <h2 className="text-lg sm:text-xl font-bold text-foreground text-center break-words max-w-full px-2">{profile.full_name}</h2>
+                    <p className="text-xs sm:text-sm text-muted-foreground text-center break-all max-w-full px-2">{user.email}</p>
                   </div>
 
                   {/* Action Buttons */}
@@ -1292,34 +1292,34 @@ const Profile = () => {
                         <TabsContent value="subscription" className="space-y-4 py-4">
                           <div className="space-y-4">
                             <div className="bg-muted rounded-xl p-4 border border-border">
-                              <p className="text-sm text-muted-foreground mb-1">Trenutni paket:</p>
-                              <p className={`text-2xl font-bold ${getSubscriptionDisplay().color}`}>
+                              <p className="text-xs sm:text-sm text-muted-foreground mb-1">Trenutni paket:</p>
+                              <p className={`text-xl sm:text-2xl font-bold ${getSubscriptionDisplay().color} break-words`}>
                                 {getSubscriptionDisplay().text}
                               </p>
                             </div>
 
                             {(!profile?.is_pro || profile?.subscription_status === "none") ? (
                               <div className="space-y-4">
-                                <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 rounded-xl p-6 border border-indigo-200 dark:border-indigo-800">
-                                  <h3 className="text-lg font-bold text-foreground mb-3">
+                                <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 rounded-xl p-4 sm:p-6 border border-indigo-200 dark:border-indigo-800">
+                                  <h3 className="text-base sm:text-lg font-bold text-foreground mb-3">
                                     Nadgradi na Študko PRO
                                   </h3>
                                   <ul className="space-y-2 mb-4">
-                                    <li className="flex items-start gap-2 text-sm text-foreground">
-                                      <CheckCircle2 className="w-4 h-4 text-primary mt-0.5" />
+                                    <li className="flex items-start gap-2 text-xs sm:text-sm text-foreground">
+                                      <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary mt-0.5 flex-shrink-0" />
                                       <span>Neomejene AI razlage</span>
                                     </li>
-                                    <li className="flex items-start gap-2 text-sm text-foreground">
-                                      <CheckCircle2 className="w-4 h-4 text-primary mt-0.5" />
+                                    <li className="flex items-start gap-2 text-xs sm:text-sm text-foreground">
+                                      <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary mt-0.5 flex-shrink-0" />
                                       <span>Nalaganje datotek in slik</span>
                                     </li>
-                                    <li className="flex items-start gap-2 text-sm text-foreground">
-                                      <CheckCircle2 className="w-4 h-4 text-primary mt-0.5" />
+                                    <li className="flex items-start gap-2 text-xs sm:text-sm text-foreground">
+                                      <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary mt-0.5 flex-shrink-0" />
                                       <span>Prednostna podpora</span>
                                     </li>
                                   </ul>
-                                  <p className="text-2xl font-bold text-foreground mb-4">
-                                    3,49 €<span className="text-sm font-normal text-muted-foreground">/mesec</span>
+                                  <p className="text-xl sm:text-2xl font-bold text-foreground mb-4">
+                                    3,49 €<span className="text-xs sm:text-sm font-normal text-muted-foreground">/mesec</span>
                                   </p>
                                   <Button
                                     onClick={handleUpgradeToPro}

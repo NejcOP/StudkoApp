@@ -387,20 +387,20 @@ const Notes = () => {
       <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
         {/* Header */}
         <div className="mb-4 sm:mb-6 lg:mb-8">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent break-words">
             Zapiski
           </h1>
-          <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400">
+          <p className="text-xs sm:text-sm lg:text-base text-slate-600 dark:text-slate-400">
             Najdi zapiske, ki ti ustrezajo, ali uporabi AI pomoč za najboljše rezultate
           </p>
         </div>
 
         {/* AI Search Bar - PRO Feature */}
-        <div className="bg-white/90 dark:bg-slate-800/90 rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 border-2 border-primary/20 shadow-glow-primary mb-4 sm:mb-6 lg:mb-8 relative">
+        <div className="bg-white/90 dark:bg-slate-800/90 rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-6 xl:p-8 border-2 border-primary/20 shadow-glow-primary mb-4 sm:mb-6 lg:mb-8 relative">
           <div className="flex items-start gap-2 sm:gap-3 mb-3">
-            <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-primary mt-1 flex-shrink-0" />
+            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-primary mt-1 flex-shrink-0" />
             <div className="flex-1 min-w-0">
-              <h2 className="text-lg sm:text-xl font-bold mb-1 text-slate-800 dark:text-slate-100">AI Iskanje</h2>
+              <h2 className="text-base sm:text-lg lg:text-xl font-bold mb-1 text-slate-800 dark:text-slate-100 truncate">AI Iskanje</h2>
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mb-3 sm:mb-4">
                 Študko AI ti predlaga najboljše zapiske zate.
               </p>

@@ -7,25 +7,25 @@ const About = () => {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <Navigation />
 
-      <div className="max-w-4xl mx-auto px-4 py-12">
+      <div className="max-w-4xl mx-auto px-3 sm:px-4 py-8 sm:py-12">
         {/* Hero Section */}
-        <div className="text-center mb-12">
-          <div className="w-16 h-16 mx-auto mb-4 bg-gradient-primary rounded-2xl flex items-center justify-center shadow-glow-primary">
-            <BookOpen className="w-9 h-9 text-white" />
+        <div className="text-center mb-8 sm:mb-12">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 bg-gradient-primary rounded-xl sm:rounded-2xl flex items-center justify-center shadow-glow-primary">
+            <BookOpen className="w-6 h-6 sm:w-9 sm:h-9 text-white" />
           </div>
-          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent px-2">
             O platformi Študko
           </h1>
-          <p className="text-xl text-slate-600 dark:text-slate-400">
+          <p className="text-base sm:text-lg lg:text-xl text-slate-600 dark:text-slate-400 px-4">
             Moderna platforma za učenje študentov, kreatorjev in tutorjev
           </p>
-          <div className="mt-6 h-1 w-24 mx-auto bg-gradient-primary rounded-full" />
+          <div className="mt-4 sm:mt-6 h-1 w-20 sm:w-24 mx-auto bg-gradient-primary rounded-full" />
         </div>
 
         {/* Mission Section */}
-        <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur rounded-2xl p-8 shadow-xl border border-slate-200 dark:border-slate-700 mb-8">
-          <h2 className="text-3xl font-bold mb-4 text-slate-800 dark:text-slate-100">Naša misija</h2>
-          <p className="text-lg text-slate-600 dark:text-slate-400 leading-relaxed">
+        <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-xl border border-slate-200 dark:border-slate-700 mb-6 sm:mb-8">
+          <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4 text-slate-800 dark:text-slate-100">Naša misija</h2>
+          <p className="text-sm sm:text-base lg:text-lg text-slate-600 dark:text-slate-400 leading-relaxed">
             Študko povezuje študente, kreatorje zapiskov in tutorje v en sodoben učni ekosistem.
             Naša misija je poenostaviti učenje, izboljšati dostop do kakovostnih zapiskov in
             omogočiti kreatorjem, da zaslužijo s svojim znanjem.
@@ -33,10 +33,9 @@ const About = () => {
         </div>
 
         {/* What We Offer */}
-        <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur rounded-2xl p-8 shadow-xl border border-slate-200 dark:border-slate-700 mb-8">
-          <h2 className="text-3xl font-bold mb-6 text-slate-800 dark:text-slate-100">Kaj ponujamo</h2>
-          <div className="space-y-4">
-            {[
+        <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-xl border border-slate-200 dark:border-slate-700 mb-6 sm:mb-8">
+          <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-slate-800 dark:text-slate-100">Kaj ponujamo</h2>
+          <div className="space-y-3 sm:space-y-4">{[
               { icon: BookOpen, text: "Kupovanje in prodaja študijskih zapiskov" },
               { icon: Brain, text: "AI asistent za pomoč pri učenju" },
               { icon: Users, text: "Preverjeni tutorji za vse predmete" },

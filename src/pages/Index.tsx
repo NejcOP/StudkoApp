@@ -58,12 +58,12 @@ const Index = () => {
             backgroundPosition: 'center',
           }}
         />
-        <div className="relative z-20 container mx-auto px-4 py-24 md:py-32">
+        <div className="relative z-20 container mx-auto px-3 sm:px-4 py-16 sm:py-20 md:py-28 lg:py-32">
           <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 drop-shadow-2xl">
+            <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white mb-4 sm:mb-6 drop-shadow-2xl px-2">
               Študko – tvoja nova alternativa za zapiske, AI pomoč in učenje
             </h1>
-            <p className="text-lg md:text-xl text-white/90 mb-8 drop-shadow-lg max-w-2xl mx-auto">
+            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-white/90 mb-6 sm:mb-8 drop-shadow-lg max-w-2xl mx-auto px-4">
               Platforma, kjer študenti delijo znanje, kupujejo zapiske in uporabljajo AI za hitrejše učenje.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -93,9 +93,9 @@ const Index = () => {
       </section>
 
       {/* Features Section */}
-      <section className="container mx-auto px-4 py-20">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+      <section className="container mx-auto px-3 sm:px-4 py-12 sm:py-16 lg:py-20">
+        <div className="text-center mb-12 sm:mb-16">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent px-2">
             Zakaj Študko?
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
@@ -127,41 +127,41 @@ const Index = () => {
       </section>
 
       {/* How It Works Section */}
-      <section className="bg-gradient-to-br from-secondary to-muted py-20">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+      <section className="bg-gradient-to-br from-secondary to-muted py-12 sm:py-16 lg:py-20">
+        <div className="container mx-auto px-3 sm:px-4">
+          <div className="text-center mb-12 sm:mb-16">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent px-2">
               Kako deluje?
             </h2>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-4 shadow-glow-primary">
-                <Upload className="w-8 h-8 text-white" />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 max-w-5xl mx-auto">
+            <div className="text-center px-2">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-glow-primary">
+                <Upload className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">1. Registriraj se</h3>
-              <p className="text-muted-foreground">
+              <h3 className="text-lg sm:text-xl font-semibold mb-2">1. Registriraj se</h3>
+              <p className="text-sm sm:text-base text-muted-foreground">
                 Ustvari brezplačen račun v nekaj sekundah
               </p>
             </div>
             
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-4 shadow-glow-primary">
-                <BookOpen className="w-8 h-8 text-white" />
+            <div className="text-center px-2">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-glow-primary">
+                <BookOpen className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">2. Prebrskaj zapiske</h3>
-              <p className="text-muted-foreground">
+              <h3 className="text-lg sm:text-xl font-semibold mb-2">2. Prebrskaj zapiske</h3>
+              <p className="text-sm sm:text-base text-muted-foreground">
                 Najdi zapiske, ki ti ustrezajo in jih kupi
               </p>
             </div>
             
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-4 shadow-glow-primary">
-                <ShieldCheck className="w-8 h-8 text-white" />
+            <div className="text-center px-2">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-glow-primary">
+                <ShieldCheck className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">3. Začni učiti</h3>
-              <p className="text-muted-foreground">
+              <h3 className="text-lg sm:text-xl font-semibold mb-2">3. Začni učiti</h3>
+              <p className="text-sm sm:text-base text-muted-foreground">
                 Prenesi zapiske in uporabi AI za pomoč
               </p>
             </div>
@@ -170,12 +170,12 @@ const Index = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="container mx-auto px-4 py-20">
-        <div className="bg-gradient-hero rounded-3xl p-12 text-center shadow-2xl">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+      <section className="container mx-auto px-3 sm:px-4 py-12 sm:py-16 lg:py-20">
+        <div className="bg-gradient-hero rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-12 text-center shadow-2xl">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-3 sm:mb-4 px-2">
             Pripravljeni začeti?
           </h2>
-          <p className="text-white/90 text-lg mb-8 max-w-2xl mx-auto">
+          <p className="text-white/90 text-sm sm:text-base lg:text-lg mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
             Pridruži se skupnosti študentov in začni učiti pametneje že danes.
           </p>
           <Button 
