@@ -516,25 +516,51 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
       }
     });
     
-    // Group by date
-    const dataByDate = new Map<string, { date: string; earnings: number; bookings: number }>();
+    // Determine date format based on time filter
+    let dateFormat = 'dd.MM';
+    if (timeFilter === '24h') {
+      dateFormat = 'HH:mm';
+    } else if (timeFilter === '1y' || timeFilter === 'all') {
+      dateFormat = 'MMM yyyy';
+    }
+    
+    // Group by date with timestamp for proper sorting
+    const dataByDate = new Map<string, { date: string; earnings: number; bookings: number; timestamp: number }>();
     
     filtered.forEach(booking => {
-      const date = format(new Date(booking.start_time), 'dd.MM', { locale: sl });
-      const existing = dataByDate.get(date) || { date, earnings: 0, bookings: 0 };
+      const bookingDate = new Date(booking.start_time);
+      let groupKey: string;
+      let timestamp: number;
       
-      dataByDate.set(date, {
-        date,
+      if (timeFilter === '24h') {
+        // Group by hour for 24h view
+        groupKey = format(bookingDate, 'yyyy-MM-dd-HH', { locale: sl });
+        timestamp = new Date(bookingDate.getFullYear(), bookingDate.getMonth(), bookingDate.getDate(), bookingDate.getHours()).getTime();
+      } else if (timeFilter === '1y' || timeFilter === 'all') {
+        // Group by month for year/all view
+        groupKey = format(bookingDate, 'yyyy-MM', { locale: sl });
+        timestamp = new Date(bookingDate.getFullYear(), bookingDate.getMonth()).getTime();
+      } else {
+        // Group by day for other views
+        groupKey = format(bookingDate, 'yyyy-MM-dd', { locale: sl });
+        timestamp = new Date(bookingDate.getFullYear(), bookingDate.getMonth(), bookingDate.getDate()).getTime();
+      }
+      
+      const displayDate = format(bookingDate, dateFormat, { locale: sl });
+      const existing = dataByDate.get(groupKey) || { date: displayDate, earnings: 0, bookings: 0, timestamp };
+      
+      dataByDate.set(groupKey, {
+        date: displayDate,
         earnings: existing.earnings + (booking.price_eur * 0.80),
-        bookings: existing.bookings + 1
+        bookings: existing.bookings + 1,
+        timestamp
       });
     });
 
-    return Array.from(dataByDate.values()).sort((a, b) => {
-      const [dayA, monthA] = a.date.split('.').map(Number);
-      const [dayB, monthB] = b.date.split('.').map(Number);
-      return (monthA * 100 + dayA) - (monthB * 100 + dayB);
-    });
+    // Sort by timestamp and return without timestamp field
+    return Array.from(dataByDate.values())
+      .sort((a, b) => a.timestamp - b.timestamp)
+      .map(({ date, earnings, bookings }) => ({ date, earnings, bookings }));
   }, [bookings, timeFilter]);
 
   if (loading) {
@@ -739,35 +765,40 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
                   </CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <ResponsiveContainer width="100%" height={350}>
+                  <LineChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
                     <XAxis 
                       dataKey="date" 
-                      className="text-xs"
-                      stroke="currentColor"
+                      tick={{ fontSize: 12, fill: 'currentColor' }}
+                      stroke="#6b7280"
+                      angle={chartData.length > 10 ? -45 : 0}
+                      textAnchor={chartData.length > 10 ? 'end' : 'middle'}
+                      height={chartData.length > 10 ? 80 : 60}
                     />
                     <YAxis 
-                      className="text-xs"
-                      stroke="currentColor"
+                      tick={{ fontSize: 12, fill: 'currentColor' }}
+                      stroke="#6b7280"
+                      tickFormatter={(value) => `${value.toFixed(0)}€`}
                     />
                     <Tooltip 
                       contentStyle={{ 
-                        backgroundColor: 'hsl(var(--card))',
+                        backgroundColor: 'hsl(var(--popover))',
                         border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px'
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
                       }}
-                      formatter={(value: number) => [`${value.toFixed(2)}€`, 'Zaslužek']}
+                      formatter={(value: number) => [`${value.toFixed(2)}€`, 'Neto zaslužek']}
+                      labelStyle={{ fontWeight: 'bold', marginBottom: '4px' }}
                     />
-                    <Legend />
                     <Line 
                       type="monotone" 
                       dataKey="earnings" 
                       stroke="#10b981" 
-                      strokeWidth={2}
-                      name="Zaslužek (€)"
-                      dot={{ fill: '#10b981', r: 4 }}
-                      activeDot={{ r: 6 }}
+                      strokeWidth={3}
+                      name="Neto zaslužek"
+                      dot={{ fill: '#10b981', r: 5, strokeWidth: 2, stroke: '#fff' }}
+                      activeDot={{ r: 7, strokeWidth: 2 }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -783,31 +814,37 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <ResponsiveContainer width="100%" height={350}>
+                  <BarChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
                     <XAxis 
                       dataKey="date" 
-                      className="text-xs"
-                      stroke="currentColor"
+                      tick={{ fontSize: 12, fill: 'currentColor' }}
+                      stroke="#6b7280"
+                      angle={chartData.length > 10 ? -45 : 0}
+                      textAnchor={chartData.length > 10 ? 'end' : 'middle'}
+                      height={chartData.length > 10 ? 80 : 60}
                     />
                     <YAxis 
-                      className="text-xs"
-                      stroke="currentColor"
+                      tick={{ fontSize: 12, fill: 'currentColor' }}
+                      stroke="#6b7280"
+                      allowDecimals={false}
+                      tickFormatter={(value) => `${value}`}
                     />
                     <Tooltip 
                       contentStyle={{ 
-                        backgroundColor: 'hsl(var(--card))',
+                        backgroundColor: 'hsl(var(--popover))',
                         border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px'
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
                       }}
                       formatter={(value: number) => [value, 'Rezervacije']}
+                      labelStyle={{ fontWeight: 'bold', marginBottom: '4px' }}
                     />
-                    <Legend />
                     <Bar 
                       dataKey="bookings" 
                       fill="#3b82f6" 
-                      name="Rezervacije"
+                      name="Število rezervacij"
                       radius={[8, 8, 0, 0]}
                     />
                   </BarChart>
