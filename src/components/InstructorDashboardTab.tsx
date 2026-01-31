@@ -1142,26 +1142,8 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-muted dark:bg-muted rounded-xl p-4">
-                  <p className="text-sm text-muted-foreground mb-1">Bruto zaslužek</p>
-                  <p className="text-2xl font-bold text-foreground">{stats.totalEarnings.toFixed(2)}€</p>
-                </div>
-                <div className="bg-muted dark:bg-muted rounded-xl p-4">
-                  <p className="text-sm text-muted-foreground mb-1">Provizija (20%)</p>
-                  <p className="text-2xl font-bold text-red-600 dark:text-red-400">-{stats.platformFee.toFixed(2)}€</p>
-                </div>
-              </div>
-              <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-xl p-6">
-                <p className="text-sm text-muted-foreground mb-1">Neto zaslužek</p>
-                <p className="text-4xl font-bold text-primary">{stats.netEarnings.toFixed(2)}€</p>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Izplačila prejmete preko Stripe na vaš povezan bančni račun.
-                </p>
-              </div>
-
               {/* All Time Earnings Section */}
-              <div className="border-t border-border pt-6 mt-6">
+              <div>
                 <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
                   <TrendingUp className="w-5 h-5 text-primary" />
                   Celotni zaslužek (vse obdobje)
