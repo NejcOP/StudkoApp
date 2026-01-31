@@ -49,7 +49,7 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.ai-chat]
-verify_jwt = false
+verify_jwt = true
 
 [functions.create-note-checkout]
 verify_jwt = true
