@@ -240,9 +240,9 @@ POMEMBNO: Ne ponavljaj vedno iste strukture strogo. Prilagodi se vprašanju in t
     
     console.log('Calling Gemini API with:', JSON.stringify({ messageCount: geminiMessages.length }));
     
-    // Use gemini-1.5-flash (stable model)
-    const modelName = "gemini-1.5-flash";
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:streamGenerateContent?key=${GOOGLE_AI_API_KEY}`;
+    // Use gemini-1.5-flash-latest with v1 API
+    const modelName = "gemini-1.5-flash-latest";
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1/models/${modelName}:streamGenerateContent?key=${GOOGLE_AI_API_KEY}`;
     
     console.log('Gemini API URL (without key):', geminiUrl.replace(/key=.*$/, 'key=***'));
     
