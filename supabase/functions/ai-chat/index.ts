@@ -225,11 +225,21 @@ POMEMBNO: Ne ponavljaj vedno iste strukture strogo. Prilagodi se vprašanju in t
       };
     });
 
-    const geminiRequestBody = {
-      contents: geminiMessages,
-      systemInstruction: {
+    // Add system prompt as first message for context
+    const contentsWithSystem = [
+      {
+        role: 'user',
         parts: [{ text: systemPrompt }]
       },
+      {
+        role: 'model',
+        parts: [{ text: 'Razumem. Sem Študko AI - vrhunski slovenski študijski mentor. Pripravljen sem pomagati z razlagami po Feynmanovi tehniki. Kako ti lahko pomagam?' }]
+      },
+      ...geminiMessages
+    ];
+
+    const geminiRequestBody = {
+      contents: contentsWithSystem,
       generationConfig: {
         temperature: 0.7,
         topP: 0.95,
@@ -238,22 +248,24 @@ POMEMBNO: Ne ponavljaj vedno iste strukture strogo. Prilagodi se vprašanju in t
       }
     };
     
-    console.log('Calling Gemini API with:', JSON.stringify({ 
-      messageCount: geminiMessages.length,
-      hasSystemPrompt: true,
-      contentsStructure: geminiMessages.map(m => ({ role: m.role, partsCount: m.parts.length }))
-    }));
+    console.log('===========================================');
+    console.log('📤 SENDING TO GEMINI');
+    console.log('===========================================');
+    console.log('Message count:', geminiMessages.length);
+    console.log('Contents structure:', JSON.stringify(contentsWithSystem.map(m => ({ 
+      role: m.role, 
+      partsCount: m.parts.length,
+      firstPartPreview: m.parts[0]?.text?.substring(0, 50) + '...'
+    })), null, 2));
+    console.log('Full payload:', JSON.stringify(geminiRequestBody, null, 2));
     
-    // Use v1beta API with gemini-1.5-flash
+    // Use v1beta API with gemini-1.5-flash and generateContent (non-streaming)
     const modelName = "gemini-1.5-flash";
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:streamGenerateContent?key=${GOOGLE_AI_API_KEY}`;
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${GOOGLE_AI_API_KEY}`;
     
-    console.log('Gemini API URL (without key):', geminiUrl.replace(/key=.*$/, 'key=***'));
-    console.log('Request body structure:', JSON.stringify({
-      contentsCount: geminiRequestBody.contents.length,
-      hasSystemInstruction: !!geminiRequestBody.systemInstruction,
-      hasGenerationConfig: !!geminiRequestBody.generationConfig
-    }));
+    console.log('🌐 Gemini API URL (without key):', geminiUrl.replace(/key=.*$/, 'key=***'));
+    console.log('📦 Request body keys:', Object.keys(geminiRequestBody));
+    console.log('===========================================');
     
     const aiResponse = await fetch(geminiUrl, {
       method: "POST",
@@ -263,10 +275,13 @@ POMEMBNO: Ne ponavljaj vedno iste strukture strogo. Prilagodi se vprašanju in t
       body: JSON.stringify(geminiRequestBody),
     });
 
-    console.log('=== Gemini API Response ===');
+    console.log('===========================================');
+    console.log('📥 GEMINI API RESPONSE');
+    console.log('===========================================');
     console.log('Status:', aiResponse.status);
     console.log('Status Text:', aiResponse.statusText);
     console.log('OK:', aiResponse.ok);
+    console.log('===========================================');
 
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
@@ -321,76 +336,43 @@ POMEMBNO: Ne ponavljaj vedno iste strukture strogo. Prilagodi se vprašanju in t
       });
     }
 
-    // Transform Gemini streaming response to SSE format
-    const reader = aiResponse.body?.getReader();
-    const encoder = new TextEncoder();
-    const decoder = new TextDecoder();
+    // For non-streaming generateContent, get full response
+    console.log('✅ Success! Reading response body...');
+    const responseData = await aiResponse.json();
+    console.log('Response data structure:', JSON.stringify({
+      hasCandidates: !!responseData.candidates,
+      candidatesCount: responseData.candidates?.length,
+      firstCandidateStructure: responseData.candidates?.[0] ? Object.keys(responseData.candidates[0]) : []
+    }));
 
-    const stream = new ReadableStream({
-      async start(controller) {
-        try {
-          let buffer = '';
-          let totalChunks = 0;
-          let totalCharsSent = 0;
-          
-          while (reader) {
-            const { done, value } = await reader.read();
-            if (done) {
-              console.log(`Stream complete. Total chunks: ${totalChunks}, chars sent: ${totalCharsSent}`);
-              break;
-            }
-
-            const chunk = decoder.decode(value, { stream: true });
-            totalChunks++;
-            buffer += chunk;
-            
-            // Gemini streams JSON objects separated by newlines
-            // Try to extract complete JSON objects from buffer
-            let braceCount = 0;
-            let jsonStart = -1;
-            
-            for (let i = 0; i < buffer.length; i++) {
-              if (buffer[i] === '{') {
-                if (braceCount === 0) jsonStart = i;
-                braceCount++;
-              } else if (buffer[i] === '}') {
-                braceCount--;
-                if (braceCount === 0 && jsonStart >= 0) {
-                  // Found complete JSON object
-                  const jsonStr = buffer.substring(jsonStart, i + 1);
-                  try {
-                    const data = JSON.parse(jsonStr);
-                    
-                    // Extract text from Gemini response
-                    if (data.candidates && data.candidates[0]) {
-                      const candidate = data.candidates[0];
-                      if (candidate.content && candidate.content.parts) {
-                        for (const part of candidate.content.parts) {
-                          if (part.text) {
-                            console.log(`Sending ${part.text.length} chars`);
-                            totalCharsSent += part.text.length;
-                            const sseData = `data: ${JSON.stringify({ choices: [{ delta: { content: part.text } }] })}\n\n`;
-                            controller.enqueue(encoder.encode(sseData));
-                          }
-                        }
-                      }
-                    }
-                  } catch (e) {
-                    console.error('Failed to parse JSON:', e);
-                  }
-                  
-                  // Remove processed JSON from buffer
-                  buffer = buffer.substring(i + 1);
-                  i = -1; // Reset search
-                  jsonStart = -1;
-                }
-              }
-            }
+    // Extract text from response
+    let generatedText = '';
+    if (responseData.candidates && responseData.candidates[0]) {
+      const candidate = responseData.candidates[0];
+      if (candidate.content && candidate.content.parts) {
+        for (const part of candidate.content.parts) {
+          if (part.text) {
+            generatedText += part.text;
           }
-          controller.close();
-        } catch (error) {
-          controller.error(error);
         }
+      }
+    }
+
+    console.log('Generated text length:', generatedText.length);
+    console.log('Generated text preview:', generatedText.substring(0, 100) + '...');
+
+    // Return as SSE stream format for compatibility with frontend
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      start(controller) {
+        // Send the text in chunks to simulate streaming
+        const chunkSize = 50;
+        for (let i = 0; i < generatedText.length; i += chunkSize) {
+          const chunk = generatedText.substring(i, i + chunkSize);
+          const sseData = `data: ${JSON.stringify({ choices: [{ delta: { content: chunk } }] })}\n\n`;
+          controller.enqueue(encoder.encode(sseData));
+        }
+        controller.close();
       }
     });
 
@@ -399,7 +381,12 @@ POMEMBNO: Ne ponavljaj vedno iste strukture strogo. Prilagodi se vprašanju in t
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("===========================================");
+    console.error("❌ FUNCTION ERROR");
+    console.error("===========================================");
     console.error("Error:", errorMessage);
+    console.error("Stack:", error instanceof Error ? error.stack : 'No stack trace');
+    console.error("===========================================");
     return new Response(JSON.stringify({ error: errorMessage }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
