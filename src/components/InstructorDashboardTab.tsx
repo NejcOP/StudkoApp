@@ -670,58 +670,58 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
       )}
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <Card className="bg-card dark:bg-card border-primary/20">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-primary/10">
-                <Clock className="w-6 h-6 text-primary" />
+          <CardContent className="pt-4 sm:pt-6">
+            <div className="flex items-center gap-2.5 sm:gap-4">
+              <div className="p-2 sm:p-3 rounded-lg sm:rounded-xl bg-primary/10 flex-shrink-0">
+                <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Na čakanju</p>
-                <p className="text-2xl font-bold text-foreground">{stats.pendingBookings.length}</p>
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">Na čakanju</p>
+                <p className="text-xl sm:text-2xl font-bold text-foreground">{stats.pendingBookings.length}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-card dark:bg-card border-primary/20">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-green-500/10">
-                <Calendar className="w-6 h-6 text-green-600 dark:text-green-400" />
+          <CardContent className="pt-4 sm:pt-6">
+            <div className="flex items-center gap-2.5 sm:gap-4">
+              <div className="p-2 sm:p-3 rounded-lg sm:rounded-xl bg-green-500/10 flex-shrink-0">
+                <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 dark:text-green-400" />
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Prihajajoče</p>
-                <p className="text-2xl font-bold text-foreground">{stats.upcomingBookings.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-card dark:bg-card border-primary/20">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-blue-500/10">
-                <TrendingUp className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Opravljene ure</p>
-                <p className="text-2xl font-bold text-foreground">{stats.totalHours.toFixed(1)}h</p>
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">Prihajajoče</p>
+                <p className="text-xl sm:text-2xl font-bold text-foreground">{stats.upcomingBookings.length}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-card dark:bg-card border-primary/20">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-emerald-500/10">
-                <DollarSign className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+          <CardContent className="pt-4 sm:pt-6">
+            <div className="flex items-center gap-2.5 sm:gap-4">
+              <div className="p-2 sm:p-3 rounded-lg sm:rounded-xl bg-blue-500/10 flex-shrink-0">
+                <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400" />
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Neto zaslužek</p>
-                <p className="text-2xl font-bold text-foreground">{stats.netEarnings.toFixed(2)}€</p>
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">Opravljene ure</p>
+                <p className="text-xl sm:text-2xl font-bold text-foreground">{stats.totalHours.toFixed(1)}h</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card dark:bg-card border-primary/20">
+          <CardContent className="pt-4 sm:pt-6">
+            <div className="flex items-center gap-2.5 sm:gap-4">
+              <div className="p-2 sm:p-3 rounded-lg sm:rounded-xl bg-emerald-500/10 flex-shrink-0">
+                <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">Neto zaslužek</p>
+                <p className="text-xl sm:text-2xl font-bold text-foreground">{stats.netEarnings.toFixed(2)}€</p>
               </div>
             </div>
           </CardContent>
@@ -732,22 +732,22 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
       {hasProAccess && (
         <div className="space-y-6">
           {/* Time Filter Buttons */}
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold flex items-center gap-2 text-foreground">
-              <BarChart3 className="w-5 h-5 text-primary" />
-              Napredna Analitika
-              <Badge className="bg-gradient-to-r from-purple-600 to-yellow-600 text-white border-0">PRO</Badge>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2 text-foreground">
+              <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+              <span className="truncate">Napredna Analitika</span>
+              <Badge className="bg-gradient-to-r from-purple-600 to-yellow-600 text-white border-0 text-xs">PRO</Badge>
             </h3>
-            <div className="flex gap-2">
+            <div className="flex gap-1.5 sm:gap-2 overflow-x-auto w-full sm:w-auto pb-1">
               {(['24h', '7d', '30d', '1y', 'all'] as const).map((filter) => (
                 <Button
                   key={filter}
                   size="sm"
                   variant={timeFilter === filter ? "default" : "outline"}
                   onClick={() => setTimeFilter(filter)}
-                  className="text-xs"
+                  className="text-xs whitespace-nowrap px-2 sm:px-3 h-8 sm:h-9"
                 >
-                  {filter === '24h' ? '24h' : filter === '7d' ? '7 dni' : filter === '30d' ? '30 dni' : filter === '1y' ? '1 leto' : 'Vse'}
+                  {filter === '24h' ? '24h' : filter === '7d' ? '7d' : filter === '30d' ? '30d' : filter === '1y' ? '1l' : 'Vse'}
                 </Button>
               ))}
             </div>
@@ -758,28 +758,29 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Earnings Chart */}
               <Card className="bg-card dark:bg-card">
-                <CardHeader>
-                  <CardTitle className="text-foreground flex items-center gap-2">
-                    <DollarSign className="w-5 h-5 text-emerald-500" />
-                    Zaslužek preko časa
+                <CardHeader className="pb-3 sm:pb-6">
+                  <CardTitle className="text-sm sm:text-base text-foreground flex items-center gap-2">
+                    <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" />
+                    <span className="truncate">Zaslužek preko časa</span>
                   </CardTitle>
               </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={350}>
-                  <LineChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+              <CardContent className="px-2 sm:px-6">
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={chartData} margin={{ top: 5, right: 5, left: -15, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
                     <XAxis 
                       dataKey="date" 
-                      tick={{ fontSize: 12, fill: 'currentColor' }}
+                      tick={{ fontSize: 10, fill: 'currentColor' }}
                       stroke="#6b7280"
-                      angle={chartData.length > 10 ? -45 : 0}
-                      textAnchor={chartData.length > 10 ? 'end' : 'middle'}
-                      height={chartData.length > 10 ? 80 : 60}
+                      angle={-45}
+                      textAnchor="end"
+                      height={70}
                     />
                     <YAxis 
-                      tick={{ fontSize: 12, fill: 'currentColor' }}
+                      tick={{ fontSize: 10, fill: 'currentColor' }}
                       stroke="#6b7280"
                       tickFormatter={(value) => `${value.toFixed(0)}€`}
+                      width={45}
                     />
                     <Tooltip 
                       contentStyle={{ 
@@ -807,29 +808,30 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
 
             {/* Bookings Chart */}
             <Card className="bg-card dark:bg-card">
-              <CardHeader>
-                <CardTitle className="text-foreground flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-blue-500" />
-                  Število rezervacij
+              <CardHeader className="pb-3 sm:pb-6">
+                <CardTitle className="text-sm sm:text-base text-foreground flex items-center gap-2">
+                  <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
+                  <span className="truncate">Število rezervacij</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={350}>
-                  <BarChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+              <CardContent className="px-2 sm:px-6">
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={chartData} margin={{ top: 5, right: 5, left: -15, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
                     <XAxis 
                       dataKey="date" 
-                      tick={{ fontSize: 12, fill: 'currentColor' }}
+                      tick={{ fontSize: 10, fill: 'currentColor' }}
                       stroke="#6b7280"
-                      angle={chartData.length > 10 ? -45 : 0}
-                      textAnchor={chartData.length > 10 ? 'end' : 'middle'}
-                      height={chartData.length > 10 ? 80 : 60}
+                      angle={-45}
+                      textAnchor="end"
+                      height={70}
                     />
                     <YAxis 
-                      tick={{ fontSize: 12, fill: 'currentColor' }}
+                      tick={{ fontSize: 10, fill: 'currentColor' }}
                       stroke="#6b7280"
                       allowDecimals={false}
                       tickFormatter={(value) => `${value}`}
+                      width={35}
                     />
                     <Tooltip 
                       contentStyle={{ 
@@ -875,30 +877,30 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
       {/* Locked Charts for Non-PRO Users */}
       {!hasProAccess && chartData.length > 0 && (
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold flex items-center gap-2 text-foreground">
-              <BarChart3 className="w-5 h-5 text-primary" />
-              Napredna Analitika
-              <Badge className="bg-gradient-to-r from-purple-600 to-yellow-600 text-white border-0">PRO</Badge>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2 text-foreground">
+              <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+              <span className="truncate">Napredna Analitika</span>
+              <Badge className="bg-gradient-to-r from-purple-600 to-yellow-600 text-white border-0 text-xs">PRO</Badge>
             </h3>
           </div>
 
           <div className="relative">
             {/* Blurred Charts Preview */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 blur-md select-none pointer-events-none">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 blur-md select-none pointer-events-none">
               <Card className="bg-card dark:bg-card">
-                <CardHeader>
-                  <CardTitle className="text-foreground flex items-center gap-2">
-                    <DollarSign className="w-5 h-5 text-emerald-500" />
-                    Zaslužek preko časa
+                <CardHeader className="pb-3 sm:pb-6">
+                  <CardTitle className="text-sm sm:text-base text-foreground flex items-center gap-2">
+                    <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" />
+                    <span className="truncate">Zaslužek preko časa</span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
+                <CardContent className="px-2 sm:px-6">
+                  <ResponsiveContainer width="100%" height={250}>
                     <LineChart data={chartData}>
                       <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                      <XAxis dataKey="date" />
-                      <YAxis />
+                      <XAxis dataKey="date" tick={{ fontSize: 10 }} />
+                      <YAxis tick={{ fontSize: 10 }} />
                       <Line type="monotone" dataKey="earnings" stroke="#10b981" strokeWidth={2} />
                     </LineChart>
                   </ResponsiveContainer>
@@ -906,18 +908,18 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
               </Card>
 
               <Card className="bg-card dark:bg-card">
-                <CardHeader>
-                  <CardTitle className="text-foreground flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-blue-500" />
-                    Število rezervacij
+                <CardHeader className="pb-3 sm:pb-6">
+                  <CardTitle className="text-sm sm:text-base text-foreground flex items-center gap-2">
+                    <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
+                    <span className="truncate">Število rezervacij</span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
+                <CardContent className="px-2 sm:px-6">
+                  <ResponsiveContainer width="100%" height={250}>
                     <BarChart data={chartData}>
                       <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                      <XAxis dataKey="date" />
-                      <YAxis />
+                      <XAxis dataKey="date" tick={{ fontSize: 10 }} />
+                      <YAxis tick={{ fontSize: 10 }} />
                       <Bar dataKey="bookings" fill="#3b82f6" radius={[8, 8, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
@@ -926,26 +928,26 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
             </div>
 
             {/* Unlock Overlay */}
-            <div className="absolute inset-0 flex items-center justify-center">
+            <div className="absolute inset-0 flex items-center justify-center p-4">
               <Card className="w-full max-w-md bg-card/95 backdrop-blur-xl shadow-2xl border-2 border-primary/30">
-                <CardContent className="p-8 text-center">
-                  <div className="mb-6">
-                    <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-purple-600 to-yellow-600 rounded-2xl flex items-center justify-center">
-                      <BarChart3 className="w-8 h-8 text-white" />
+                <CardContent className="p-6 sm:p-8 text-center">
+                  <div className="mb-4 sm:mb-6">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 bg-gradient-to-br from-purple-600 to-yellow-600 rounded-xl sm:rounded-2xl flex items-center justify-center">
+                      <BarChart3 className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                     </div>
-                    <h3 className="text-2xl font-bold mb-2 text-foreground">Odkleni napredne grafe</h3>
-                    <p className="text-muted-foreground mb-6">
+                    <h3 className="text-lg sm:text-2xl font-bold mb-2 text-foreground">Odkleni napredne grafe</h3>
+                    <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6">
                       Poglej podrobne statistike svojega zaslužka in rezervacij preko časa.
                     </p>
                   </div>
                   <Button 
                     onClick={() => window.location.href = '/profile'}
-                    className="w-full bg-gradient-to-r from-purple-600 to-yellow-600 hover:from-purple-700 hover:to-yellow-700 text-white font-semibold py-6 text-lg shadow-lg"
+                    className="w-full bg-gradient-to-r from-purple-600 to-yellow-600 hover:from-purple-700 hover:to-yellow-700 text-white font-semibold py-4 sm:py-6 text-sm sm:text-lg shadow-lg"
                   >
-                    <Sparkles className="w-5 h-5 mr-2" />
+                    <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                     Nadgradi na Študko PRO
                   </Button>
-                  <p className="mt-4 text-sm text-muted-foreground">
+                  <p className="mt-3 sm:mt-4 text-xs sm:text-sm text-muted-foreground">
                     Samo 3,49 €/mesec • 7 dni brezplačno
                   </p>
                 </CardContent>
@@ -1172,32 +1174,32 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
         {/* Earnings */}
         <TabsContent value="earnings">
           <Card className="bg-card dark:bg-card">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-foreground">
-                <DollarSign className="w-5 h-5 text-emerald-500" />
+            <CardHeader className="pb-4 sm:pb-6">
+              <CardTitle className="flex items-center gap-2 text-foreground text-base sm:text-lg">
+                <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" />
                 Zaslužek
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4 sm:space-y-6">
               {/* All Time Earnings Section */}
               <div>
-                <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-primary" />
-                  Celotni zaslužek (vse obdobje)
+                <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-foreground mb-3 sm:mb-4 flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />
+                  <span className="truncate">Celotni zaslužek (vse obdobje)</span>
                 </h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-muted/50 dark:bg-muted/50 rounded-xl p-4">
-                    <p className="text-sm text-muted-foreground mb-1">Bruto zaslužek</p>
-                    <p className="text-2xl font-bold text-foreground">{stats.allTimeTotalEarnings.toFixed(2)}€</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div className="bg-muted/50 dark:bg-muted/50 rounded-lg sm:rounded-xl p-3 sm:p-4">
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-1 truncate">Bruto zaslužek</p>
+                    <p className="text-xl sm:text-2xl font-bold text-foreground">{stats.allTimeTotalEarnings.toFixed(2)}€</p>
                   </div>
-                  <div className="bg-muted/50 dark:bg-muted/50 rounded-xl p-4">
-                    <p className="text-sm text-muted-foreground mb-1">Provizija (20%)</p>
-                    <p className="text-2xl font-bold text-red-600 dark:text-red-400">-{stats.allTimePlatformFee.toFixed(2)}€</p>
+                  <div className="bg-muted/50 dark:bg-muted/50 rounded-lg sm:rounded-xl p-3 sm:p-4">
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-1 truncate">Provizija (20%)</p>
+                    <p className="text-xl sm:text-2xl font-bold text-red-600 dark:text-red-400">-{stats.allTimePlatformFee.toFixed(2)}€</p>
                   </div>
                 </div>
-                <div className="bg-gradient-to-r from-emerald-500/10 to-blue-500/10 rounded-xl p-6 mt-4">
-                  <p className="text-sm text-muted-foreground mb-1">Neto zaslužek</p>
-                  <p className="text-4xl font-bold text-emerald-600 dark:text-emerald-400">{stats.allTimeNetEarnings.toFixed(2)}€</p>
+                <div className="bg-gradient-to-r from-emerald-500/10 to-blue-500/10 rounded-lg sm:rounded-xl p-4 sm:p-6 mt-3 sm:mt-4">
+                  <p className="text-xs sm:text-sm text-muted-foreground mb-1">Neto zaslužek</p>
+                  <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-emerald-600 dark:text-emerald-400">{stats.allTimeNetEarnings.toFixed(2)}€</p>
                   <p className="text-xs text-muted-foreground mt-2">
                     Skupni zaslužek od začetka uporabe platforme
                   </p>
