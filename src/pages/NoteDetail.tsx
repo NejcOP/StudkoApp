@@ -24,6 +24,7 @@ interface Note {
   created_at: string;
   author_id: string;
   file_url?: string | null;
+  improved_file_url?: string | null;
   profiles: {
     full_name: string;
     stripe_connect_id?: string;
@@ -266,7 +267,14 @@ const NoteDetail = () => {
   };
 
   const handleImproveNotes = async () => {
-    if (!user || !note || !note.file_url) return;
+    if (!user || !note) return;
+    
+    // Get the content from description or show error if none
+    const content = note.description || note.title;
+    if (!content) {
+      toast.error("Ni vsebine za izboljšavo");
+      return;
+    }
     
     // Optimistic update
     setImproving(true);
@@ -274,15 +282,16 @@ const NoteDetail = () => {
     toast.success("Zapisek se izboljšuje...");
     
     try {
-      const { error } = await supabase.functions.invoke('improve-notes', {
-        body: { noteId: note.id, content: note.file_url }
+      const { data, error } = await supabase.functions.invoke('improve-notes', {
+        body: { noteId: note.id, content: content }
       });
       if (error) throw error;
       
-      // Silent refresh in background
-      fetchNote();
+      // Silent refresh in background to get the improved content
+      await fetchNote();
       toast.success("Zapisek uspešno izboljšan!");
-    } catch {
+    } catch (err) {
+      console.error('Error improving notes:', err);
       // Rollback on error
       setImprovedSuccess(false);
       toast.error("Napaka pri izboljšavi");
@@ -396,7 +405,7 @@ const NoteDetail = () => {
                     <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-2 text-foreground break-words">
                       {note.title}
                     </h1>
-                    <div className="flex flex-wrap gap-1.5 sm:gap-1.5 sm:gap-2">
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2">
                       <span className="px-2 sm:px-3 py-1 bg-primary/10 text-primary rounded-lg text-xs sm:text-sm font-medium">
                         {note.subject}
                       </span>
@@ -440,6 +449,19 @@ const NoteDetail = () => {
                   <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-foreground">Opis</h2>
                   <div className="text-sm sm:text-base text-muted-foreground whitespace-pre-line leading-relaxed">
                     {note.description}
+                  </div>
+                </div>
+              )}
+
+              {/* Improved Content */}
+              {note.improved_file_url && (isOwner || hasPurchased) && (
+                <div className="bg-gradient-card rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 border border-border shadow-lg">
+                  <div className="flex items-center gap-2 mb-3 sm:mb-4">
+                    <Sparkles className="w-5 h-5 text-primary" />
+                    <h2 className="text-lg sm:text-xl font-bold text-foreground">AI Izboljšana verzija</h2>
+                  </div>
+                  <div className="text-sm sm:text-base text-foreground whitespace-pre-line leading-relaxed prose prose-sm sm:prose-base max-w-none">
+                    {note.improved_file_url}
                   </div>
                 </div>
               )}
@@ -574,16 +596,16 @@ const NoteDetail = () => {
                 ) : null}
 
                 {/* AI Features */}
-                {(isOwner || hasPurchased) && note.file_url && (
+                {(isOwner || hasPurchased) && (note.description || note.file_url) && (
                   <div className="space-y-2.5 sm:space-y-3 mb-4 sm:mb-6">
                     <Button
                       variant="outline"
                       className="w-full h-11 sm:h-12 text-sm sm:text-base"
                       onClick={handleImproveNotes}
-                      disabled={improving}
+                      disabled={improving || !!note.improved_file_url}
                     >
-                      {improving ? <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />}
-                      {improving ? "Izboljšujem..." : "AI izboljšaj zapiske"}
+                      {improving ? <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 mr-2 animate-spin" /> : note.improved_file_url ? <Check className="w-4 h-4 sm:w-5 sm:h-5 mr-2" /> : <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />}
+                      {improving ? "Izboljšujem..." : note.improved_file_url ? "Že izboljšano" : "AI izboljšaj zapiske"}
                     </Button>
 
                     <Button
