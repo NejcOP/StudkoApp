@@ -26,13 +26,13 @@ serve(async (req) => {
   }
 
   try {
-    console.log('🔍 Checking GOOGLE_AI_API_KEY...');
-    const GOOGLE_AI_API_KEY = Deno.env.get("GOOGLE_AI_API_KEY");
-    if (!GOOGLE_AI_API_KEY) {
-      console.error('❌ GOOGLE_AI_API_KEY is NOT configured!');
-      throw new Error("GOOGLE_AI_API_KEY is not configured");
+    console.log('🔍 Checking OPENAI_API_KEY...');
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    if (!OPENAI_API_KEY) {
+      console.error('❌ OPENAI_API_KEY is NOT configured!');
+      throw new Error("OPENAI_API_KEY is not configured");
     }
-    console.log('✅ GOOGLE_AI_API_KEY exists');
+    console.log('✅ OPENAI_API_KEY exists');
 
     console.log('🔍 Checking Authorization header...');
     const authHeader = req.headers.get("Authorization");
@@ -200,83 +200,82 @@ POMEMBNO: Ne ponavljaj vedno iste strukture strogo. Prilagodi se vprašanju in t
       userMessages = [{ role: "user", content: actionPrompts[quickAction] || lastResponse }];
     }
 
-    // Convert messages to Gemini format
-    const geminiMessages = userMessages.map((msg: any) => {
-      const parts: any[] = [];
+    // Convert messages to OpenAI format
+    const openaiMessages = userMessages.map((msg: any) => {
+      const message: any = {
+        role: msg.role === 'assistant' ? 'assistant' : 'user',
+        content: []
+      };
       
       // Add text content
       if (msg.content) {
-        parts.push({ text: msg.content });
+        message.content.push({
+          type: 'text',
+          text: msg.content
+        });
       }
       
       // Add image if present
       if (msg.attachment?.imageData) {
-        parts.push({
-          inline_data: {
-            mime_type: msg.attachment.mimeType || "image/jpeg",
-            data: msg.attachment.imageData
+        message.content.push({
+          type: 'image_url',
+          image_url: {
+            url: `data:${msg.attachment.mimeType || 'image/jpeg'};base64,${msg.attachment.imageData}`
           }
         });
       }
       
-      return {
-        role: msg.role === 'assistant' ? 'model' : 'user',
-        parts: parts
-      };
+      // If no content array items, just use text string
+      if (message.content.length === 1 && message.content[0].type === 'text') {
+        message.content = message.content[0].text;
+      }
+      
+      return message;
     });
 
-    // Add system prompt as first message for context
-    const contentsWithSystem = [
+    // Add system prompt as first message
+    const messagesWithSystem = [
       {
-        role: 'user',
-        parts: [{ text: systemPrompt }]
+        role: 'system',
+        content: systemPrompt
       },
-      {
-        role: 'model',
-        parts: [{ text: 'Razumem. Sem Študko AI - vrhunski slovenski študijski mentor. Pripravljen sem pomagati z razlagami po Feynmanovi tehniki. Kako ti lahko pomagam?' }]
-      },
-      ...geminiMessages
+      ...openaiMessages
     ];
 
-    const geminiRequestBody = {
-      contents: contentsWithSystem,
-      generationConfig: {
-        temperature: 0.7,
-        topP: 0.95,
-        topK: 40,
-        maxOutputTokens: 2048,
-      }
+    const openaiRequestBody = {
+      model: "gpt-4o-mini",
+      messages: messagesWithSystem,
+      temperature: 0.7,
+      max_tokens: 2048,
     };
     
     console.log('===========================================');
-    console.log('📤 SENDING TO GEMINI');
+    console.log('📤 SENDING TO OPENAI');
     console.log('===========================================');
-    console.log('Message count:', geminiMessages.length);
-    console.log('Contents structure:', JSON.stringify(contentsWithSystem.map(m => ({ 
+    console.log('Message count:', openaiMessages.length);
+    console.log('Messages structure:', JSON.stringify(messagesWithSystem.map(m => ({ 
       role: m.role, 
-      partsCount: m.parts.length,
-      firstPartPreview: m.parts[0]?.text?.substring(0, 50) + '...'
+      contentPreview: typeof m.content === 'string' ? m.content.substring(0, 50) + '...' : 'array'
     })), null, 2));
-    console.log('Full payload:', JSON.stringify(geminiRequestBody, null, 2));
+    console.log('Full payload:', JSON.stringify(openaiRequestBody, null, 2));
     
-    // Use v1beta API with gemini-1.5-flash-latest
-    const modelName = "gemini-1.5-flash-latest";
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${GOOGLE_AI_API_KEY}`;
+    const openaiUrl = 'https://api.openai.com/v1/chat/completions';
     
-    console.log('🌐 Gemini API URL (without key):', geminiUrl.replace(/key=.*$/, 'key=***'));
-    console.log('📦 Request body keys:', Object.keys(geminiRequestBody));
+    console.log('🌐 OpenAI API URL:', openaiUrl);
+    console.log('📦 Request body keys:', Object.keys(openaiRequestBody));
     console.log('===========================================');
     
-    const aiResponse = await fetch(geminiUrl, {
+    const aiResponse = await fetch(openaiUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Authorization": `Bearer ${OPENAI_API_KEY}`
       },
-      body: JSON.stringify(geminiRequestBody),
+      body: JSON.stringify(openaiRequestBody),
     });
 
     console.log('===========================================');
-    console.log('📥 GEMINI API RESPONSE');
+    console.log('📥 OPENAI API RESPONSE');
     console.log('===========================================');
     console.log('Status:', aiResponse.status);
     console.log('Status Text:', aiResponse.statusText);
@@ -286,7 +285,7 @@ POMEMBNO: Ne ponavljaj vedno iste strukture strogo. Prilagodi se vprašanju in t
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
       console.error('===========================================');
-      console.error('❌ GEMINI API ERROR');
+      console.error('❌ OPENAI API ERROR');
       console.error('===========================================');
       console.error('Status:', aiResponse.status);
       console.error('Status Text:', aiResponse.statusText);
@@ -312,7 +311,7 @@ POMEMBNO: Ne ponavljaj vedno iste strukture strogo. Prilagodi se vprašanju in t
         const waitTime = retryAfter ? `${retryAfter} sekund` : 'nekaj časa';
         
         return new Response(JSON.stringify({ 
-          error: `Google AI API rate limit dosežen. Poskusi čez ${waitTime}.`,
+          error: `OpenAI API rate limit dosežen. Poskusi čez ${waitTime}.`,
           retryAfter: retryAfter ? parseInt(retryAfter) : 60
         }), {
           status: 429, 
@@ -324,7 +323,7 @@ POMEMBNO: Ne ponavljaj vedno iste strukture strogo. Prilagodi se vprašanju in t
           status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
         });
       }
-      if (aiResponse.status === 403) {
+      if (aiResponse.status === 401 || aiResponse.status === 403) {
         return new Response(JSON.stringify({ error: "API ključ ni pravilen ali nima dostopa." }), {
           status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" }
         });
@@ -336,25 +335,21 @@ POMEMBNO: Ne ponavljaj vedno iste strukture strogo. Prilagodi se vprašanju in t
       });
     }
 
-    // For non-streaming generateContent, get full response
+    // Get OpenAI response
     console.log('✅ Success! Reading response body...');
     const responseData = await aiResponse.json();
     console.log('Response data structure:', JSON.stringify({
-      hasCandidates: !!responseData.candidates,
-      candidatesCount: responseData.candidates?.length,
-      firstCandidateStructure: responseData.candidates?.[0] ? Object.keys(responseData.candidates[0]) : []
+      hasChoices: !!responseData.choices,
+      choicesCount: responseData.choices?.length,
+      firstChoiceStructure: responseData.choices?.[0] ? Object.keys(responseData.choices[0]) : []
     }));
 
-    // Extract text from response
+    // Extract text from OpenAI response
     let generatedText = '';
-    if (responseData.candidates && responseData.candidates[0]) {
-      const candidate = responseData.candidates[0];
-      if (candidate.content && candidate.content.parts) {
-        for (const part of candidate.content.parts) {
-          if (part.text) {
-            generatedText += part.text;
-          }
-        }
+    if (responseData.choices && responseData.choices[0]) {
+      const choice = responseData.choices[0];
+      if (choice.message && choice.message.content) {
+        generatedText = choice.message.content;
       }
     }
 

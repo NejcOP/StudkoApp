@@ -18,9 +18,9 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    const GOOGLE_AI_API_KEY = Deno.env.get("GOOGLE_AI_API_KEY");
-    if (!GOOGLE_AI_API_KEY) {
-      throw new Error("GOOGLE_AI_API_KEY is not configured");
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    if (!OPENAI_API_KEY) {
+      throw new Error("OPENAI_API_KEY is not configured");
     }
 
     const authHeader = req.headers.get("Authorization");
@@ -46,7 +46,7 @@ serve(async (req) => {
     }
     logStep("Request validated", { subject, titleLength: title.length, textLength: text.length });
 
-    // Use Google Gemini directly (same as ai-chat)
+    // Use OpenAI API
     const systemPrompt = `You are an expert educational flashcard creator. Generate 10-15 high-quality flashcards from study materials.
 
 RULES:
@@ -61,26 +61,25 @@ IMPORTANT: Return ONLY valid JSON in this EXACT format:
 
 Do NOT include any text before or after the JSON. Do NOT include markdown code blocks.`;
 
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GOOGLE_AI_API_KEY}`;
+    const openaiUrl = 'https://api.openai.com/v1/chat/completions';
     
     const requestBody = {
-      contents: [{
-        role: "user",
-        parts: [{ text: `${systemPrompt}\n\nSubject: ${subject || "General"}\nTitle: ${title}\n\nCreate flashcards from:\n\n${text}` }]
-      }],
-      generationConfig: {
-        temperature: 0.7,
-        topP: 0.95,
-        maxOutputTokens: 2048,
-        response_mime_type: "application/json"
-      }
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: `Subject: ${subject || "General"}\nTitle: ${title}\n\nCreate flashcards from:\n\n${text}` }
+      ],
+      temperature: 0.7,
+      max_tokens: 2048,
+      response_format: { type: "json_object" }
     };
 
-    logStep("Calling Gemini API");
-    const aiResponse = await fetch(geminiUrl, {
+    logStep("Calling OpenAI API");
+    const aiResponse = await fetch(openaiUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Authorization": `Bearer ${OPENAI_API_KEY}`
       },
       body: JSON.stringify(requestBody),
     });
@@ -106,9 +105,9 @@ Do NOT include any text before or after the JSON. Do NOT include markdown code b
     const aiData = await aiResponse.json();
     logStep("AI response received");
 
-    // Extract flashcards from Gemini response
+    // Extract flashcards from OpenAI response
     let flashcards;
-    const content = aiData.candidates?.[0]?.content?.parts?.[0]?.text;
+    const content = aiData.choices?.[0]?.message?.content;
     
     if (!content) {
       logStep("No content in response", { response: JSON.stringify(aiData) });
@@ -119,15 +118,9 @@ Do NOT include any text before or after the JSON. Do NOT include markdown code b
 
     // Parse JSON from content
     try {
-      // Try to find JSON in the response
-      const jsonMatch = content.match(/\{[\s\S]*"flashcards"[\s\S]*\}/);
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
-        flashcards = parsed.flashcards;
-        logStep("Flashcards parsed successfully", { count: flashcards?.length });
-      } else {
-        throw new Error("No JSON found in response");
-      }
+      const parsed = JSON.parse(content);
+      flashcards = parsed.flashcards;
+      logStep("Flashcards parsed successfully", { count: flashcards?.length });
     } catch (parseError) {
       logStep("Parse error", { error: parseError.message, content: content.substring(0, 500) });
       throw new Error("Failed to parse flashcards from AI response");

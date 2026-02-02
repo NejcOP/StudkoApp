@@ -18,29 +18,28 @@ serve(async (req) => {
       throw new Error('Content is required');
     }
     
-    const GOOGLE_AI_API_KEY = Deno.env.get('GOOGLE_AI_API_KEY');
-    if (!GOOGLE_AI_API_KEY) {
-      throw new Error('GOOGLE_AI_API_KEY not configured');
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+    if (!OPENAI_API_KEY) {
+      throw new Error('OPENAI_API_KEY not configured');
     }
 
-    // Call Google AI to improve notes
-    const prompt = `You are an expert at improving study notes in Slovenian. Rewrite notes with: 1) Clean formatting with headers and sections 2) Fixed grammar and spelling 3) Bullet points for key concepts 4) A clear summary at the top 5) Study-friendly structure. IMPORTANT: Respond in Slovenian language. Keep all important content but make it clearer and more organized.
+    // Call OpenAI to improve notes
+    const systemPrompt = `You are an expert at improving study notes in Slovenian. Rewrite notes with: 1) Clean formatting with headers and sections 2) Fixed grammar and spelling 3) Bullet points for key concepts 4) A clear summary at the top 5) Study-friendly structure. IMPORTANT: Respond in Slovenian language. Keep all important content but make it clearer and more organized.`;
 
-Please improve these study notes:
-
-${content}`;
-
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GOOGLE_AI_API_KEY}`, {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENAI_API_KEY}`
       },
       body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: prompt
-          }]
-        }]
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: `Please improve these study notes:\n\n${content}` }
+        ],
+        temperature: 0.7,
+        max_tokens: 2048
       }),
     });
 
@@ -51,7 +50,7 @@ ${content}`;
     }
 
     const data = await response.json();
-    const improvedContent = data.candidates[0].content.parts[0].text;
+    const improvedContent = data.choices[0].message.content;
 
     // If noteId is provided, update the note (backward compatibility)
     if (noteId) {
