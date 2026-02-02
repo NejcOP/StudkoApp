@@ -61,7 +61,7 @@ IMPORTANT: Return ONLY valid JSON in this EXACT format:
 
 Do NOT include any text before or after the JSON. Do NOT include markdown code blocks.`;
 
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GOOGLE_AI_API_KEY}`;
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GOOGLE_AI_API_KEY}`;
     
     const requestBody = {
       contents: [{
