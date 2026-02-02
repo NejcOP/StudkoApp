@@ -259,8 +259,8 @@ POMEMBNO: Ne ponavljaj vedno iste strukture strogo. Prilagodi se vprašanju in t
     })), null, 2));
     console.log('Full payload:', JSON.stringify(geminiRequestBody, null, 2));
     
-    // Use v1beta API with gemini-1.5-pro and generateContent (non-streaming)
-    const modelName = "gemini-1.5-pro";
+    // Use v1beta API with gemini-pro (stable model)
+    const modelName = "gemini-pro";
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${GOOGLE_AI_API_KEY}`;
     
     console.log('🌐 Gemini API URL (without key):', geminiUrl.replace(/key=.*$/, 'key=***'));
