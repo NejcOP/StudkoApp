@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import { ArrowLeft, Download, ShoppingCart, Sparkles, Brain, Zap, Check, BookOpen, User, Calendar, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Download, ShoppingCart, Brain, Zap, BookOpen, User, Calendar, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { NotePreview } from "@/components/NotePreview";
@@ -73,8 +73,6 @@ const NoteDetail = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [hasPurchased, setHasPurchased] = useState(false);
   const [purchasing, setPurchasing] = useState(false);
-  const [improving, setImproving] = useState(false);
-  const [improvedSuccess, setImprovedSuccess] = useState(false);
   const [fileUrls, setFileUrls] = useState<string[]>([]);
   const [hasExistingFlashcards, setHasExistingFlashcards] = useState(false);
   const [authorStats, setAuthorStats] = useState({ totalSales: 0, averageRating: 0, isVerified: false });
@@ -263,42 +261,6 @@ const NoteDetail = () => {
       toast.error(errorMessage);
     } finally {
       setPurchasing(false);
-    }
-  };
-
-  const handleImproveNotes = async () => {
-    if (!user || !note) return;
-    
-    // Get the content from description or show error if none
-    const content = note.description || note.title;
-    if (!content) {
-      toast.error("Ni vsebine za izboljšavo");
-      return;
-    }
-    
-    // Optimistic update
-    setImproving(true);
-    setImprovedSuccess(true);
-    toast.success("Zapisek se izboljšuje...");
-    
-    try {
-      const { data, error } = await supabase.functions.invoke('improve-notes', {
-        body: { noteId: note.id, content: content }
-      });
-      if (error) throw error;
-      
-      // Silent refresh in background to get the improved content
-      await fetchNote();
-      toast.success("Zapisek uspešno izboljšan!");
-    } catch (err) {
-      console.error('Error improving notes:', err);
-      // Rollback on error
-      setImprovedSuccess(false);
-      toast.error("Napaka pri izboljšavi");
-    } finally {
-      setImproving(false);
-      // Keep success state for a moment
-      setTimeout(() => setImprovedSuccess(false), 3000);
     }
   };
 
@@ -598,16 +560,6 @@ const NoteDetail = () => {
                 {/* AI Features */}
                 {(isOwner || hasPurchased) && (note.description || note.file_url) && (
                   <div className="space-y-2.5 sm:space-y-3 mb-4 sm:mb-6">
-                    <Button
-                      variant="outline"
-                      className="w-full h-11 sm:h-12 text-sm sm:text-base"
-                      onClick={handleImproveNotes}
-                      disabled={improving || !!note.improved_file_url}
-                    >
-                      {improving ? <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 mr-2 animate-spin" /> : note.improved_file_url ? <Check className="w-4 h-4 sm:w-5 sm:h-5 mr-2" /> : <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />}
-                      {improving ? "Izboljšujem..." : note.improved_file_url ? "Že izboljšano" : "AI izboljšaj zapiske"}
-                    </Button>
-
                     <Button
                       variant="outline"
                       className="w-full h-11 sm:h-12 text-sm sm:text-base"
