@@ -136,6 +136,19 @@ const TutorManagement = () => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
 
+    // Validate file type
+    if (!file.type.startsWith('video/')) {
+      toast.error('Prosim naloži video datoteko');
+      return;
+    }
+
+    // Validate file size (max 50MB)
+    const maxSize = 50 * 1024 * 1024; // 50MB
+    if (file.size > maxSize) {
+      toast.error('Video je prevelik. Maksimalna velikost je 50MB.');
+      return;
+    }
+
     setVideoUploading(true);
 
     try {
@@ -159,7 +172,7 @@ const TutorManagement = () => {
       toast.success('Video uspešno naložen!');
     } catch (error: any) {
       console.error('Error uploading video:', error);
-      toast.error('Napaka pri nalaganju videa');
+      toast.error('Napaka pri nalaganju videa. Poskusi z manjšo datoteko.');
     } finally {
       setVideoUploading(false);
     }
@@ -597,8 +610,9 @@ const TutorManagement = () => {
                                 className="hidden"
                               />
                             </div>
+                            <p className="text-xs text-muted-foreground">Maksimalna velikost: 50MB</p>
                             {formData.video_file_url && (
-                              <p className="text-xs text-muted-foreground">Video naložen uspešno</p>
+                              <p className="text-xs text-green-600">Video naložen uspešno</p>
                             )}
                           </TabsContent>
                         </Tabs>

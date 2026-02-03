@@ -98,22 +98,42 @@ export default function TutorApply() {
   const handleVideoFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
-    setVideoUploading(true);
-    const fileExt = file.name.split('.').pop();
-    const filePath = `video_${user.id}_${Date.now()}.${fileExt}`;
-    const { error: uploadError } = await supabase.storage.from('tutor-videos').upload(filePath, file, {
-      cacheControl: '3600',
-      upsert: false,
-    });
-    if (uploadError) {
-      toast({ title: 'Napaka pri nalaganju videa', description: uploadError.message, variant: 'destructive' });
-      setVideoUploading(false);
+
+    // Validate file type
+    if (!file.type.startsWith('video/')) {
+      toast({ title: 'Napaka', description: 'Prosim naloži video datoteko', variant: 'destructive' });
       return;
     }
-    const { data: publicUrlData } = supabase.storage.from('tutor-videos').getPublicUrl(filePath);
-    setFormData(prev => ({ ...prev, video_file_url: publicUrlData.publicUrl }));
-    setVideoUploading(false);
-    toast({ title: 'Video uspešno naložen!', description: 'Video je bil naložen in bo dodan k tvojemu profilu.' });
+
+    // Validate file size (max 50MB)
+    const maxSize = 50 * 1024 * 1024; // 50MB
+    if (file.size > maxSize) {
+      toast({ title: 'Napaka', description: 'Video je prevelik. Maksimalna velikost je 50MB.', variant: 'destructive' });
+      return;
+    }
+
+    setVideoUploading(true);
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const filePath = `video_${user.id}_${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage.from('tutor-videos').upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false,
+      });
+      
+      if (uploadError) throw uploadError;
+      
+      const { data: publicUrlData } = supabase.storage.from('tutor-videos').getPublicUrl(filePath);
+      setFormData(prev => ({ ...prev, video_file_url: publicUrlData.publicUrl }));
+      toast({ title: 'Video uspešno naložen!', description: 'Video je bil naložen in bo dodan k tvojemu profilu.' });
+    } catch (error: any) {
+      console.error('Error uploading video:', error);
+      toast({ title: 'Napaka pri nalaganju videa', description: error.message || 'Poskusi z manjšo datoteko', variant: 'destructive' });
+    } finally {
+      setVideoUploading(false);
+    }
   };
 
   const handleProfileImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -498,10 +518,10 @@ export default function TutorApply() {
                   </div>
                 )}
                 {videoTab === 'file' && (
-                  <div className="flex items-center gap-2">
-                    <label htmlFor="video_file" className="flex items-center gap-2 cursor-pointer px-3 py-2 border border-primary/30 rounded-lg bg-card hover:bg-primary/10 transition">
+                  <div className="space-y-2">
+                    <label htmlFor="video_file" className="flex items-center gap-2 cursor-pointer px-3 py-2 border border-primary/30 rounded-lg bg-card hover:bg-primary/10 transition w-fit">
                       <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 002.828 2.828L18 9.828M7 7h.01" /></svg>
-                      <span>{formData.video_file_url ? 'Video naložen' : 'Izberi video datoteko'}</span>
+                      <span>{videoUploading ? 'Nalagam...' : (formData.video_file_url ? 'Video naložen' : 'Izberi video datoteko')}</span>
                       <Input
                         id="video_file"
                         type="file"
@@ -511,8 +531,8 @@ export default function TutorApply() {
                         disabled={videoUploading}
                       />
                     </label>
-                    {videoUploading && <span className="text-xs text-primary animate-pulse">Nalagam...</span>}
-                    {formData.video_file_url && <a href={formData.video_file_url} target="_blank" rel="noopener noreferrer" className="text-xs text-green-600 underline ml-2">Poglej video</a>}
+                    <p className="text-xs text-muted-foreground">Maksimalna velikost: 50MB</p>
+                    {formData.video_file_url && <a href={formData.video_file_url} target="_blank" rel="noopener noreferrer" className="text-xs text-green-600 underline">Poglej video</a>}
                   </div>
                 )}
               </div>
