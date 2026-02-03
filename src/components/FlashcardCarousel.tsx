@@ -16,7 +16,7 @@ interface FlashcardCarouselProps {
   title?: string;
 }
 
-export const FlashcardCarousel = ({ flashcards, onReset, title = "Flashcards" }: FlashcardCarouselProps) => {
+export const FlashcardCarousel = ({ flashcards, onReset, title = "Kartice" }: FlashcardCarouselProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [knownCards, setKnownCards] = useState<Set<number>>(new Set());
@@ -68,6 +68,99 @@ export const FlashcardCarousel = ({ flashcards, onReset, title = "Flashcards" }:
       celebrateProgress();
     }
   }, [cardsReviewed]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        setIsFlipped(false);
+        setCurrentIndex(prev => prev > 0 ? prev - 1 : prev);
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        setIsFlipped(false);
+        setCurrentIndex(prev => prev < flashcards.length - 1 ? prev + 1 : prev);
+      } else if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        setIsFlipped(prev => !prev);
+      } else if (e.key === '1') {
+        e.preventDefault();
+        setIsFlipped(flipped => {
+          if (flipped) {
+            // Hard action
+            setCurrentIndex(current => {
+              const newUnknown = new Set(unknownCards);
+              newUnknown.add(current);
+              setUnknownCards(newUnknown);
+              const newKnown = new Set(knownCards);
+              newKnown.delete(current);
+              setKnownCards(newKnown);
+              setCardsReviewed(prev => prev + 1);
+              
+              setTimeout(() => {
+                if (current < flashcards.length - 1) {
+                  setCurrentIndex(current + 1);
+                  setIsFlipped(false);
+                }
+              }, 300);
+              return current;
+            });
+          }
+          return flipped;
+        });
+      } else if (e.key === '2') {
+        e.preventDefault();
+        setIsFlipped(flipped => {
+          if (flipped) {
+            // Good action
+            setCurrentIndex(current => {
+              const newKnown = new Set(knownCards);
+              newKnown.add(current);
+              setKnownCards(newKnown);
+              setCardsReviewed(prev => prev + 1);
+              
+              setTimeout(() => {
+                if (current < flashcards.length - 1) {
+                  setCurrentIndex(current + 1);
+                  setIsFlipped(false);
+                }
+              }, 300);
+              return current;
+            });
+          }
+          return flipped;
+        });
+      } else if (e.key === '3') {
+        e.preventDefault();
+        setIsFlipped(flipped => {
+          if (flipped) {
+            // Easy action
+            setCurrentIndex(current => {
+              const newKnown = new Set(knownCards);
+              newKnown.add(current);
+              setKnownCards(newKnown);
+              const newUnknown = new Set(unknownCards);
+              newUnknown.delete(current);
+              setUnknownCards(newUnknown);
+              setCardsReviewed(prev => prev + 1);
+              
+              setTimeout(() => {
+                if (current < flashcards.length - 1) {
+                  setCurrentIndex(current + 1);
+                  setIsFlipped(false);
+                }
+              }, 300);
+              return current;
+            });
+          }
+          return flipped;
+        });
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [flashcards.length, knownCards, unknownCards]);
 
   const handleFlip = () => {
     setIsFlipped(!isFlipped);
@@ -339,7 +432,8 @@ export const FlashcardCarousel = ({ flashcards, onReset, title = "Flashcards" }:
               <div className="text-2xl font-bold text-foreground">
                 <ReactMarkdown>{currentCard.question}</ReactMarkdown>
               </div>
-              <p className="text-sm text-muted-foreground mt-6">Klikni za odgovor</p>
+              <p className="text-sm text-muted-foreground mt-6">Klikni ali pritisni preslednico za odgovor</p>
+              <p className="text-xs text-muted-foreground mt-2">← → puščici za navigacijo</p>
             </div>
           </div>
 
@@ -374,69 +468,77 @@ export const FlashcardCarousel = ({ flashcards, onReset, title = "Flashcards" }:
                 <ReactMarkdown>{currentCard.answer}</ReactMarkdown>
               </div>
               <p className="text-sm text-muted-foreground mt-6">Klikni za vprašanje</p>
+              <p className="text-xs text-muted-foreground mt-2">1-Težko | 2-Dobro | 3-Lahko</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Navigation and action buttons */}
-      <div className="flex items-center justify-between gap-4">
-        <Button
-          variant="outline"
-          size="lg"
-          onClick={handlePrev}
-          disabled={currentIndex === 0}
-          className="flex-1"
-        >
-          <ChevronLeft className="w-5 h-5 mr-2" />
-          Prejšnja
-        </Button>
+      <div className="flex flex-col gap-4">
+        {/* Action buttons - always visible */}
+        <div className="flex gap-2 justify-center">
+          <Button
+            variant="destructive"
+            size="lg"
+            onClick={handleHard}
+            disabled={!isFlipped}
+            className="flex-1"
+            title="Težko - Prikaži čez 1 min (pritisni 1)"
+          >
+            Težko
+            <span className="text-xs ml-1">(1min)</span>
+          </Button>
+          <Button
+            variant="default"
+            size="lg"
+            onClick={handleGood}
+            disabled={!isFlipped}
+            className="flex-1 bg-yellow-600 hover:bg-yellow-700"
+            title="Dobro - Prikaži čez 10 min (pritisni 2)"
+          >
+            Dobro
+            <span className="text-xs ml-1">(10min)</span>
+          </Button>
+          <Button
+            variant="default"
+            size="lg"
+            onClick={handleEasy}
+            disabled={!isFlipped}
+            className="flex-1 bg-green-600 hover:bg-green-700"
+            title="Lahko - Prikaži čez 1 dan (pritisni 3)"
+          >
+            Lahko
+            <span className="text-xs ml-1">(1 dan)</span>
+          </Button>
+        </div>
 
-        {isFlipped && (
-          <div className="flex gap-2 flex-1 justify-center">
-            <Button
-              variant="destructive"
-              size="lg"
-              onClick={handleHard}
-              className="flex-1"
-              title="Prikaži čez 1 min"
-            >
-              Težko
-              <span className="text-xs ml-1">(1min)</span>
-            </Button>
-            <Button
-              variant="default"
-              size="lg"
-              onClick={handleGood}
-              className="flex-1 bg-yellow-600 hover:bg-yellow-700"
-              title="Prikaži čez 10 min"
-            >
-              Dobro
-              <span className="text-xs ml-1">(10min)</span>
-            </Button>
-            <Button
-              variant="default"
-              size="lg"
-              onClick={handleEasy}
-              className="flex-1 bg-green-600 hover:bg-green-700"
-              title="Prikaži čez 1 dan"
-            >
-              Lahko
-              <span className="text-xs ml-1">(1 dan)</span>
-            </Button>
-          </div>
-        )}
+        {/* Navigation buttons */}
+        <div className="flex items-center justify-between gap-4">
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={handlePrev}
+            disabled={currentIndex === 0}
+            className="flex-1"
+            title="Prejšnja kartica (←)"
+          >
+            <ChevronLeft className="w-5 h-5 mr-2" />
+            Prejšnja
+          </Button>
 
-        <Button
-          variant="outline"
-          size="lg"
-          onClick={handleNext}
-          disabled={currentIndex === flashcards.length - 1}
-          className="flex-1"
-        >
-          Naslednja
-          <ChevronRight className="w-5 h-5 ml-2" />
-        </Button>
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={handleNext}
+            disabled={currentIndex === flashcards.length - 1}
+            className="flex-1"
+            title="Naslednja kartica (→)"
+          >
+            Naslednja
+            <ChevronRight className="w-5 h-5 ml-2" />
+          </Button>
+        </div>
       </div>
 
       {/* Restart button */}
