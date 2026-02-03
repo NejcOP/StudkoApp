@@ -41,6 +41,14 @@ serve(async (req) => {
     const { tutorId, bookings } = await req.json();
     console.log('[AI] tutorId:', tutorId, 'bookings count:', bookings?.length);
 
+    if (!tutorId) {
+      throw new Error('tutorId is required');
+    }
+
+    // Ensure bookings is an array
+    const bookingsArray = Array.isArray(bookings) ? bookings : [];
+    console.log('[AI] Bookings array length:', bookingsArray.length);
+
     // Fetch tutor data
     const { data: tutorData, error: tutorError } = await supabaseClient
       .from('tutors')
@@ -54,8 +62,8 @@ serve(async (req) => {
     }
     console.log('[AI] Tutor data fetched');
 
-    // Calculate statistics
-    const completedBookings = bookings.filter((b: any) => b.status === 'completed');
+    // Calculate statistics - safely handle bookings array
+    const completedBookings = bookingsArray.filter((b: any) => b.status === 'completed');
     const totalHours = completedBookings.length;
     const netEarnings = completedBookings.reduce((sum: number, b: any) => sum + (b.price_eur * 0.80), 0);
     
@@ -147,9 +155,15 @@ Dolžina: 300-400 besed. Piši v slovenščini.`;
     );
 
   } catch (error) {
-    console.error("Error:", error);
+    console.error("Error in analyze-instructor-profile:", error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error("Error details:", errorMessage);
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: errorMessage,
+        details: error instanceof Error ? error.stack : undefined
+      }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
