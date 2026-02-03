@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -47,9 +47,12 @@ const TutorManagement = () => {
     languages: [] as string[],
     methodology: "",
     video_url: "",
+    video_file_url: "",
     profile_image_url: "",
   });
   const [imageUploading, setImageUploading] = useState(false);
+  const [videoUploading, setVideoUploading] = useState(false);
+  const [videoTab, setVideoTab] = useState<'url' | 'file'>('url');
 
   useEffect(() => {
     if (!user) {
@@ -100,6 +103,7 @@ const TutorManagement = () => {
         languages: data.languages || [],
         methodology: data.methodology || "",
         video_url: data.video_url || "",
+        video_file_url: data.video_file_url || "",
         profile_image_url: data.profile_image_url || "",
       });
     } catch (error) {
@@ -126,6 +130,39 @@ const TutorManagement = () => {
         ? prev.languages.filter(l => l !== language)
         : [...prev.languages, language]
     }));
+  };
+
+  const handleVideoFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    setVideoUploading(true);
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const filePath = `video_${user.id}_${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('tutor-videos')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false,
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = supabase.storage
+        .from('tutor-videos')
+        .getPublicUrl(filePath);
+
+      setFormData(prev => ({ ...prev, video_file_url: publicUrlData.publicUrl }));
+      toast.success('Video uspešno naložen!');
+    } catch (error: any) {
+      console.error('Error uploading video:', error);
+      toast.error('Napaka pri nalaganju videa');
+    } finally {
+      setVideoUploading(false);
+    }
   };
 
   const handleProfileImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -204,6 +241,7 @@ const TutorManagement = () => {
           languages: formData.languages,
           methodology: formData.methodology,
           video_url: formData.video_url || null,
+          video_file_url: formData.video_file_url || null,
           profile_image_url: formData.profile_image_url || null,
         })
         .eq('user_id', user?.id);
@@ -241,7 +279,7 @@ const TutorManagement = () => {
       <Navigation />
       
       <main className="container mx-auto px-4 py-12">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           <div className="mb-8">
             <h1 className="text-4xl font-bold mb-2 bg-gradient-primary bg-clip-text text-transparent">
               Uredi profil
@@ -518,13 +556,52 @@ const TutorManagement = () => {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="video_url">Video predstavitev (URL)</Label>
-                        <Input
-                          id="video_url"
-                          type="url"
-                          value={formData.video_url}
-                          onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
-                        />
+                        <Label>Predstavitveni video</Label>
+                        <Tabs value={videoTab} onValueChange={(v) => setVideoTab(v as 'url' | 'file')}>
+                          <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="url">Prilepi YouTube URL</TabsTrigger>
+                            <TabsTrigger value="file">Naloži video</TabsTrigger>
+                          </TabsList>
+                          <TabsContent value="url" className="space-y-2">
+                            <Input
+                              id="video_url"
+                              type="url"
+                              placeholder="https://youtube.com/watch?v=..."
+                              value={formData.video_url}
+                              onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
+                            />
+                          </TabsContent>
+                          <TabsContent value="file" className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <Label htmlFor="video-file" className="cursor-pointer flex-1">
+                                <div className="flex items-center justify-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/80 rounded-lg text-sm font-medium transition-colors border border-input">
+                                  {videoUploading ? (
+                                    <>
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                      Nalaganje...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Upload className="w-4 h-4" />
+                                      {formData.video_file_url ? 'Naložen' : 'Izberi video'}
+                                    </>
+                                  )}
+                                </div>
+                              </Label>
+                              <Input
+                                id="video-file"
+                                type="file"
+                                accept="video/*"
+                                onChange={handleVideoFileChange}
+                                disabled={videoUploading}
+                                className="hidden"
+                              />
+                            </div>
+                            {formData.video_file_url && (
+                              <p className="text-xs text-muted-foreground">Video naložen uspešno</p>
+                            )}
+                          </TabsContent>
+                        </Tabs>
                       </div>
                     </div>
 
