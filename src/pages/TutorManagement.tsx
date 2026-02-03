@@ -264,7 +264,11 @@ const TutorManagement = () => {
       if (error) throw error;
 
       toast.success('Profil uspešno posodobljen!');
-      loadTutorProfile(); // Reload to get fresh data
+      
+      // Redirect to tutor profile page after successful update
+      setTimeout(() => {
+        navigate(`/tutors/${tutor.id}`);
+      }, 1000);
     } catch (error: any) {
       console.error('Error updating profile:', error);
       toast.error(`Napaka pri posodabljanju profila: ${error.message}`);
