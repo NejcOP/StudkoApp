@@ -14,13 +14,13 @@ serve(async (req) => {
 
   try {
     console.log('[AI] Function started');
-    const GOOGLE_API_KEY = Deno.env.get("GOOGLE_AI_API_KEY") || Deno.env.get("GOOGLE_API_KEY");
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     
-    if (!GOOGLE_API_KEY) {
+    if (!OPENAI_API_KEY) {
       console.error('[AI] Missing API key');
-      throw new Error('API ključ manjka! Dodaj GOOGLE_AI_API_KEY v Supabase Secrets.');
+      throw new Error('OpenAI API ključ manjka! Dodaj OPENAI_API_KEY v Supabase Secrets.');
     }
-    console.log('[AI] API key found');
+    console.log('[AI] OpenAI API key found');
 
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -74,45 +74,72 @@ serve(async (req) => {
     const hourlyRate = tutorData?.price_per_hour || 20;
 
     // Create AI prompt
-    const prompt = `Analiziraj profil inštruktorja in podaj konkretne nasvete za izboljšave.
+    const prompt = `Ti si strokovnjak za optimizacijo profilov inštruktorjev in svetovanje za povečanje prodaje inštrukcijskih storitev.
 
-**Podatki:**
+Analiziraj profil inštruktorja in mu daj KONKRETNE IN UPORABNE nasvete:
+
+**PODATKI O INŠTRUKTORJU:**
+- Ime: ${tutorData?.full_name || 'Neznano'}
+- Predmeti: ${subjects}
+- Cena: ${hourlyRate}€/uro
+- Način poučevanja: ${tutorData?.mode || 'Ni podatkov'}
+- Izobrazbeni nivo: ${tutorData?.education_level || 'Ni podatkov'}
+- Biografija: ${tutorData?.bio || 'Ni dodane biografije'}
+- Izkušnje: ${tutorData?.experience || 'Ni dodanih izkušenj'}
+
+**STATISTIKA:**
 - Opravljene ure: ${totalHours}
 - Povprečna ocena: ${avgRating}
-- Predmeti: ${subjects}
-- Cena na uro: ${hourlyRate}€
 - Skupni zaslužek: ${netEarnings.toFixed(2)}€
 
-Ustvari **kratko in jedrnato analizo** v slovenščini z naslednjimi elementi:
-1. **Močne točke** (2-3 točke)
-2. **Priložnosti za rast** (3-4 konkretne točke)
-3. **Napovedana rast** (ocena potencialnega dodatnega zaslužka)
+**NAVODILA ZA ANALIZO:**
+1. Analiziraj MOČNE točke profila (kaj dela dobro)
+2. Identificiraj ŠIBKE točke in priložnosti za izboljšave
+3. Daj 3-5 KONKRETNIH nasvetov za izboljšanje profila
+4. Predlagaj cenovno strategijo (ali je cena primerna za trg)
+5. Če je premalo podatkov, svetuj kaj naj doda za boljšo predstavitev
+6. Poudari kaj lahko naredi DANES za več rezervacij
 
-Odgovor mora biti formatiran z Markdown (**bold**, bullet points). Bodi kratek, konkreten in uporaben.`;
+Odgovor naj bo STRUKTURIRAN, JASEN in MOTIVIRAJOČ. Uporabi emojije za boljšo berljivost.
+Dolžina: 300-400 besed. Piši v slovenščini.`;
 
-    // Call AI API
-    console.log('[AI] Calling Google AI API...');
+    // Call OpenAI API
+    console.log('[AI] Calling OpenAI API...');
     const aiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GOOGLE_API_KEY}`,
+      "https://api.openai.com/v1/chat/completions",
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${OPENAI_API_KEY}`
+        },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.7 },
+          model: "gpt-4o-mini",
+          messages: [
+            {
+              role: "system",
+              content: "Ti si strokovni svetovalec za inštruktorje. Tvoj cilj je pomagati inštruktorjem izboljšati njihove profile in povečati število rezervacij. Vedno podaj konkretne, izvedljive nasvete v slovenščini."
+            },
+            {
+              role: "user",
+              content: prompt
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 1500,
         }),
       }
     );
 
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
-      console.error('[AI] API error:', aiResponse.status, errorText);
-      throw new Error(`AI API error: ${aiResponse.status}`);
+      console.error('[AI] OpenAI API error:', aiResponse.status, errorText);
+      throw new Error(`OpenAI API error: ${aiResponse.status}`);
     }
-    console.log('[AI] API response received');
+    console.log('[AI] OpenAI API response received');
 
     const aiData = await aiResponse.json();
-    const analysis = aiData.candidates?.[0]?.content?.parts?.[0]?.text || "Napaka pri generiranju analize";
+    const analysis = aiData.choices?.[0]?.message?.content || "Napaka pri generiranju analize";
 
     return new Response(
       JSON.stringify({ success: true, analysis }),
