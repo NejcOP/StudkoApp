@@ -342,10 +342,10 @@ const AIAssistant = () => {
                 content: data.flashcards
               });
               
-              toast.success("Flashcards so ustvarjeni!");
+              toast.success("Kartice so ustvarjene!");
             }
           } else {
-            toast.error("Zapisek nima dovolj vsebine za generiranje flashcards.");
+            toast.error("Zapisek nima dovolj vsebine za generiranje kartic.");
           }
         } catch (error) {
           console.error('Auto-generate error:', error);
@@ -1025,10 +1025,10 @@ const AIAssistant = () => {
           }
         }
         
-        toast.success(data.message || "Flashcards so ustvarjeni!");
+        toast.success(data.message || "Kartice so ustvarjene!");
       }
     } catch (error) {
-      toast.error("Napaka pri generiranju flashcards.");
+      toast.error("Napaka pri generiranju kartic.");
     } finally {
       setIsLoading(false);
     }
@@ -1624,7 +1624,7 @@ const AIAssistant = () => {
 
                       <div className="bg-card rounded-2xl border border-border shadow-2xl p-6 mb-6">
                         <h2 className="text-2xl font-bold text-foreground mb-4">
-                          Ustvari flashcards
+                          Generiraj kartice
                         </h2>
 
                         <div className="mb-4">

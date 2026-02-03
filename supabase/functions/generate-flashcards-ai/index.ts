@@ -136,7 +136,7 @@ Do NOT include any text before or after the JSON. Do NOT include markdown code b
     return new Response(
       JSON.stringify({ 
         flashcards,
-        message: `Ustvarjenih ${flashcards.length} flashcards!`
+        message: `Ustvarjenih ${flashcards.length} kartic!`
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

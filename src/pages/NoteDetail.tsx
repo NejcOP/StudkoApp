@@ -415,18 +415,6 @@ const NoteDetail = () => {
                 </div>
               )}
 
-              {/* Improved Content */}
-              {note.improved_file_url && (isOwner || hasPurchased) && (
-                <div className="bg-gradient-card rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 border border-border shadow-lg">
-                  <div className="flex items-center gap-2 mb-3 sm:mb-4">
-                    <Sparkles className="w-5 h-5 text-primary" />
-                    <h2 className="text-lg sm:text-xl font-bold text-foreground">AI Izboljšana verzija</h2>
-                  </div>
-                  <div className="text-sm sm:text-base text-foreground whitespace-pre-line leading-relaxed prose prose-sm sm:prose-base max-w-none">
-                    {note.improved_file_url}
-                  </div>
-                </div>
-              )}
 
               {/* Preview Section - Show 25% of content for paid notes not yet purchased */}
               {showPreview && fileUrls.length > 0 && (
@@ -566,7 +554,7 @@ const NoteDetail = () => {
                       onClick={handleGenerateFlashcards}
                     >
                       <Brain className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                      Ustvari flashcards
+                      Generiraj kartice
                     </Button>
 
                     {hasExistingFlashcards && (
