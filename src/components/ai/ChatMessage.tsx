@@ -1,4 +1,5 @@
 import { Brain, User } from "lucide-react";
+import { memo, useMemo } from "react";
 
 interface ChatMessageProps {
   role: "user" | "assistant";
@@ -48,7 +49,10 @@ const formatContent = (text: string) => {
   });
 };
 
-export const ChatMessage = ({ role, content, attachment, isStreaming = false }: ChatMessageProps) => {
+const ChatMessageComponent = ({ role, content, attachment, isStreaming = false }: ChatMessageProps) => {
+  // Memoize formatted content to avoid re-calculating on every render
+  const formattedContent = useMemo(() => formatContent(content), [content]);
+
   return (
     <div className={`flex gap-3 ${role === "user" ? "justify-end" : "justify-start"}`}>
       {role === "assistant" && (
@@ -76,7 +80,7 @@ export const ChatMessage = ({ role, content, attachment, isStreaming = false }: 
           </div>
         )}
         <div className="whitespace-pre-wrap">
-          {formatContent(content)}
+          {formattedContent}
           {isStreaming && role === "assistant" && content.length > 0 && (
             <span className="inline-block w-1 h-4 bg-current ml-1 animate-pulse" />
           )}
@@ -90,6 +94,17 @@ export const ChatMessage = ({ role, content, attachment, isStreaming = false }: 
     </div>
   );
 };
+
+// Memoize ChatMessage to prevent unnecessary re-renders of previous messages
+export const ChatMessage = memo(ChatMessageComponent, (prevProps, nextProps) => {
+  // Only re-render if content, isStreaming, or attachment changed
+  return (
+    prevProps.content === nextProps.content &&
+    prevProps.isStreaming === nextProps.isStreaming &&
+    prevProps.role === nextProps.role &&
+    prevProps.attachment?.preview === nextProps.attachment?.preview
+  );
+});
 
 export const TypingIndicator = () => {
   return (

@@ -351,12 +351,19 @@ const AIAssistant = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
-  // Auto-scroll chat on new messages
+  // Auto-scroll chat on new messages with debouncing for better performance
   useEffect(() => {
     if (conversation.length > 0 && chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+      // Use setTimeout to batch scroll updates
+      const scrollTimer = setTimeout(() => {
+        if (chatContainerRef.current) {
+          chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+        }
+      }, 10);
+      
+      return () => clearTimeout(scrollTimer);
     }
-  }, [conversation]);
+  }, [conversation.length]); // Only depend on length, not full conversation object
 
   const loadConversationMessages = async (conversationId: string) => {
     try {
@@ -740,10 +747,35 @@ const AIAssistant = () => {
       }
 
       let chunkCount = 0;
+      let updateScheduled = false;
+      let lastUpdate = Date.now();
+      const UPDATE_INTERVAL = 50; // Update UI every 50ms for smooth performance
+
+      const scheduleUpdate = () => {
+        if (!updateScheduled) {
+          updateScheduled = true;
+          requestAnimationFrame(() => {
+            setConversation(prev => {
+              const updated = [...prev];
+              updated[updated.length - 1] = { role: "assistant", content: aiResponse };
+              return updated;
+            });
+            updateScheduled = false;
+            lastUpdate = Date.now();
+          });
+        }
+      };
+
       while (reader) {
         const { done, value } = await reader.read();
         if (done) {
           console.log(`Stream done. Total chunks: ${chunkCount}, Response length: ${aiResponse.length}`);
+          // Final update
+          setConversation(prev => {
+            const updated = [...prev];
+            updated[updated.length - 1] = { role: "assistant", content: aiResponse };
+            return updated;
+          });
           break;
         }
 
@@ -759,11 +791,11 @@ const AIAssistant = () => {
               const content = data.choices?.[0]?.delta?.content;
               if (content) {
                 aiResponse += content;
-                setConversation(prev => {
-                  const updated = [...prev];
-                  updated[updated.length - 1] = { role: "assistant", content: aiResponse };
-                  return updated;
-                });
+                // Throttle updates: only update if enough time has passed
+                const now = Date.now();
+                if (now - lastUpdate >= UPDATE_INTERVAL) {
+                  scheduleUpdate();
+                }
               }
             } catch (err) {
               console.warn('Failed to parse SSE line:', line, err);
@@ -1179,9 +1211,36 @@ const AIAssistant = () => {
           return;
         }
 
+        let updateScheduled = false;
+        let lastUpdate = Date.now();
+        const UPDATE_INTERVAL = 50; // Update UI every 50ms
+
+        const scheduleUpdate = () => {
+          if (!updateScheduled) {
+            updateScheduled = true;
+            requestAnimationFrame(() => {
+              setConversation(prev => {
+                const updated = [...prev];
+                updated[updated.length - 1] = { role: "assistant", content: aiResponse };
+                return updated;
+              });
+              updateScheduled = false;
+              lastUpdate = Date.now();
+            });
+          }
+        };
+
         while (reader) {
           const { done, value } = await reader.read();
-          if (done) break;
+          if (done) {
+            // Final update
+            setConversation(prev => {
+              const updated = [...prev];
+              updated[updated.length - 1] = { role: "assistant", content: aiResponse };
+              return updated;
+            });
+            break;
+          }
 
           const chunk = decoder.decode(value, { stream: true });
           const lines = chunk.split("\n");
@@ -1193,11 +1252,11 @@ const AIAssistant = () => {
                 const content = data.choices?.[0]?.delta?.content;
                 if (content) {
                   aiResponse += content;
-                  setConversation(prev => {
-                    const updated = [...prev];
-                    updated[updated.length - 1] = { role: "assistant", content: aiResponse };
-                    return updated;
-                  });
+                  // Throttle updates
+                  const now = Date.now();
+                  if (now - lastUpdate >= UPDATE_INTERVAL) {
+                    scheduleUpdate();
+                  }
                 }
               } catch (err) {
                 // Ignore parse errors
@@ -1378,6 +1437,7 @@ const AIAssistant = () => {
                         <div 
                           ref={chatContainerRef}
                           className="p-3 sm:p-4 lg:p-6 space-y-3 sm:space-y-4 min-h-[400px] sm:min-h-[350px] max-h-[calc(100vh-28rem)] sm:max-h-[450px] overflow-y-auto"
+                          style={{ willChange: 'scroll-position' }}
                         >
                           {conversation.length === 0 ? (
                             <div className="flex flex-col items-center justify-center h-full py-12 text-center">
@@ -1395,7 +1455,7 @@ const AIAssistant = () => {
                             <>
                               {conversation.map((message, index) => (
                                 <ChatMessage 
-                                  key={index} 
+                                  key={`${index}-${message.role}-${message.content.length}`}
                                   role={message.role} 
                                   content={message.content}
                                   attachment={message.attachment}
