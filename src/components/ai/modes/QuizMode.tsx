@@ -291,6 +291,7 @@ export const QuizMode = ({ isLoading, setIsLoading, initialQuestions, initialTit
         created_by: user.id,
         quiz_data: {
           questions: questions,
+          title: quizTitle || 'Quiz',
         },
         title: quizTitle || 'Quiz',
         total_questions: questions.length,
@@ -298,30 +299,10 @@ export const QuizMode = ({ isLoading, setIsLoading, initialQuestions, initialTit
 
       if (error) throw error;
 
-      // Create share URL
-      const shareUrl = `${window.location.origin}/quiz/${shareCode}`;
+      // Create share URL - point to AI assistant with quiz parameter
+      const shareUrl = `${window.location.origin}/ai-assistant?tab=quiz&share=${shareCode}`;
       
-      // Try Web Share API first (for mobile devices)
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            title: quizTitle || 'Quiz Izziv',
-            text: 'Izzivam te na kviz! Lahko me premagaš? 🎯',
-            url: shareUrl,
-          });
-          toast.success("Delitev uspešna! 🎉");
-          return; // Exit if share was successful
-        } catch (shareError) {
-          // User cancelled - don't show error
-          const err = shareError as Error;
-          if (err.name === 'AbortError') {
-            return;
-          }
-          // If share failed for other reasons, continue to clipboard
-        }
-      }
-      
-      // Fallback to clipboard
+      // Copy to clipboard immediately
       let copied = false;
       
       // Modern clipboard API (secure context only)

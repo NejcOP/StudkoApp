@@ -185,15 +185,54 @@ const AIAssistant = () => {
     }
   }, [user?.id, loadUserNotes, loadConversations]);
 
+  // Load shared quiz
+  const loadSharedQuiz = useCallback(async (shareCode: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('shared_quizzes')
+        .select('*')
+        .eq('share_code', shareCode)
+        .single();
+
+      if (error) throw error;
+
+      if (data && data.quiz_data) {
+        // Load quiz questions
+        const quizData = data.quiz_data as { questions: Array<{ question: string; options: string[]; correct_answer: string }>; title?: string };
+        const questions = quizData.questions;
+        const title = quizData.title || data.title || 'Deljen kviz';
+        
+        // Set retake quiz state to load the quiz
+        setRetakeQuizQuestions(questions);
+        setRetakeQuizTitle(title);
+        
+        toast.success(`Kviz "${title}" naložen! 🎯`);
+        
+        // Clear URL parameter
+        searchParams.delete('share');
+        setSearchParams(searchParams);
+      }
+    } catch (error) {
+      console.error('Error loading shared quiz:', error);
+      toast.error('Napaka pri nalaganju kviza');
+    }
+  }, [searchParams, setSearchParams]);
+
   // Auto-activate tab and auto-generate flashcards from URL params
   useEffect(() => {
     const tab = searchParams.get('tab');
     const action = searchParams.get('action');
     const noteId = searchParams.get('noteId');
+    const shareCode = searchParams.get('share');
 
     // Activate tab if specified
     if (tab && ['chat', 'flashcards', 'quiz', 'summary'].includes(tab)) {
       setMode(tab as AIMode);
+    }
+
+    // Load shared quiz
+    if (shareCode && tab === 'quiz' && user?.id) {
+      loadSharedQuiz(shareCode);
     }
 
     // Auto-generate flashcards if action=generate and noteId present
@@ -322,7 +361,7 @@ const AIAssistant = () => {
 
       autoGenerate();
     }
-  }, [searchParams, setSearchParams, user?.id, autoGenerating]);
+  }, [searchParams, setSearchParams, user?.id, autoGenerating, loadSharedQuiz]);
 
   useEffect(() => {
     if (user?.id) {
