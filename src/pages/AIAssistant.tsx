@@ -1399,9 +1399,14 @@ const AIAssistant = () => {
                                   role={message.role} 
                                   content={message.content}
                                   attachment={message.attachment}
+                                  isStreaming={
+                                    message.role === "assistant" && 
+                                    index === conversation.length - 1 && 
+                                    isLoading
+                                  }
                                 />
                               ))}
-                              {isLoading && <TypingIndicator />}
+                              {isLoading && conversation.length > 0 && conversation[conversation.length - 1].role === "user" && <TypingIndicator />}
                               <div ref={chatEndRef} />
                             </>
                           )}

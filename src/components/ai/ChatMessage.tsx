@@ -1,4 +1,5 @@
 import { Brain, User } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 
 interface ChatMessageProps {
   role: "user" | "assistant";
@@ -8,6 +9,7 @@ interface ChatMessageProps {
     storagePath?: string;
     fileName?: string;
   };
+  isStreaming?: boolean;
 }
 
 const formatContent = (text: string) => {
@@ -47,7 +49,59 @@ const formatContent = (text: string) => {
   });
 };
 
-export const ChatMessage = ({ role, content, attachment }: ChatMessageProps) => {
+export const ChatMessage = ({ role, content, attachment, isStreaming = false }: ChatMessageProps) => {
+  const [displayedContent, setDisplayedContent] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const currentIndexRef = useRef(0);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    // If user message or not streaming, show immediately
+    if (role === "user" || !isStreaming) {
+      setDisplayedContent(content);
+      setIsTyping(false);
+      return;
+    }
+
+    // For assistant messages with streaming
+    if (content.length > displayedContent.length) {
+      setIsTyping(true);
+      
+      // Clear any existing interval
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+
+      // Start typing animation
+      currentIndexRef.current = displayedContent.length;
+      
+      intervalRef.current = setInterval(() => {
+        if (currentIndexRef.current < content.length) {
+          // Type 4-5 characters at a time for smooth yet fast display
+          const charsToAdd = Math.min(5, content.length - currentIndexRef.current);
+          setDisplayedContent(content.substring(0, currentIndexRef.current + charsToAdd));
+          currentIndexRef.current += charsToAdd;
+        } else {
+          setIsTyping(false);
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+          }
+        }
+      }, 15); // Update every 15ms for smooth and fast typing effect
+    } else if (content.length < displayedContent.length) {
+      // Content was reduced (shouldn't happen in streaming, but handle it)
+      setDisplayedContent(content);
+      setIsTyping(false);
+    }
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [content, role, isStreaming, displayedContent.length]);
+
   return (
     <div className={`flex gap-3 ${role === "user" ? "justify-end" : "justify-start"}`}>
       {role === "assistant" && (
@@ -74,7 +128,12 @@ export const ChatMessage = ({ role, content, attachment }: ChatMessageProps) => 
             )}
           </div>
         )}
-        <div className="whitespace-pre-wrap">{formatContent(content)}</div>
+        <div className="whitespace-pre-wrap">
+          {formatContent(displayedContent)}
+          {isTyping && role === "assistant" && (
+            <span className="inline-block w-1 h-4 bg-current ml-1 animate-pulse" />
+          )}
+        </div>
       </div>
       {role === "user" && (
         <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
