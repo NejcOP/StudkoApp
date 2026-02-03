@@ -685,18 +685,11 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
       )}
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="mb-6">
         <Link to="/tutors/manage">
           <Button variant="outline" className="w-full h-auto py-4 flex items-center justify-center gap-3">
             <Settings className="w-5 h-5" />
             <span className="font-medium">Uredi svoj profil</span>
-          </Button>
-        </Link>
-        
-        <Link to="/tutor/availability">
-          <Button variant="outline" className="w-full h-auto py-4 flex items-center justify-center gap-3">
-            <Calendar className="w-5 h-5" />
-            <span className="font-medium">Nastavi razpoložljivost</span>
           </Button>
         </Link>
       </div>
