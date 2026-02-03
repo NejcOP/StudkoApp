@@ -749,7 +749,7 @@ const AIAssistant = () => {
       let chunkCount = 0;
       let updateScheduled = false;
       let lastUpdate = Date.now();
-      const UPDATE_INTERVAL = 50; // Update UI every 50ms for smooth performance
+      const UPDATE_INTERVAL = 16; // Update UI every 16ms (60fps) for real-time typing effect
 
       const scheduleUpdate = () => {
         if (!updateScheduled) {
@@ -1213,7 +1213,7 @@ const AIAssistant = () => {
 
         let updateScheduled = false;
         let lastUpdate = Date.now();
-        const UPDATE_INTERVAL = 50; // Update UI every 50ms
+        const UPDATE_INTERVAL = 16; // Update UI every 16ms (60fps)
 
         const scheduleUpdate = () => {
           if (!updateScheduled) {
