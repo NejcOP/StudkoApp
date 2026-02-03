@@ -118,7 +118,13 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
     
     setAiAnalysisLoading(true);
     try {
+      console.log('Analyzing profile - tutorId:', tutorId, 'bookings:', bookings.length);
+      
       const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.access_token) {
+        throw new Error('Ni prijave');
+      }
       
       const { data, error } = await supabase.functions.invoke('analyze-instructor-profile', {
         headers: {
@@ -127,16 +133,25 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
         body: { tutorId, bookings }
       });
 
-      if (error) throw error;
+      console.log('Function response:', { data, error });
+
+      if (error) {
+        console.error('Function error:', error);
+        throw error;
+      }
       
       if (data?.analysis) {
         setAiAnalysis(data.analysis);
+        toast.success('Analiza profila uspešno ustvarjena!');
+      } else if (data?.error) {
+        throw new Error(data.error);
       } else {
         throw new Error('Ni prejel analize od AI');
       }
     } catch (error) {
       console.error('Error analyzing profile:', error);
-      toast.error('Napaka pri analizi profila');
+      const errorMessage = error instanceof Error ? error.message : 'Napaka pri analizi profila';
+      toast.error(errorMessage);
     } finally {
       setAiAnalysisLoading(false);
     }
