@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,8 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { TutorAvailabilityManager } from "@/components/TutorAvailabilityManager";
-import { BookingManagement } from "@/components/BookingManagement";
+
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
@@ -187,27 +186,19 @@ const TutorManagement = () => {
         <div className="max-w-6xl mx-auto">
           <div className="mb-8">
             <h1 className="text-4xl font-bold mb-2 bg-gradient-primary bg-clip-text text-transparent">
-              Upravljanje tutorstva
+              Uredi profil
             </h1>
             <p className="text-muted-foreground">
-              Nastavi razpoložljivost in upravljaj rezervacije
+              Posodobi svoje podatke in informacije
             </p>
           </div>
 
-          <Tabs defaultValue="profile" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="profile">Uredi profil</TabsTrigger>
-              <TabsTrigger value="availability">Razpoložljivost</TabsTrigger>
-              <TabsTrigger value="bookings">Rezervacije</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="profile">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Uredi svoj profil</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleSaveChanges} className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Uredi svoj profil</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSaveChanges} className="space-y-6">
                     {/* Osnovni podatki */}
                     <div className="space-y-4">
                       <h3 className="text-lg font-semibold">Osnovni podatki</h3>
@@ -448,19 +439,9 @@ const TutorManagement = () => {
                         "Shrani spremembe"
                       )}
                     </Button>
-                  </form>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="availability">
-              <TutorAvailabilityManager tutorId={tutor.id} />
-            </TabsContent>
-
-            <TabsContent value="bookings">
-              <BookingManagement tutorId={tutor.id} isTutor={true} />
-            </TabsContent>
-          </Tabs>
+              </form>
+            </CardContent>
+          </Card>
         </div>
       </main>
 
