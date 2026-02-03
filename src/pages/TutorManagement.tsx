@@ -14,7 +14,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Upload, Image as ImageIcon } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const SUBJECTS = [
   "Matematika", "Fizika", "Kemija", "Biologija", "Slovenščina",
@@ -46,7 +47,9 @@ const TutorManagement = () => {
     languages: [] as string[],
     methodology: "",
     video_url: "",
+    profile_image_url: "",
   });
+  const [imageUploading, setImageUploading] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -97,6 +100,7 @@ const TutorManagement = () => {
         languages: data.languages || [],
         methodology: data.methodology || "",
         video_url: data.video_url || "",
+        profile_image_url: data.profile_image_url || "",
       });
     } catch (error) {
       console.error('Error loading tutor profile:', error);
@@ -124,6 +128,59 @@ const TutorManagement = () => {
     }));
   };
 
+  const handleProfileImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Prosim naloži sliko (JPG, PNG, itd.)');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Slika je prevelika. Maksimalna velikost je 5MB.');
+      return;
+    }
+
+    setImageUploading(true);
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${user.id}/profile.${fileExt}`;
+
+      // Delete old image if exists
+      if (formData.profile_image_url) {
+        const oldPath = formData.profile_image_url.split('/tutor-profiles/')[1];
+        if (oldPath) {
+          await supabase.storage.from('tutor-profiles').remove([oldPath]);
+        }
+      }
+
+      const { error: uploadError } = await supabase.storage
+        .from('tutor-profiles')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true,
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = supabase.storage
+        .from('tutor-profiles')
+        .getPublicUrl(filePath);
+
+      setFormData(prev => ({ ...prev, profile_image_url: publicUrlData.publicUrl }));
+      toast.success('Profilna slika uspešno naložena!');
+    } catch (error: any) {
+      console.error('Error uploading image:', error);
+      toast.error('Napaka pri nalaganju slike');
+    } finally {
+      setImageUploading(false);
+    }
+  };
+
   const handleSaveChanges = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -147,6 +204,7 @@ const TutorManagement = () => {
           languages: formData.languages,
           methodology: formData.methodology,
           video_url: formData.video_url || null,
+          profile_image_url: formData.profile_image_url || null,
         })
         .eq('user_id', user?.id);
 
@@ -199,6 +257,47 @@ const TutorManagement = () => {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSaveChanges} className="space-y-6">
+                    {/* Profilna slika */}
+                    <div className="space-y-2">
+                      <Label>Profilna slika</Label>
+                      <div className="flex items-center gap-4">
+                        <Avatar className="w-24 h-24">
+                          <AvatarImage src={formData.profile_image_url} />
+                          <AvatarFallback>
+                            <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <Label htmlFor="profile-image-edit" className="cursor-pointer">
+                            <div className="flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/80 rounded-lg text-sm font-medium transition-colors border border-input w-fit">
+                              {imageUploading ? (
+                                <>
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                  Nalaganje...
+                                </>
+                              ) : (
+                                <>
+                                  <Upload className="w-4 h-4" />
+                                  Naloži sliko
+                                </>
+                              )}
+                            </div>
+                          </Label>
+                          <Input
+                            id="profile-image-edit"
+                            type="file"
+                            accept="image/*"
+                            onChange={handleProfileImageChange}
+                            disabled={imageUploading}
+                            className="hidden"
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            JPG, PNG ali GIF. Maksimalno 5MB.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
                     {/* Osnovni podatki */}
                     <div className="space-y-4">
                       <h3 className="text-lg font-semibold">Osnovni podatki</h3>
