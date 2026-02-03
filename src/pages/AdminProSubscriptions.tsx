@@ -29,6 +29,7 @@ export default function AdminProSubscriptions() {
   const { toast } = useToast();
   const [subscribers, setSubscribers] = useState<ProSubscriber[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [stats, setStats] = useState({
     total: 0,
     active: 0,
@@ -37,9 +38,39 @@ export default function AdminProSubscriptions() {
   });
 
   useEffect(() => {
-    fetchSubscribers();
+    checkAdminStatus();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const checkAdminStatus = async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if ((data as any)?.is_admin) {
+        setIsAdmin(true);
+        fetchSubscribers();
+      } else {
+        setIsAdmin(false);
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error('Error checking admin status:', error);
+      setIsAdmin(false);
+      setLoading(false);
+    }
+  };
 
   const fetchSubscribers = async () => {
     try {
@@ -96,6 +127,22 @@ export default function AdminProSubscriptions() {
         <Navigation />
         <div className="container mx-auto px-4 py-8">
           <p className="text-center text-muted-foreground">Nalaganje...</p>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 py-8">
+          <Card>
+            <CardContent className="py-8">
+              <p className="text-center text-muted-foreground">Nimate dostopa do te strani.</p>
+            </CardContent>
+          </Card>
         </div>
         <Footer />
       </div>
