@@ -104,6 +104,101 @@ serve(async (req) => {
         return new Response(`Supabase error: ${error}`, { status: 500 });
       }
 
+      // Get user details for email notification
+      const userData = await res.json();
+      const userProfile = userData[0];
+
+      // Send email notification to admin (info@studko.si)
+      const resendApiKey = Deno.env.get("RESEND_API_KEY");
+      if (resendApiKey && userProfile) {
+        const subscriptionType = subscription.status === 'trialing' ? 'Preizkusna' : 'Plačana';
+        const adminEmailBody = `
+          <h2>Nova PRO naročnina</h2>
+          <p>Nov uporabnik se je naročil na Študko PRO!</p>
+          <ul>
+            <li><strong>Ime:</strong> ${userProfile.full_name || 'Neznano'}</li>
+            <li><strong>Email:</strong> ${userProfile.email || 'Neznano'}</li>
+            <li><strong>Tip:</strong> ${subscriptionType}</li>
+            <li><strong>Status:</strong> ${subscription.status}</li>
+            <li><strong>Stripe Customer ID:</strong> ${session.customer}</li>
+            <li><strong>Subscription ID:</strong> ${subscription.id}</li>
+            ${trialEndsAt ? `<li><strong>Preizkus poteče:</strong> ${new Date(trialEndsAt).toLocaleDateString('sl-SI')}</li>` : ''}
+          </ul>
+        `;
+
+        try {
+          // Send email to admin
+          await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${resendApiKey}`,
+            },
+            body: JSON.stringify({
+              from: "Študko <no-reply@studko.si>",
+              to: "info@studko.si",
+              subject: `Nova PRO naročnina - ${userProfile.full_name || 'Uporabnik'}`,
+              html: adminEmailBody,
+            }),
+          });
+
+          // Send welcome email to user
+          const userEmailBody = subscription.status === 'trialing' 
+            ? `
+              <h2>Dobrodošel v Študko PRO preizkusu! 🎉</h2>
+              <p>Pozdravljeni ${userProfile.full_name || 'študent'},</p>
+              <p>Aktivirali ste 7-dnevni brezplačni preizkus Študko PRO!</p>
+              <h3>Kaj dobite s PRO:</h3>
+              <ul>
+                <li>✨ Neomejeno generiranje kartic, kvizov in povzetkov</li>
+                <li>🤖 AI asistent brez omejitev</li>
+                <li>📊 Napredna analitika učenja</li>
+                <li>🎯 Prednostna podpora</li>
+                <li>💾 Večji shranjevalni prostor</li>
+              </ul>
+              <p><strong>Preizkus poteče:</strong> ${trialEndsAt ? new Date(trialEndsAt).toLocaleDateString('sl-SI', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Neznano'}</p>
+              <p>Če preizkus prekličete pred koncem, vam ne bomo zaračunali ničesar.</p>
+              <p>Srečno pri učenju! 🚀</p>
+              <p>Ekipa Študko</p>
+            `
+            : `
+              <h2>Dobrodošel v Študko PRO! 🎉</h2>
+              <p>Pozdravljeni ${userProfile.full_name || 'študent'},</p>
+              <p>Hvala, da ste se naročili na Študko PRO! Vaša naročnina je aktivna.</p>
+              <h3>Kaj dobite s PRO:</h3>
+              <ul>
+                <li>✨ Neomejeno generiranje kartic, kvizov in povzetkov</li>
+                <li>🤖 AI asistent brez omejitev</li>
+                <li>📊 Napredna analitika učenja</li>
+                <li>🎯 Prednostna podpora</li>
+                <li>💾 Večji shranjevalni prostor</li>
+              </ul>
+              <p>Prijavite se na <a href="https://studko.si">studko.si</a> in začnite uporabljati PRO funkcije!</p>
+              <p>Srečno pri učenju! 🚀</p>
+              <p>Ekipa Študko</p>
+            `;
+
+          await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${resendApiKey}`,
+            },
+            body: JSON.stringify({
+              from: "Študko <no-reply@studko.si>",
+              to: userProfile.email,
+              subject: subscription.status === 'trialing' 
+                ? "Dobrodošel v Študko PRO preizkusu! 🎉" 
+                : "Dobrodošel v Študko PRO! 🎉",
+              html: userEmailBody,
+            }),
+          });
+        } catch (emailError) {
+          console.error("Failed to send emails:", emailError);
+          // Don't fail the webhook if email fails
+        }
+      }
+
       // Create welcome notification for PRO users
       const notificationTitle = subscription.status === 'trialing' 
         ? "Dobrodošel v PRO preizkusu! 🎉" 
