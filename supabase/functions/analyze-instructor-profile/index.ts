@@ -49,11 +49,11 @@ serve(async (req) => {
     const bookingsArray = Array.isArray(bookings) ? bookings : [];
     console.log('[AI] Bookings array length:', bookingsArray.length);
 
-    // Fetch tutor data
+    // Fetch tutor data - tutorId is actually user_id
     const { data: tutorData, error: tutorError } = await supabaseClient
       .from('tutors')
       .select('*')
-      .eq('id', tutorId)
+      .eq('user_id', tutorId)
       .single();
 
     if (tutorError) {
