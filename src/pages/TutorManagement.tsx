@@ -236,36 +236,38 @@ const TutorManagement = () => {
     setSaving(true);
 
     try {
+      const updateData: any = {
+        full_name: formData.full_name,
+        email: formData.email,
+        phone: formData.phone || null,
+        age: formData.age ? parseInt(formData.age) : null,
+        location: formData.location || null,
+        education_level: formData.education_level,
+        school_type: formData.school_type,
+        subjects: formData.subjects,
+        mode: formData.mode,
+        price_per_hour: parseFloat(formData.price_per_hour),
+        bio: formData.bio,
+        experience: formData.experience || null,
+        languages: formData.languages.length > 0 ? formData.languages : null,
+        methodology: formData.methodology || null,
+        video_url: formData.video_url || null,
+        video_file_url: formData.video_file_url || null,
+        profile_image_url: formData.profile_image_url || null,
+      };
+
       const { error } = await supabase
         .from('tutors')
-        .update({
-          full_name: formData.full_name,
-          email: formData.email,
-          phone: formData.phone,
-          age: parseInt(formData.age),
-          location: formData.location,
-          education_level: formData.education_level,
-          school_type: formData.school_type,
-          subjects: formData.subjects,
-          mode: formData.mode,
-          price_per_hour: parseFloat(formData.price_per_hour),
-          bio: formData.bio,
-          experience: formData.experience,
-          languages: formData.languages,
-          methodology: formData.methodology,
-          video_url: formData.video_url || null,
-          video_file_url: formData.video_file_url || null,
-          profile_image_url: formData.profile_image_url || null,
-        })
+        .update(updateData)
         .eq('user_id', user?.id);
 
       if (error) throw error;
 
       toast.success('Profil uspešno posodobljen!');
       loadTutorProfile(); // Reload to get fresh data
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating profile:', error);
-      toast.error('Napaka pri posodabljanju profila');
+      toast.error(`Napaka pri posodabljanju profila: ${error.message}`);
     } finally {
       setSaving(false);
     }

@@ -111,12 +111,51 @@ export default function AdminTikTokChallenges() {
       const { error: profileError } = await supabase
         .from("profiles")
         .update({
-          subscription_status: "active",
-          trial_ends_at: oneMonthFromNow.toISOString(),
+          is_pro: true,
+          pro_expires_at: oneMonthFromNow.toISOString(),
         })
         .eq("id", userId);
 
       if (profileError) throw profileError;
+
+      // Send email notification to user
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        const userEmail = claim.profiles?.email;
+        const userName = claim.profiles?.full_name || 'Uporabnik';
+
+        if (userEmail) {
+          await fetch('/api/send-notification', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${session?.access_token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              to: userEmail,
+              title: '🎉 TikTok izziv odobren - Dobil si 1 mesec PRO!',
+              message: `
+                <h2>Čestitamo ${userName}! 🎊</h2>
+                <p>Tvoj TikTok izziv je bil odobren!</p>
+                <p><strong>Nagrada:</strong> 1 mesec brezplačnega PRO dostopa</p>
+                <p><strong>Velja do:</strong> ${oneMonthFromNow.toLocaleDateString('sl-SI')}</p>
+                <hr>
+                <h3>Tvoje PRO prednosti:</h3>
+                <ul>
+                  <li>✨ AI asistent za učenje</li>
+                  <li>📚 Neomejen dostop do vseh zapiskov</li>
+                  <li>🎯 Personalizirane kvize in flashcards</li>
+                  <li>📊 Napredna analitika učenja</li>
+                </ul>
+                <p>Hvala za sodelovanje v TikTok izzivu! 💜</p>
+              `,
+            }),
+          });
+        }
+      } catch (emailError) {
+        console.error('Error sending email:', emailError);
+      }
 
       toast({
         title: "Uspešno!",
