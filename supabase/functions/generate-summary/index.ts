@@ -22,16 +22,16 @@ serve(async (req) => {
     console.log("=== START generate-summary function ===");
     
     // Validate API Keys
-    const GOOGLE_API_KEY = Deno.env.get("GOOGLE_AI_API_KEY") || Deno.env.get("GOOGLE_API_KEY");
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     
-    console.log("GOOGLE_API_KEY exists:", !!GOOGLE_API_KEY);
+    console.log("OPENAI_API_KEY exists:", !!OPENAI_API_KEY);
     
-    if (!GOOGLE_API_KEY) {
+    if (!OPENAI_API_KEY) {
       console.error("Missing API Key");
-      throw new Error('API ključ manjka! Dodaj GOOGLE_AI_API_KEY v Supabase Secrets.');
+      throw new Error('API ključ manjka! Dodaj OPENAI_API_KEY v Supabase Secrets.');
     }
     
-    console.log("Using API: Direct Google Gemini");
+    console.log("Using API: OpenAI GPT-4o-mini");
 
     let requestBody;
     try {
@@ -57,18 +57,22 @@ serve(async (req) => {
     console.log("Generating summary for text length:", text.length);
     console.log("Text preview:", text.substring(0, 100));
 
-    console.log("Using Direct Google Gemini API");
-    const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GOOGLE_API_KEY}`, {
+    const aiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Authorization": `Bearer ${OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: `You are a study assistant. IMPORTANT: Detect the language of the input text and create the summary in the SAME language.
-
-If the text is in SLOVENIAN, generate all summaries in SLOVENIAN.
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: "You are a study assistant. Detect the language of the input text and create the summary in the SAME language. Return valid JSON only."
+          },
+          {
+            role: "user",
+            content: `If the text is in SLOVENIAN, generate all summaries in SLOVENIAN.
 If the text is in ENGLISH, generate all summaries in ENGLISH.
 
 Return a JSON object with this structure:
@@ -82,14 +86,11 @@ Return a JSON object with this structure:
 
 Text to summarize:
 ${text}`
-          }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 2048,
-        }
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 2048,
+        response_format: { type: "json_object" }
       }),
     });
 
@@ -111,31 +112,19 @@ ${text}`
     console.log("AI response received");
     
     console.log("Response structure:", JSON.stringify({
-      hasCandidates: !!aiData.candidates,
-      candidatesLength: aiData.candidates?.length
+      hasChoices: !!aiData.choices,
+      choicesLength: aiData.choices?.length
     }));
     
     let summary;
-    if (aiData.candidates?.[0]?.content?.parts?.[0]?.text) {
-      console.log("Parsing Gemini text response");
-      const responseText = aiData.candidates[0].content.parts[0].text;
+    if (aiData.choices?.[0]?.message?.content) {
+      console.log("Parsing OpenAI response");
+      const responseText = aiData.choices[0].message.content;
       
-      // Extract JSON from text (might have markdown)
-      let cleanedText = responseText.trim();
-      cleanedText = cleanedText.replace(/^```(?:json)?\s*\n?/i, '');
-      cleanedText = cleanedText.replace(/\n?```\s*$/i, '');
-      cleanedText = cleanedText.trim();
-      
-      // Find JSON object
-      const jsonStart = cleanedText.indexOf('{');
-      const jsonEnd = cleanedText.lastIndexOf('}');
-      if (jsonStart !== -1 && jsonEnd !== -1) {
-        cleanedText = cleanedText.substring(jsonStart, jsonEnd + 1);
-      }
-      
-      summary = JSON.parse(cleanedText);
+      // Parse JSON (OpenAI with json_object mode should return valid JSON)
+      summary = JSON.parse(responseText);
     } else {
-      console.error("Invalid Gemini response format:", JSON.stringify(aiData, null, 2));
+      console.error("Invalid OpenAI response format:", JSON.stringify(aiData, null, 2));
       throw new Error("Invalid AI response format");
     }
 

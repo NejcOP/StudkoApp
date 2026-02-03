@@ -51,16 +51,16 @@ serve(async (req) => {
     console.log("=== START generate-quiz function ===");
     
     // Validate API Keys
-    const GOOGLE_API_KEY = Deno.env.get("GOOGLE_AI_API_KEY") || Deno.env.get("GOOGLE_API_KEY");
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     
-    console.log("GOOGLE_API_KEY exists:", !!GOOGLE_API_KEY);
+    console.log("OPENAI_API_KEY exists:", !!OPENAI_API_KEY);
     
-    if (!GOOGLE_API_KEY) {
+    if (!OPENAI_API_KEY) {
       console.error("Missing API Key");
-      throw new Error('API ključ manjka! Dodaj GOOGLE_AI_API_KEY v Supabase Secrets.');
+      throw new Error('API ključ manjka! Dodaj OPENAI_API_KEY v Supabase Secrets.');
     }
     
-    console.log("Using API: Direct Google Gemini");
+    console.log("Using API: OpenAI GPT-4o-mini");
 
     // Parse request body
     let requestBody;
@@ -94,20 +94,24 @@ serve(async (req) => {
     
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        console.log(`Attempt ${attempt}/${maxAttempts}: Calling AI API...`);
+        console.log(`Attempt ${attempt}/${maxAttempts}: Calling OpenAI API...`);
         
-        console.log("Using Direct Google Gemini API");
-        const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GOOGLE_API_KEY}`, {
+        const aiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "Authorization": `Bearer ${OPENAI_API_KEY}`,
           },
           body: JSON.stringify({
-            contents: [{
-              parts: [{
-                text: `You are a JSON generator. Output MUST be valid JSON only. No markdown. No conversational text.
-
-Generate 10 quiz questions from the provided text.
+            model: "gpt-4o-mini",
+            messages: [
+              {
+                role: "system",
+                content: "You are a JSON generator. Output MUST be valid JSON only. No markdown. No conversational text."
+              },
+              {
+                role: "user",
+                content: `Generate 10 quiz questions from the provided text.
 
 Mix these question types:
 - multiple_choice: 4 options (label them A, B, C, D)
@@ -140,43 +144,39 @@ Return ONLY a valid JSON object in this exact format:
 Create a quiz from this text:
 
 ${text.substring(0, 8000)}`
-              }]
-            }],
-            generationConfig: {
-              temperature: 0.7,
-              maxOutputTokens: 2048,
-            }
+              }
+            ],
+            temperature: 0.7,
+            max_tokens: 2048,
+            response_format: { type: "json_object" }
           }),
         });
 
-        console.log("AI API response status:", aiResponse.status);
-        console.log("AI API response ok:", aiResponse.ok);
+        console.log("OpenAI API response status:", aiResponse.status);
+        console.log("OpenAI API response ok:", aiResponse.ok);
 
         if (!aiResponse.ok) {
           const errorText = await aiResponse.text();
-          console.error(`AI API error: ${aiResponse.status}`, errorText);
+          console.error(`OpenAI API error: ${aiResponse.status}`, errorText);
           if (aiResponse.status === 429) {
             return new Response(JSON.stringify({ error: "Preveč zahtev. Poskusi čez nekaj sekund." }), {
               status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" }
             });
           }
-          throw new Error(`AI API napaka: ${aiResponse.status}`);
+          throw new Error(`OpenAI API napaka: ${aiResponse.status}`);
         }
 
         const aiData = await aiResponse.json();
         console.log("=== AI Response ===");
-        console.log("Full AI Response:", JSON.stringify(aiData, null, 2));
+        console.log("Full OpenAI Response:", JSON.stringify(aiData, null, 2));
 
-        // Extract questions from response
-        console.log("Extracting from Google Gemini format...");
-        console.log("candidates:", aiData.candidates);
-        
+        // Extract questions from OpenAI response
         let content;
-        if (aiData.candidates?.[0]?.content?.parts?.[0]?.text) {
-          content = aiData.candidates[0].content.parts[0].text;
+        if (aiData.choices?.[0]?.message?.content) {
+          content = aiData.choices[0].message.content;
         } else {
           console.error("Missing content. Response structure:", JSON.stringify(aiData, null, 2));
-          throw new Error("Missing candidates[0].content.parts[0].text in Google response");
+          throw new Error("Missing choices[0].message.content in OpenAI response");
         }
         
         console.log("=== Extracted Content ===");
