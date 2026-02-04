@@ -438,7 +438,7 @@ const Notes = () => {
                     className={`h-14 text-lg rounded-xl border-2 border-primary/30 focus:border-primary bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 ${!hasProAccess ? 'opacity-60 cursor-not-allowed' : ''}`}
                   />
                   <Button 
-                    onClick={hasProAccess ? handleAiSearch : () => navigate('/profile')}
+                    onClick={hasProAccess ? handleAiSearch : () => navigate('/ai')}
                     variant="hero" 
                     size="lg" 
                     className="h-14 px-8 shadow-glow-primary whitespace-nowrap"
