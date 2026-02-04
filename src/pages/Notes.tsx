@@ -252,6 +252,18 @@ const Notes = () => {
       return;
     }
 
+    // Check PRO access
+    if (!hasProAccess) {
+      toast.error('AI iskanje je na voljo samo PRO uporabnikom', {
+        description: 'Nadgradi na PRO za dostop do AI funkcij',
+        action: {
+          label: 'Nadgradi',
+          onClick: () => navigate('/profile')
+        }
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -405,31 +417,39 @@ const Notes = () => {
                 Študko AI ti predlaga najboljše zapiske zate.
               </p>
             </div>
-            {hasProAccess && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-purple-600 to-yellow-500 text-white text-xs font-bold shadow-md">
-                PRO
-              </span>
-            )}
+            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shadow-md ${
+              hasProAccess 
+                ? 'bg-gradient-to-r from-purple-600 to-yellow-500 text-white' 
+                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+            }`}>
+              {hasProAccess ? 'PRO' : '🔒 PRO'}
+            </span>
           </div>
           
           <div className="space-y-3">
             <div className="flex gap-3">
                   <Input
                     type="text"
-                    placeholder="Napiši, kakšne zapiske iščeš… (npr. 'zapiske za maturo iz matematike 2025')"
+                    placeholder={hasProAccess ? "Napiši, kakšne zapiske iščeš… (npr. 'zapiske za maturo iz matematike 2025')" : "🔒 AI iskanje je na voljo samo PRO uporabnikom"}
                     value={aiSearchQuery}
                     onChange={(e) => setAiSearchQuery(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleAiSearch()}
-                    className="h-14 text-lg rounded-xl border-2 border-primary/30 focus:border-primary bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100"
+                    onKeyDown={(e) => e.key === 'Enter' && hasProAccess && handleAiSearch()}
+                    disabled={!hasProAccess}
+                    className={`h-14 text-lg rounded-xl border-2 border-primary/30 focus:border-primary bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 ${!hasProAccess ? 'opacity-60 cursor-not-allowed' : ''}`}
                   />
                   <Button 
-                    onClick={handleAiSearch}
+                    onClick={hasProAccess ? handleAiSearch : () => navigate('/profile')}
                     variant="hero" 
                     size="lg" 
                     className="h-14 px-8 shadow-glow-primary whitespace-nowrap"
-                    disabled={loading || !aiSearchQuery.trim()}
+                    disabled={hasProAccess && (loading || !aiSearchQuery.trim())}
                   >
-                    {loading ? (
+                    {!hasProAccess ? (
+                      <>
+                        <Sparkles className="w-5 h-5 mr-2" />
+                        Nadgradi
+                      </>
+                    ) : loading ? (
                       <>
                         <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                         Iščem...
