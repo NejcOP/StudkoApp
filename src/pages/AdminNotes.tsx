@@ -80,14 +80,28 @@ const AdminNotes = () => {
 
     setDeleting(true);
     try {
-      // Get current user email
+      // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       if (!user?.email) {
         toast.error("Nisi prijavljen");
+        setDeleting(false);
         return;
       }
 
-      // Re-authenticate to verify password
+      // Verify admin status
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("is_admin")
+        .eq("id", user.id)
+        .single();
+
+      if (profileError || !profile?.is_admin) {
+        toast.error("Nisi admin");
+        setDeleting(false);
+        return;
+      }
+
+      // Verify password by attempting to sign in (this doesn't change the session)
       const { error: authError } = await supabase.auth.signInWithPassword({
         email: user.email,
         password: password,
@@ -95,16 +109,20 @@ const AdminNotes = () => {
 
       if (authError) {
         toast.error("Napačno geslo");
+        setDeleting(false);
         return;
       }
 
-      // Password is correct, proceed with deletion
+      // Password is correct and user is admin, proceed with deletion
       const { error: deleteError } = await supabase
         .from("notes")
         .delete()
         .eq("id", selectedNoteId);
 
-      if (deleteError) throw deleteError;
+      if (deleteError) {
+        console.error("Delete error:", deleteError);
+        throw deleteError;
+      }
 
       toast.success("Zapisek uspešno izbrisan!");
       setDeleteDialogOpen(false);
@@ -115,7 +133,7 @@ const AdminNotes = () => {
       loadNotes();
     } catch (error: any) {
       console.error("Error deleting note:", error);
-      toast.error("Napaka pri brisanju zapiska");
+      toast.error(`Napaka pri brisanju zapiska: ${error.message || 'Neznana napaka'}`);
     } finally {
       setDeleting(false);
     }
