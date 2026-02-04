@@ -113,6 +113,7 @@ export default function AdminTikTokChallenges() {
         .update({
           is_pro: true,
           pro_expires_at: oneMonthFromNow.toISOString(),
+          subscription_status: 'social_claim',
         })
         .eq("id", userId);
 

@@ -79,7 +79,7 @@ serve(async (req) => {
       // Get current PRO status
       const { data: profile, error: profileError } = await supabaseAdmin
         .from("profiles")
-        .select("pro_status, pro_expires_at")
+        .select("is_pro, pro_expires_at")
         .eq("id", userId)
         .single();
 
@@ -92,7 +92,7 @@ serve(async (req) => {
       const now = new Date();
       let newExpiresAt: Date;
 
-      if (profile.pro_status && profile.pro_expires_at) {
+      if (profile.is_pro && profile.pro_expires_at) {
         // If already PRO, extend from current expiration
         const currentExpiration = new Date(profile.pro_expires_at);
         newExpiresAt = currentExpiration > now ? currentExpiration : now;
@@ -108,8 +108,9 @@ serve(async (req) => {
       const { error: updateError } = await supabaseAdmin
         .from("profiles")
         .update({
-          pro_status: true,
+          is_pro: true,
           pro_expires_at: newExpiresAt.toISOString(),
+          subscription_status: 'social_claim',
         })
         .eq("id", userId);
 
