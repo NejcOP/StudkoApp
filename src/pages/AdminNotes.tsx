@@ -82,6 +82,7 @@ const AdminNotes = () => {
     try {
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
+      console.log('Current user:', user);
       if (!user?.email) {
         toast.error("Nisi prijavljen");
         setDeleting(false);
@@ -95,6 +96,8 @@ const AdminNotes = () => {
         .eq("id", user.id)
         .single();
 
+      console.log('Profile check:', { profile, profileError });
+
       if (profileError || !profile?.is_admin) {
         toast.error("Nisi admin");
         setDeleting(false);
@@ -102,10 +105,13 @@ const AdminNotes = () => {
       }
 
       // Admin verified, proceed with deletion
+      console.log('Attempting to delete note:', selectedNoteId);
       const { error: deleteError } = await supabase
         .from("notes")
         .delete()
         .eq("id", selectedNoteId);
+
+      console.log('Delete result:', { deleteError });
 
       if (deleteError) {
         console.error("Delete error:", deleteError);
@@ -113,12 +119,22 @@ const AdminNotes = () => {
       }
 
       toast.success("Zapisek uspešno izbrisan!");
+      
+      // Remove from list immediately
+      setNotes(prevNotes => prevNotes.filter(n => n.id !== selectedNoteId));
+      
+      // Update today count if needed
+      const deletedNote = notes.find(n => n.id === selectedNoteId);
+      if (deletedNote) {
+        const today = new Date().toISOString().split('T')[0];
+        if (deletedNote.created_at.startsWith(today)) {
+          setTodayCount(prev => Math.max(0, prev - 1));
+        }
+      }
+      
       setDeleteDialogOpen(false);
       setPassword("");
       setSelectedNoteId(null);
-      
-      // Reload notes
-      loadNotes();
     } catch (error: any) {
       console.error("Error deleting note:", error);
       toast.error(`Napaka: ${error.message || 'Neznana napaka'}`);
