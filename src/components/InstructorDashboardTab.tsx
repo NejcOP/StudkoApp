@@ -687,7 +687,7 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
       {/* Quick Actions */}
       <div className="mb-6">
         <Link to="/tutors/manage">
-          <Button variant="outline" className="w-full h-auto py-4 flex items-center justify-center gap-3">
+          <Button variant="outline" className="w-full h-auto py-4 flex items-center justify-start gap-3 px-4">
             <Settings className="w-5 h-5" />
             <span className="font-medium">Uredi svoj profil</span>
           </Button>
