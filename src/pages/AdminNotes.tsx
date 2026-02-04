@@ -71,8 +71,8 @@ const AdminNotes = () => {
   };
 
   const handleDeleteNote = async () => {
-    if (!password.trim()) {
-      toast.error("Vpiši geslo za potrditev");
+    if (password !== 'IZBRIŠI') {
+      toast.error('Vpiši "IZBRIŠI" za potrditev');
       return;
     }
 
@@ -88,10 +88,10 @@ const AdminNotes = () => {
         return;
       }
 
-      // Verify admin status first
+      // Verify admin status
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select("is_admin, email")
+        .select("is_admin")
         .eq("id", user.id)
         .single();
 
@@ -101,26 +101,7 @@ const AdminNotes = () => {
         return;
       }
 
-      // Create a temporary client to verify password without affecting current session
-      const { createClient } = await import("@supabase/supabase-js");
-      const tempClient = createClient(
-        import.meta.env.VITE_SUPABASE_URL,
-        import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
-      );
-
-      // Verify password
-      const { error: authError } = await tempClient.auth.signInWithPassword({
-        email: profile.email,
-        password: password,
-      });
-
-      if (authError) {
-        toast.error("Napačno geslo");
-        setDeleting(false);
-        return;
-      }
-
-      // Password is correct, now delete using original authenticated client
+      // Admin verified, proceed with deletion
       const { error: deleteError } = await supabase
         .from("notes")
         .delete()
@@ -264,19 +245,19 @@ const AdminNotes = () => {
           <DialogHeader>
             <DialogTitle>Izbriši zapisek</DialogTitle>
             <DialogDescription>
-              Za potrditev brisanja vnesi svoje geslo (isto kot za prijavo).
+              Za potrditev brisanja vpiši "IZBRIŠI" (z velikimi črkami).
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="password">Geslo</Label>
+              <Label htmlFor="password">Potrditvena beseda</Label>
               <Input
                 id="password"
-                type="password"
-                placeholder="Vpiši svoje geslo"
+                type="text"
+                placeholder='Vpiši "IZBRIŠI"'
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleDeleteNote()}
+                onKeyDown={(e) => e.key === 'Enter' && password === 'IZBRIŠI' && handleDeleteNote()}
               />
             </div>
           </div>
@@ -295,7 +276,7 @@ const AdminNotes = () => {
             <Button
               variant="destructive"
               onClick={handleDeleteNote}
-              disabled={deleting || !password.trim()}
+              disabled={deleting || password !== 'IZBRIŠI'}
             >
               {deleting ? "Brišem..." : "Izbriši"}
             </Button>
