@@ -80,48 +80,26 @@ const AdminNotes = () => {
 
     setDeleting(true);
     try {
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user?.email) {
-        toast.error("Nisi prijavljen");
-        setDeleting(false);
-        return;
-      }
-
-      // Verify admin status
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("is_admin")
-        .eq("id", user.id)
-        .single();
-
-      if (profileError || !profile?.is_admin) {
-        toast.error("Nisi admin");
-        setDeleting(false);
-        return;
-      }
-
-      // Verify password by attempting to sign in (this doesn't change the session)
-      const { error: authError } = await supabase.auth.signInWithPassword({
-        email: user.email,
-        password: password,
+      // Call edge function to verify password and delete note
+      const { data, error } = await supabase.functions.invoke("verify-admin-password", {
+        body: {
+          password: password,
+          noteId: selectedNoteId,
+        },
       });
 
-      if (authError) {
-        toast.error("Napačno geslo");
-        setDeleting(false);
-        return;
+      if (error) {
+        throw error;
       }
 
-      // Password is correct and user is admin, proceed with deletion
-      const { error: deleteError } = await supabase
-        .from("notes")
-        .delete()
-        .eq("id", selectedNoteId);
-
-      if (deleteError) {
-        console.error("Delete error:", deleteError);
-        throw deleteError;
+      if (!data.success) {
+        if (data.error === "Invalid password") {
+          toast.error("Napačno geslo");
+        } else {
+          toast.error(data.error || "Napaka pri brisanju");
+        }
+        setDeleting(false);
+        return;
       }
 
       toast.success("Zapisek uspešno izbrisan!");
@@ -133,7 +111,7 @@ const AdminNotes = () => {
       loadNotes();
     } catch (error: any) {
       console.error("Error deleting note:", error);
-      toast.error(`Napaka pri brisanju zapiska: ${error.message || 'Neznana napaka'}`);
+      toast.error(`Napaka: ${error.message || 'Neznana napaka'}`);
     } finally {
       setDeleting(false);
     }
