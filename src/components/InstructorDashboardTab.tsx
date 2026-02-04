@@ -600,7 +600,7 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
             <p className="text-muted-foreground mb-4">
               Pridobi personalizirane nasvete in analize za povečanje števila strank
             </p>
-            <Link to="/profile">
+            <Link to="/ai">
               <Button variant="hero" className="bg-gradient-to-r from-purple-600 to-yellow-600 hover:from-purple-700 hover:to-yellow-700">
                 <Sparkles className="w-4 h-4 mr-2" />
                 Nadgradi na PRO
@@ -966,7 +966,7 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
                     </p>
                   </div>
                   <Button 
-                    onClick={() => window.location.href = '/profile'}
+                    onClick={() => window.location.href = '/ai'}
                     className="w-full bg-gradient-to-r from-purple-600 to-yellow-600 hover:from-purple-700 hover:to-yellow-700 text-white font-semibold py-4 sm:py-6 text-sm sm:text-lg shadow-lg"
                   >
                     <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
