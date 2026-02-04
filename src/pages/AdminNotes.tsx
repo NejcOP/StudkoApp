@@ -1,16 +1,30 @@
 import { Button } from "@/components/ui/button";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import { Eye } from "lucide-react";
+import { Eye, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const AdminNotes = () => {
   const [notes, setNotes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [todayCount, setTodayCount] = useState(0);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
+  const [password, setPassword] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     loadNotes();
@@ -47,6 +61,63 @@ const AdminNotes = () => {
       toast.error('Napaka pri nalaganju zapiskov');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteClick = (noteId: string) => {
+    setSelectedNoteId(noteId);
+    setDeleteDialogOpen(true);
+    setPassword("");
+  };
+
+  const handleDeleteNote = async () => {
+    if (!password.trim()) {
+      toast.error("Vpiši geslo za potrditev");
+      return;
+    }
+
+    if (!selectedNoteId) return;
+
+    setDeleting(true);
+    try {
+      // Get current user email
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.email) {
+        toast.error("Nisi prijavljen");
+        return;
+      }
+
+      // Re-authenticate to verify password
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: password,
+      });
+
+      if (authError) {
+        toast.error("Napačno geslo");
+        return;
+      }
+
+      // Password is correct, proceed with deletion
+      const { error: deleteError } = await supabase
+        .from("notes")
+        .delete()
+        .eq("id", selectedNoteId);
+
+      if (deleteError) throw deleteError;
+
+      toast.success("Zapisek uspešno izbrisan!");
+      setDeleteDialogOpen(false);
+      setPassword("");
+      setSelectedNoteId(null);
+      
+      // Reload notes
+      loadNotes();
+    } catch (error: any) {
+      console.error("Error deleting note:", error);
+      toast.error("Napaka pri brisanju zapiska");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -135,6 +206,14 @@ const AdminNotes = () => {
                               <Eye className="w-4 h-4" />
                             </Button>
                           </Link>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteClick(note.id)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 border-red-200 dark:border-red-800"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
                         </div>
                       </td>
                     </tr>
@@ -153,6 +232,51 @@ const AdminNotes = () => {
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Izbriši zapisek</DialogTitle>
+            <DialogDescription>
+              Za potrditev brisanja vnesi svoje geslo (isto kot za prijavo).
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="password">Geslo</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Vpiši svoje geslo"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleDeleteNote()}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteDialogOpen(false);
+                setPassword("");
+                setSelectedNoteId(null);
+              }}
+              disabled={deleting}
+            >
+              Prekliči
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteNote}
+              disabled={deleting || !password.trim()}
+            >
+              {deleting ? "Brišem..." : "Izbriši"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Footer />
     </div>
