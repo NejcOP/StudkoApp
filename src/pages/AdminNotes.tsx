@@ -80,26 +80,55 @@ const AdminNotes = () => {
 
     setDeleting(true);
     try {
-      // Call edge function to verify password and delete note
-      const { data, error } = await supabase.functions.invoke("verify-admin-password", {
-        body: {
-          password: password,
-          noteId: selectedNoteId,
-        },
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      if (!data.success) {
-        if (data.error === "Invalid password") {
-          toast.error("Napačno geslo");
-        } else {
-          toast.error(data.error || "Napaka pri brisanju");
-        }
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.email) {
+        toast.error("Nisi prijavljen");
         setDeleting(false);
         return;
+      }
+
+      // Verify admin status first
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("is_admin, email")
+        .eq("id", user.id)
+        .single();
+
+      if (profileError || !profile?.is_admin) {
+        toast.error("Nisi admin");
+        setDeleting(false);
+        return;
+      }
+
+      // Create a temporary client to verify password without affecting current session
+      const { createClient } = await import("@supabase/supabase-js");
+      const tempClient = createClient(
+        import.meta.env.VITE_SUPABASE_URL,
+        import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
+      );
+
+      // Verify password
+      const { error: authError } = await tempClient.auth.signInWithPassword({
+        email: profile.email,
+        password: password,
+      });
+
+      if (authError) {
+        toast.error("Napačno geslo");
+        setDeleting(false);
+        return;
+      }
+
+      // Password is correct, now delete using original authenticated client
+      const { error: deleteError } = await supabase
+        .from("notes")
+        .delete()
+        .eq("id", selectedNoteId);
+
+      if (deleteError) {
+        console.error("Delete error:", deleteError);
+        throw deleteError;
       }
 
       toast.success("Zapisek uspešno izbrisan!");
