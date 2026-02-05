@@ -421,14 +421,19 @@ ${JSON.stringify(allTutors?.map((t: PublicTutor) => ({
         <div className="absolute bottom-20 left-0 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl -z-10" />
 
         {/* Filters */}
-        <Card className="mb-6 sm:mb-8 shadow-2xl border-primary/30 bg-card/95 backdrop-blur-sm">
-          <CardContent className="pt-4 sm:pt-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-3 sm:mb-4">
-              {/* Subject */}
-              <div>
-                <label className="text-sm font-medium mb-2 block">Predmet</label>
-                <Select value={selectedSubject} onValueChange={setSelectedSubject}>
-                  <SelectTrigger>
+        <div className="bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 rounded-xl sm:rounded-2xl p-4 sm:p-7 border border-slate-200 dark:border-slate-700 shadow-xl mb-4 sm:mb-6 lg:mb-8 backdrop-blur-sm">
+          <h3 className="text-base sm:text-xl font-bold mb-4 sm:mb-6 text-slate-800 dark:text-slate-100 flex items-center gap-2">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+            Filtri
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-5">
+            {/* Subject */}
+            <div className="space-y-1.5">
+              <label className="text-xs sm:text-sm font-semibold block text-slate-700 dark:text-slate-200">Predmet</label>
+              <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+                <SelectTrigger className="h-11 sm:h-12 rounded-lg sm:rounded-xl border-2 border-slate-200 dark:border-slate-600 hover:border-purple-400 dark:hover:border-purple-500 transition-colors bg-white dark:bg-slate-800 shadow-sm text-sm sm:text-base">
                     <SelectValue placeholder="Vsi predmeti" />
                   </SelectTrigger>
                   <SelectContent className="bg-popover max-h-[300px]">
@@ -457,10 +462,10 @@ ${JSON.stringify(allTutors?.map((t: PublicTutor) => ({
               </div>
 
               {/* Level */}
-              <div>
-                <label className="text-sm font-medium mb-2 block">Stopnja</label>
+              <div className="space-y-1.5">
+                <label className="text-xs sm:text-sm font-semibold block text-slate-700 dark:text-slate-200">Stopnja</label>
                 <Select value={selectedLevel} onValueChange={setSelectedLevel}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-11 sm:h-12 rounded-lg sm:rounded-xl border-2 border-slate-200 dark:border-slate-600 hover:border-purple-400 dark:hover:border-purple-500 transition-colors bg-white dark:bg-slate-800 shadow-sm text-sm sm:text-base">
                     <SelectValue placeholder="Vse stopnje" />
                   </SelectTrigger>
                   <SelectContent>
@@ -473,10 +478,10 @@ ${JSON.stringify(allTutors?.map((t: PublicTutor) => ({
               </div>
 
               {/* Mode */}
-              <div>
-                <label className="text-sm font-medium mb-2 block">Način</label>
+              <div className="space-y-1.5">
+                <label className="text-xs sm:text-sm font-semibold block text-slate-700 dark:text-slate-200">Način</label>
                 <Select value={selectedMode} onValueChange={setSelectedMode}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-11 sm:h-12 rounded-lg sm:rounded-xl border-2 border-slate-200 dark:border-slate-600 hover:border-purple-400 dark:hover:border-purple-500 transition-colors bg-white dark:bg-slate-800 shadow-sm text-sm sm:text-base">
                     <SelectValue placeholder="Vsi načini" />
                   </SelectTrigger>
                   <SelectContent>
@@ -488,10 +493,10 @@ ${JSON.stringify(allTutors?.map((t: PublicTutor) => ({
               </div>
 
               {/* Price */}
-              <div>
-                <label className="text-sm font-medium mb-2 block">Cena na uro</label>
+              <div className="space-y-1.5">
+                <label className="text-xs sm:text-sm font-semibold block text-slate-700 dark:text-slate-200">Cena na uro</label>
                 <Select value={selectedPrice} onValueChange={setSelectedPrice}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-11 sm:h-12 rounded-lg sm:rounded-xl border-2 border-slate-200 dark:border-slate-600 hover:border-purple-400 dark:hover:border-purple-500 transition-colors bg-white dark:bg-slate-800 shadow-sm text-sm sm:text-base">
                     <SelectValue placeholder="Vse cene" />
                   </SelectTrigger>
                   <SelectContent>
@@ -504,10 +509,10 @@ ${JSON.stringify(allTutors?.map((t: PublicTutor) => ({
               </div>
 
               {/* Rating */}
-              <div>
-                <label className="text-sm font-medium mb-2 block">Ocena</label>
+              <div className="space-y-1.5">
+                <label className="text-xs sm:text-sm font-semibold block text-slate-700 dark:text-slate-200">Ocena</label>
                 <Select value={selectedRating} onValueChange={setSelectedRating}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-11 sm:h-12 rounded-lg sm:rounded-xl border-2 border-slate-200 dark:border-slate-600 hover:border-purple-400 dark:hover:border-purple-500 transition-colors bg-white dark:bg-slate-800 shadow-sm text-sm sm:text-base">
                     <SelectValue placeholder="Vse ocene" />
                   </SelectTrigger>
                   <SelectContent>
@@ -519,18 +524,17 @@ ${JSON.stringify(allTutors?.map((t: PublicTutor) => ({
               </div>
 
               {/* Reset */}
-              <div className="flex items-end">
+              <div className="flex items-end space-y-1.5">
                 <Button 
                   variant="outline" 
                   onClick={resetFilters}
-                  className="w-full"
+                  className="w-full h-11 sm:h-12 rounded-lg sm:rounded-xl border-2 border-slate-200 dark:border-slate-600 hover:border-purple-400 dark:hover:border-purple-500 transition-colors text-sm sm:text-base font-semibold"
                 >
                   Ponastavi filtre
                 </Button>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
         {/* Results count */}
         <div className="flex items-center justify-between mb-6">
