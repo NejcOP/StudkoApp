@@ -368,7 +368,7 @@ ${JSON.stringify(allTutors?.map((t: PublicTutor) => ({
                   </>
                 ) : aiSearching ? (
                   <>
-                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 mr-2" animate-spin" />
+                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 mr-2 animate-spin" />
                     Iščem...
                   </>
                 ) : (
