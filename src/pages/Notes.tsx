@@ -564,17 +564,22 @@ const Notes = () => {
         </div>
 
         {/* Standard Filters */}
-        <div className="bg-white/90 dark:bg-slate-800/90 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-slate-200 dark:border-slate-700 shadow-lg mb-4 sm:mb-6 lg:mb-8">
-          <h3 className="text-base sm:text-lg font-bold mb-3 sm:mb-4 text-slate-800 dark:text-slate-100">Filtri</h3>
+        <div className="bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 rounded-2xl p-5 sm:p-7 border border-slate-200 dark:border-slate-700 shadow-xl mb-4 sm:mb-6 lg:mb-8 backdrop-blur-sm">
+          <h3 className="text-lg sm:text-xl font-bold mb-5 sm:mb-6 text-slate-800 dark:text-slate-100 flex items-center gap-2">
+            <svg className="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+            Filtri
+          </h3>
           
 
           {/* First row of filters */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-5">
             {/* School Type */}
-            <div>
-              <Label className="text-sm font-medium mb-2 block">Vrsta šole</Label>
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold mb-2 block text-slate-700 dark:text-slate-200">Vrsta šole</Label>
               <Select value={schoolType} onValueChange={setSchoolType}>
-                <SelectTrigger className="h-11 rounded-xl border-2">
+                <SelectTrigger className="h-12 rounded-xl border-2 border-slate-200 dark:border-slate-600 hover:border-purple-400 dark:hover:border-purple-500 transition-colors bg-white dark:bg-slate-800 shadow-sm">
                   <SelectValue placeholder="Vse šole" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover">
@@ -586,14 +591,14 @@ const Notes = () => {
             </div>
 
             {/* School Name */}
-            <div>
-              <Label className="text-sm font-medium mb-2 block">Ime šole</Label>
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold mb-2 block text-slate-700 dark:text-slate-200">Ime šole</Label>
               <Select
                 value={schoolId ?? ""}
                 onValueChange={val => setSchoolId(val || null)}
                 disabled={!schoolType}
               >
-                <SelectTrigger className="h-11 rounded-xl border-2">
+                <SelectTrigger className="h-12 rounded-xl border-2 border-slate-200 dark:border-slate-600 hover:border-purple-400 dark:hover:border-purple-500 transition-colors bg-white dark:bg-slate-800 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
                   <SelectValue placeholder={schoolType ? "Vse šole" : "Najprej izberi vrsto šole"} />
                 </SelectTrigger>
                 <SelectContent className="bg-popover">
@@ -605,14 +610,14 @@ const Notes = () => {
             </div>
 
             {/* Subject */}
-            <div>
-              <Label className="text-sm font-medium mb-2 block">Predmet</Label>
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold mb-2 block text-slate-700 dark:text-slate-200">Predmet</Label>
               <Select
                 value={subject}
                 onValueChange={setSubject}
                 disabled={!schoolType || subjectsLoading}
               >
-                <SelectTrigger className="h-11 rounded-xl border-2">
+                <SelectTrigger className="h-12 rounded-xl border-2 border-slate-200 dark:border-slate-600 hover:border-purple-400 dark:hover:border-purple-500 transition-colors bg-white dark:bg-slate-800 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
                   <SelectValue placeholder={
                     !schoolType
                       ? "Najprej izberi vrsto šole"
@@ -631,10 +636,10 @@ const Notes = () => {
               </Select>
             </div>
 
-            <div>
-              <Label className="text-sm font-medium mb-2 block">Tip zapiskov</Label>
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold mb-2 block text-slate-700 dark:text-slate-200">Tip zapiskov</Label>
               <Select value={noteType} onValueChange={setNoteType}>
-                <SelectTrigger className="h-11 rounded-xl border-2">
+                <SelectTrigger className="h-12 rounded-xl border-2 border-slate-200 dark:border-slate-600 hover:border-purple-400 dark:hover:border-purple-500 transition-colors bg-white dark:bg-slate-800 shadow-sm">
                   <SelectValue placeholder="Vsi tipi" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover">
@@ -649,10 +654,10 @@ const Notes = () => {
               </Select>
             </div>
 
-            <div>
-              <Label className="text-sm font-medium mb-2 block">Tip datoteke</Label>
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold mb-2 block text-slate-700 dark:text-slate-200">Tip datoteke</Label>
               <Select value={fileType} onValueChange={setFileType}>
-                <SelectTrigger className="h-11 rounded-xl border-2">
+                <SelectTrigger className="h-12 rounded-xl border-2 border-slate-200 dark:border-slate-600 hover:border-purple-400 dark:hover:border-purple-500 transition-colors bg-white dark:bg-slate-800 shadow-sm">
                   <SelectValue placeholder="Vsi tipi" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover">
@@ -666,11 +671,11 @@ const Notes = () => {
           </div>
 
           {/* Second row of filters */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
-            <div>
-              <Label className="text-sm font-medium mb-2 block">Jezik</Label>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5 mb-5">
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold mb-2 block text-slate-700 dark:text-slate-200">Jezik</Label>
               <Select value={language} onValueChange={setLanguage}>
-                <SelectTrigger className="h-11 rounded-xl border-2">
+                <SelectTrigger className="h-12 rounded-xl border-2 border-slate-200 dark:border-slate-600 hover:border-purple-400 dark:hover:border-purple-500 transition-colors bg-white dark:bg-slate-800 shadow-sm">
                   <SelectValue placeholder="Vsi jeziki" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover">
@@ -682,10 +687,10 @@ const Notes = () => {
               </Select>
             </div>
 
-            <div>
-              <Label className="text-sm font-medium mb-2 block">Dolžina zapiskov</Label>
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold mb-2 block text-slate-700 dark:text-slate-200">Dolžina zapiskov</Label>
               <Select value={noteLength} onValueChange={setNoteLength}>
-                <SelectTrigger className="h-11 rounded-xl border-2">
+                <SelectTrigger className="h-12 rounded-xl border-2 border-slate-200 dark:border-slate-600 hover:border-purple-400 dark:hover:border-purple-500 transition-colors bg-white dark:bg-slate-800 shadow-sm">
                   <SelectValue placeholder="Vse dolžine" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover">
@@ -697,10 +702,10 @@ const Notes = () => {
               </Select>
             </div>
 
-            <div>
-              <Label className="text-sm font-medium mb-2 block">Ocena zapiskov</Label>
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold mb-2 block text-slate-700 dark:text-slate-200">Ocena zapiskov</Label>
               <Select value={noteRating} onValueChange={setNoteRating}>
-                <SelectTrigger className="h-11 rounded-xl border-2">
+                <SelectTrigger className="h-12 rounded-xl border-2 border-slate-200 dark:border-slate-600 hover:border-purple-400 dark:hover:border-purple-500 transition-colors bg-white dark:bg-slate-800 shadow-sm">
                   <SelectValue placeholder="Vse" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover">
@@ -712,10 +717,10 @@ const Notes = () => {
               </Select>
             </div>
 
-            <div>
-              <Label className="text-sm font-medium mb-2 block">Sortiraj po</Label>
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold mb-2 block text-slate-700 dark:text-slate-200">Sortiraj po</Label>
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="h-11 rounded-xl border-2">
+                <SelectTrigger className="h-12 rounded-xl border-2 border-slate-200 dark:border-slate-600 hover:border-purple-400 dark:hover:border-purple-500 transition-colors bg-white dark:bg-slate-800 shadow-sm">
                   <SelectValue placeholder="Sortiraj" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover">
