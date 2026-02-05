@@ -1019,17 +1019,26 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
       )}
 
       <Tabs defaultValue="availability" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5 bg-muted dark:bg-muted">
-          <TabsTrigger value="availability" className="text-foreground data-[state=active]:text-foreground">
-            <Calendar className="w-4 h-4 mr-1 hidden sm:inline" />
-            Razpoložljivost
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 bg-muted dark:bg-muted h-auto p-2">
+          <TabsTrigger value="availability" className="text-foreground data-[state=active]:text-foreground text-xs sm:text-sm whitespace-nowrap">
+            <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+            <span className="hidden sm:inline">Razpoložljivost</span>
+            <span className="sm:hidden">Razp.</span>
           </TabsTrigger>
-          <TabsTrigger value="pending" className="text-foreground data-[state=active]:text-foreground">
-            Na čakanju {stats.pendingBookings.length > 0 && `(${stats.pendingBookings.length})`}
+          <TabsTrigger value="pending" className="text-foreground data-[state=active]:text-foreground text-xs sm:text-sm whitespace-nowrap">
+            <span className="hidden sm:inline">Na čakanju</span>
+            <span className="sm:hidden">Čakanje</span>
+            {stats.pendingBookings.length > 0 && ` (${stats.pendingBookings.length})`}
           </TabsTrigger>
-          <TabsTrigger value="upcoming" className="text-foreground data-[state=active]:text-foreground">Prihajajoče</TabsTrigger>
-          <TabsTrigger value="past" className="text-foreground data-[state=active]:text-foreground">Pretekle</TabsTrigger>
-          <TabsTrigger value="earnings" className="text-foreground data-[state=active]:text-foreground">Zaslužek</TabsTrigger>
+          <TabsTrigger value="upcoming" className="text-foreground data-[state=active]:text-foreground text-xs sm:text-sm whitespace-nowrap">
+            <span className="hidden sm:inline">Prihajajoče</span>
+            <span className="sm:hidden">Prihaj.</span>
+          </TabsTrigger>
+          <TabsTrigger value="past" className="text-foreground data-[state=active]:text-foreground text-xs sm:text-sm whitespace-nowrap">Pretekle</TabsTrigger>
+          <TabsTrigger value="earnings" className="text-foreground data-[state=active]:text-foreground text-xs sm:text-sm whitespace-nowrap">
+            <span className="hidden sm:inline">Zaslužek</span>
+            <span className="sm:hidden">€€€</span>
+          </TabsTrigger>
         </TabsList>
 
         {/* Availability Management */}
