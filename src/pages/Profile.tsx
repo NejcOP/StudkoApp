@@ -1338,7 +1338,7 @@ const Profile = () => {
                               </div>
                             ) : (
                               <div className="space-y-4">
-                                {profile?.cancel_at_period_end ? (
+                                {profile?.cancel_at_period_end && (profile?.subscription_status !== "active" && profile?.subscription_status !== "trialing") ? (
                                   <>
                                     <div className="bg-orange-50 dark:bg-orange-950/30 rounded-xl p-4 border border-orange-200 dark:border-orange-800">
                                       <p className="text-sm text-orange-700 dark:text-orange-300 flex items-center gap-2 mb-2">
