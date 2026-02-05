@@ -323,16 +323,18 @@ ${JSON.stringify(allTutors?.map((t: PublicTutor) => ({
 
       <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-8 lg:py-12 relative">
         {/* AI Search Bar - PRO Feature */}
-        <div className="bg-white/90 dark:bg-slate-800/90 rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-6 xl:p-8 border-2 border-primary/20 shadow-glow-primary mb-4 sm:mb-6 lg:mb-8 relative">
-          <div className="flex items-start gap-2 sm:gap-3 mb-3">
-            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-primary mt-1 flex-shrink-0" />
-            <div className="flex-1 min-w-0">
-              <h2 className="text-base sm:text-lg lg:text-xl font-bold mb-1 text-slate-800 dark:text-slate-100 truncate">AI Iskanje</h2>
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mb-3 sm:mb-4">
-                Študko AI ti predlaga najboljše inštruktorje zate.
-              </p>
+        <div className="bg-white/90 dark:bg-slate-800/90 rounded-lg sm:rounded-xl lg:rounded-2xl p-4 sm:p-5 lg:p-6 xl:p-8 border-2 border-primary/20 shadow-glow-primary mb-4 sm:mb-6 lg:mb-8 relative">
+          <div className="flex flex-col sm:flex-row sm:items-start gap-3 mb-4">
+            <div className="flex items-start gap-2 sm:gap-3 flex-1">
+              <Sparkles className="w-5 h-5 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-primary mt-0.5 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <h2 className="text-base sm:text-lg lg:text-xl font-bold mb-1 text-slate-800 dark:text-slate-100">AI Iskanje</h2>
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 hidden sm:block">
+                  Študko AI ti predlaga najboljše inštruktorje zate.
+                </p>
+              </div>
             </div>
-            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shadow-md ${
+            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold shadow-md self-start ${
               hasProAccess 
                 ? 'bg-gradient-to-r from-purple-600 to-yellow-500 text-white' 
                 : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
@@ -341,37 +343,37 @@ ${JSON.stringify(allTutors?.map((t: PublicTutor) => ({
             </span>
           </div>
           
-          <div className="space-y-3">
-            <div className="flex gap-3">
+          <div className="space-y-2 sm:space-y-3">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
               <Input
                 type="text"
-                placeholder={hasProAccess ? "Napiši, kakšnega inštruktorja iščeš… (npr. 'inštruktor za matematiko za maturo online')" : "🔒 AI iskanje je na voljo samo PRO uporabnikom"}
+                placeholder={hasProAccess ? (window.innerWidth < 640 ? "Kakšnega inštruktorja iščeš?" : "Napiši, kakšnega inštruktorja iščeš… (npr. 'inštruktor za matematiko za maturo online')") : "🔒 Samo za PRO uporabnike"}
                 value={aiSearchQuery}
                 onChange={(e) => setAiSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && hasProAccess && handleAiSearch()}
                 disabled={!hasProAccess}
-                className={`h-14 text-lg rounded-xl border-2 border-primary/30 focus:border-primary bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 ${!hasProAccess ? 'opacity-60 cursor-not-allowed' : ''}`}
+                className={`h-12 sm:h-14 text-base sm:text-lg rounded-lg sm:rounded-xl border-2 border-primary/30 focus:border-primary bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 ${!hasProAccess ? 'opacity-60 cursor-not-allowed' : ''}`}
               />
               <Button 
                 onClick={hasProAccess ? handleAiSearch : () => navigate('/ai')}
                 variant="hero" 
                 size="lg" 
-                className="h-14 px-8 shadow-glow-primary whitespace-nowrap"
+                className="h-12 sm:h-14 px-6 sm:px-8 shadow-glow-primary w-full sm:w-auto whitespace-nowrap"
                 disabled={hasProAccess && (aiSearching || !aiSearchQuery.trim())}
               >
                 {!hasProAccess ? (
                   <>
-                    <Sparkles className="w-5 h-5 mr-2" />
+                    <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                     Nadgradi
                   </>
                 ) : aiSearching ? (
                   <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 mr-2" animate-spin" />
                     Iščem...
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-5 h-5 mr-2" />
+                    <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                     AI iskanje
                   </>
                 )}
