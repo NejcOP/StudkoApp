@@ -1020,18 +1020,20 @@ const Profile = () => {
       if (!profile?.is_pro && profile?.subscription_status === "none") {
         return { text: "Brezplačen", color: "text-muted-foreground" };
       }
-      if (profile?.cancel_at_period_end && profile?.trial_ends_at) {
-        return { 
-          text: `Študko PRO (preklicano) – dostop do ${formatDate(profile.trial_ends_at)}`, 
-          color: "text-orange-600 dark:text-orange-400" 
-        };
-      }
+      // Najprej preveri če je naročnina aktivna ali v preizkusu
       if (profile?.subscription_status === "trialing" && profile?.trial_ends_at) {
         const daysLeft = Math.ceil((new Date(profile.trial_ends_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
         return { text: `Študko PRO (preizkus) – še ${daysLeft} dni`, color: "text-purple-600 dark:text-purple-400" };
       }
       if (profile?.subscription_status === "active" || profile?.is_pro) {
         return { text: "Študko PRO (aktiven)", color: "text-green-600 dark:text-green-400" };
+      }
+      // Če naročnina ni več aktivna, ampak je preklicana
+      if (profile?.cancel_at_period_end && (profile?.current_period_end || profile?.trial_ends_at)) {
+        return { 
+          text: `Študko PRO (preklicano) – dostop do ${formatDate(profile.current_period_end || profile.trial_ends_at)}`, 
+          color: "text-orange-600 dark:text-orange-400" 
+        };
       }
       return { text: "Brezplačen", color: "text-muted-foreground" };
     };
