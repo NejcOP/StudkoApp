@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -7,10 +7,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import AISearchBanner from "@/components/ui/AISearchBanner";
+import { Input } from "@/components/ui/input";
 import { useProAccess } from "@/hooks/useProAccess";
 import { useToast } from "@/hooks/use-toast";
-import { Star, MapPin, Video, GraduationCap } from "lucide-react";
+import { Star, MapPin, Video, GraduationCap, Sparkles, Loader2 } from "lucide-react";
+import { toast as sonnerToast } from "sonner";
 
 interface PublicTutor {
   id: string;
@@ -28,6 +29,7 @@ interface PublicTutor {
 }
 
 export default function Tutors() {
+  const navigate = useNavigate();
   const { hasProAccess } = useProAccess();
   const { toast } = useToast();
   const [tutors, setTutors] = useState<PublicTutor[]>(() => {
@@ -53,6 +55,8 @@ export default function Tutors() {
   const [selectedPrice, setSelectedPrice] = useState<string>("all");
   const [selectedRating, setSelectedRating] = useState<string>("all");
   const [aiSearchResults, setAiSearchResults] = useState<PublicTutor[] | null>(null);
+  const [aiSearchQuery, setAiSearchQuery] = useState("");
+  const [aiSearching, setAiSearching] = useState(false);
 
   // Handler for AI search results
   const handleAISearchResults = (results: PublicTutor[]) => {
@@ -68,6 +72,104 @@ export default function Tutors() {
   // Handler to clear AI search
   const clearAISearch = () => {
     setAiSearchResults(null);
+    setAiSearchQuery("");
+  };
+
+  // AI Search handler
+  const handleAiSearch = async () => {
+    if (!aiSearchQuery.trim() || !hasProAccess) return;
+
+    setAiSearching(true);
+    try {
+      const { data: allTutors, error: tutorsError } = await supabase
+        .rpc('get_public_tutors');
+
+      if (tutorsError) {
+        console.error('Error fetching tutors:', tutorsError);
+        sonnerToast.error('Napaka pri iskanju inštruktorjev');
+        return;
+      }
+
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'system',
+              content: `You are an AI assistant that helps match students with the best tutors based on their needs. Analyze the user's query and the available tutors, then return a relevance score (0-100) for each tutor. Consider:
+- Subject match (if mentioned)
+- Experience level and teaching style
+- Mode of instruction (online/in-person)
+- Price range expectations
+- School level (osnovna šola, gimnazija, fakulteta)
+- Bio and teaching approach
+
+Return ONLY a valid JSON array of objects with tutor_id and score fields, like: [{"tutor_id": "uuid", "score": 85}, ...]`
+            },
+            {
+              role: 'user',
+              content: `User query: "${aiSearchQuery}"
+
+Available tutors:
+${JSON.stringify(allTutors?.map((t: PublicTutor) => ({
+  id: t.id,
+  subjects: t.subjects,
+  bio: t.bio,
+  experience: t.experience,
+  mode: t.mode,
+  price_per_hour: t.price_per_hour,
+  school_type: t.school_type,
+})) || [], null, 2)}`
+            }
+          ],
+          temperature: 0.3,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('AI search failed');
+      }
+
+      const data = await response.json();
+      const scoresText = data.choices[0].message.content.trim();
+      
+      // Parse the scores
+      let scores: Array<{ tutor_id: string; score: number }> = [];
+      try {
+        scores = JSON.parse(scoresText);
+      } catch (e) {
+        console.error('Failed to parse AI response:', scoresText);
+        sonnerToast.error('Napaka pri obdelavi AI odgovora');
+        return;
+      }
+
+      // Filter and sort tutors by AI scores
+      const scoredTutors = (allTutors as PublicTutor[])
+        .map(tutor => {
+          const scoreObj = scores.find(s => s.tutor_id === tutor.id);
+          return { ...tutor, aiScore: scoreObj?.score || 0 };
+        })
+        .filter(tutor => tutor.aiScore >= 40)
+        .sort((a, b) => b.aiScore - a.aiScore);
+
+      handleAISearchResults(scoredTutors);
+      
+      if (scoredTutors.length === 0) {
+        sonnerToast.info('Ni najdenih ustreznih inštruktorjev za tvojo poizvedbo');
+      } else {
+        sonnerToast.success(`Najdenih ${scoredTutors.length} ustreznih inštruktorjev`);
+      }
+    } catch (error) {
+      console.error('AI search error:', error);
+      sonnerToast.error('Napaka pri AI iskanju');
+    } finally {
+      setAiSearching(false);
+    }
   };
 
   // Fetch tutors using secure RPC function (excludes PII)
@@ -190,35 +292,98 @@ export default function Tutors() {
       </div>
 
       <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-8 lg:py-12 relative">
-        {/* AI Search Banner */}
-        <div className="mb-8">
-          <AISearchBanner
-            isPro={hasProAccess}
-            onSearchResults={handleAISearchResults}
-            onUpgradeClick={() =>
-              toast({
-                title: "PRO funkcija",
-                description: "AI iskanje je na voljo samo PRO uporabnikom.",
-                variant: "destructive",
-              })
-            }
-          />
-          {aiSearchResults && (
-            <div className="mt-4 flex items-center gap-2">
-              <Badge variant="secondary" className="text-sm">
-                AI rezultati: {aiSearchResults.length} inštruktorjev
-              </Badge>
+        {/* AI Search Bar - PRO Feature */}
+        <div className="bg-white/90 dark:bg-slate-800/90 rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-6 xl:p-8 border-2 border-primary/20 shadow-glow-primary mb-4 sm:mb-6 lg:mb-8 relative">
+          <div className="flex items-start gap-2 sm:gap-3 mb-3">
+            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-primary mt-1 flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <h2 className="text-base sm:text-lg lg:text-xl font-bold mb-1 text-slate-800 dark:text-slate-100 truncate">AI Iskanje</h2>
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mb-3 sm:mb-4">
+                Študko AI ti predlaga najboljše inštruktorje zate.
+              </p>
+            </div>
+            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shadow-md ${
+              hasProAccess 
+                ? 'bg-gradient-to-r from-purple-600 to-yellow-500 text-white' 
+                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+            }`}>
+              {hasProAccess ? 'PRO' : '🔒 PRO'}
+            </span>
+          </div>
+          
+          <div className="space-y-3">
+            <div className="flex gap-3">
+              <Input
+                type="text"
+                placeholder={hasProAccess ? "Napiši, kakšnega inštruktorja iščeš… (npr. 'inštruktor za matematiko za maturo online')" : "🔒 AI iskanje je na voljo samo PRO uporabnikom"}
+                value={aiSearchQuery}
+                onChange={(e) => setAiSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && hasProAccess && handleAiSearch()}
+                disabled={!hasProAccess}
+                className={`h-14 text-lg rounded-xl border-2 border-primary/30 focus:border-primary bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 ${!hasProAccess ? 'opacity-60 cursor-not-allowed' : ''}`}
+              />
               <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={clearAISearch}
-                className="text-xs"
+                onClick={hasProAccess ? handleAiSearch : () => navigate('/ai')}
+                variant="hero" 
+                size="lg" 
+                className="h-14 px-8 shadow-glow-primary whitespace-nowrap"
+                disabled={hasProAccess && (aiSearching || !aiSearchQuery.trim())}
               >
-                Počisti AI iskanje
+                {!hasProAccess ? (
+                  <>
+                    <Sparkles className="w-5 h-5 mr-2" />
+                    Nadgradi
+                  </>
+                ) : aiSearching ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Iščem...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-5 h-5 mr-2" />
+                    AI iskanje
+                  </>
+                )}
               </Button>
+            </div>
+            {hasProAccess && aiSearchResults && aiSearchResults.length > 0 && (
+              <div className="flex justify-center">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearAISearch}
+                  className="text-xs"
+                >
+                  Počisti AI iskanje • Prikazanih {aiSearchResults.length} rezultatov
+                </Button>
+              </div>
+            )}
+          </div>
+          
+          {/* Overlay for non-PRO users */}
+          {!hasProAccess && (
+            <div className="absolute inset-0 bg-gradient-to-br from-slate-900/80 to-slate-950/80 backdrop-blur-sm rounded-xl sm:rounded-2xl flex items-center justify-center">
+              <div className="text-center p-6">
+                <Sparkles className="w-12 h-12 text-primary mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-white mb-2">Nadgradi na PRO</h3>
+                <p className="text-slate-300 mb-4">
+                  AI iskanje je na voljo samo PRO uporabnikom
+                </p>
+                <Button 
+                  onClick={() => navigate('/ai')}
+                  variant="hero"
+                  size="lg"
+                  className="shadow-glow-primary"
+                >
+                  <Sparkles className="w-5 h-5 mr-2" />
+                  Nadgradi
+                </Button>
+              </div>
             </div>
           )}
         </div>
+
         {/* Background decoration */}
         <div className="absolute top-20 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl -z-10" />
         <div className="absolute bottom-20 left-0 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl -z-10" />
