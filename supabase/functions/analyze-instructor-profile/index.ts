@@ -133,8 +133,10 @@ Dolžina: 300-400 besed. Piši v slovenščini.`;
               content: prompt
             }
           ],
-          temperature: 0.7,
-          max_tokens: 1500,
+          temperature: 0.75, // Slightly higher for creative suggestions
+          max_tokens: 2000, // More tokens for comprehensive analysis
+          top_p: 0.92,
+          presence_penalty: 0.3, // Encourage diverse suggestions
         }),
       }
     );

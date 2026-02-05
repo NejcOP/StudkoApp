@@ -47,19 +47,60 @@ serve(async (req) => {
     logStep("Request validated", { subject, titleLength: title.length, textLength: text.length });
 
     // Use OpenAI API
-    const systemPrompt = `You are an expert educational flashcard creator. Generate 10-15 high-quality flashcards from study materials.
+    const systemPrompt = `You are an EXPERT educational flashcard creator with deep knowledge of cognitive science and effective learning techniques.
 
-RULES:
-- Generate exactly 10-15 flashcards
-- Questions must be clear, specific, and in Slovenian
-- Answers must be concise (2-4 sentences) and in Slovenian
-- Use Markdown: **bold** for key terms, lists for multiple points
-- Adapt to subject: ${subject || "General"}
+CORE PRINCIPLES:
+✓ Apply spaced repetition principles
+✓ Follow evidence-based learning science
+✓ Use active recall techniques
+✓ Implement elaborative interrogation
+✓ Apply cognitive load theory
 
-IMPORTANT: Return ONLY valid JSON in this EXACT format:
-{"flashcards": [{"question": "Question text?", "answer": "Answer text with **bold** for key terms."}]}
+FLASHCARD QUALITY STANDARDS:
 
-Do NOT include any text before or after the JSON. Do NOT include markdown code blocks.`;
+1. QUESTION DESIGN:
+   - ONE concept per card (atomic principle)
+   - Clear, specific, unambiguous wording
+   - Test understanding, not just memorization
+   - Use "why", "how", and "explain" for deeper learning
+   - Vary question types: definition, application, comparison, cause-effect
+
+2. ANSWER DESIGN:
+   - Concise but complete (2-4 sentences ideal)
+   - Start with CORE answer, then add context
+   - Use **bold** for KEY TERMS
+   - Include mnemonics when helpful
+   - Add "why this matters" when relevant
+
+3. DIFFICULTY PROGRESSION:
+   - Start with fundamental concepts (cards 1-4)
+   - Middle cards: connections and applications (cards 5-8)
+   - Advanced cards: synthesis and evaluation (cards 9-12)
+   - Include 1-2 challenge cards
+
+4. CONTENT COVERAGE:
+   - Cover main ideas (40%)
+   - Important details (30%)
+   - Applications and examples (20%)
+   - Connections to other concepts (10%)
+
+5. SLOVENIAN LANGUAGE REQUIREMENTS:
+   - Use clear, academic Slovenian
+   - Avoid anglicisms unless necessary
+   - Use proper terminology for the subject
+   - Natural phrasing that sounds native
+
+SUBJECT-SPECIFIC ADAPTATIONS:
+• Mathematics: Include step-by-step problem types
+• Science: Focus on concepts before formulas
+• History: Use timeline and cause-effect questions
+• Languages: Include context and usage examples
+• Literature: Ask for interpretation and analysis
+
+RETURN FORMAT:
+{"flashcards": [{"question": "Clear question?", "answer": "Concise answer with **key terms** in bold."}]}
+
+IMPORTANT: Generate EXACTLY 12 high-quality flashcards. Return ONLY valid JSON without markdown code blocks.`;
 
     const openaiUrl = 'https://api.openai.com/v1/chat/completions';
     
@@ -67,11 +108,13 @@ Do NOT include any text before or after the JSON. Do NOT include markdown code b
       model: "gpt-4o-mini",
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: `Subject: ${subject || "General"}\nTitle: ${title}\n\nCreate flashcards from:\n\n${text}` }
+        { role: "user", content: `Subject: ${subject || "General"}\nTitle: ${title}\n\nGenerate 12 high-quality flashcards that progressively build understanding from basic to advanced concepts. Cover key ideas, details, applications, and connections.\n\nSource material:\n\n${text.substring(0, 12000)}` }
       ],
-      temperature: 0.7,
-      max_tokens: 2048,
-      response_format: { type: "json_object" }
+      temperature: 0.8, // Higher creativity for varied questions
+      max_tokens: 3000, // More tokens for 12 cards
+      response_format: { type: "json_object" },
+      top_p: 0.9,
+      frequency_penalty: 0.4, // Reduce repetitive phrasing
     };
 
     logStep("Calling OpenAI API");

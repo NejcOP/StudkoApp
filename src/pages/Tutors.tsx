@@ -101,19 +101,42 @@ export default function Tutors() {
           messages: [
             {
               role: 'system',
-              content: `You are an AI assistant that helps match students with the best tutors based on their needs. Analyze the user's query and the available tutors, then return a relevance score (0-100) for each tutor. Consider:
-- Subject match (if mentioned)
-- Experience level and teaching style
-- Mode of instruction (online/in-person)
-- Price range expectations
-- School level (osnovna šola, gimnazija, fakulteta)
-- Bio and teaching approach
+              content: `You are an AI tutor matching assistant that helps students find the BEST tutors for their specific needs.
 
-Return ONLY a valid JSON array of objects with tutor_id and score fields, like: [{"tutor_id": "uuid", "score": 85}, ...]`
+MATCHING CRITERIA (in order of importance):
+1. SUBJECT EXPERTISE (40%) - Does tutor teach what student needs?
+2. EXPERIENCE & QUALITY (25%) - Teaching experience, student success rate
+3. TEACHING STYLE FIT (20%) - Does tutor's approach match student's needs?
+4. PRACTICAL FACTORS (15%) - Location, price, availability, mode (online/in-person)
+
+SCORING GUIDELINES:
+90-100: PERFECT MATCH - All criteria met exceptionally
+75-89: EXCELLENT MATCH - Strong fit across most criteria
+60-74: GOOD MATCH - Meets main requirements with minor gaps
+40-59: MODERATE MATCH - Some alignment but significant gaps
+0-39: POOR MATCH - Minimal alignment with student needs
+
+ANALYSIS APPROACH:
+✓ Parse student query for: subject, level, learning goals, preferences, constraints
+✓ Evaluate each tutor against parsed requirements
+✓ Consider implicit needs (e.g., "matura prep" = advanced level + exam techniques)
+✓ Account for student level (osnovna šola, gimnazija, fakulteta)
+✓ Weight experience and teaching approach heavily
+✓ Don't over-penalize price unless student mentions budget
+✓ Favor tutors with detailed, thoughtful bios
+
+SPECIAL CONSIDERATIONS:
+• "Začetnik" queries: Favor patient, foundational approach tutors
+• "Matura/izpit" queries: Prioritize exam-prep experience
+• "Hitra pomoč" queries: Consider availability and responsiveness
+• Online preference: Only show online-capable tutors
+• Multiple subjects: Tutors teaching multiple relevant subjects score higher
+
+Return ONLY valid JSON array: [{"tutor_id": "uuid", "score": 85, "reason": "Short explanation why"}]`
             },
             {
               role: 'user',
-              content: `User query: "${aiSearchQuery}"
+              content: `Student query: "${aiSearchQuery}"
 
 Available tutors:
 ${JSON.stringify(allTutors?.map((t: PublicTutor) => ({
@@ -124,10 +147,14 @@ ${JSON.stringify(allTutors?.map((t: PublicTutor) => ({
   mode: t.mode,
   price_per_hour: t.price_per_hour,
   school_type: t.school_type,
+  rating: t.average_rating,
+  total_bookings: t.total_bookings,
 })) || [], null, 2)}`
             }
           ],
-          temperature: 0.3,
+          temperature: 0.4, // Lower for consistent scoring
+          max_tokens: 2000,
+          top_p: 0.9,
         }),
       });
 
@@ -139,30 +166,33 @@ ${JSON.stringify(allTutors?.map((t: PublicTutor) => ({
       const scoresText = data.choices[0].message.content.trim();
       
       // Parse the scores
-      let scores: Array<{ tutor_id: string; score: number }> = [];
+      let scores: Array<{ tutor_id: string; score: number; reason?: string }> = [];
       try {
-        scores = JSON.parse(scoresText);
+        // Try to extract JSON if wrapped in markdown
+        const jsonMatch = scoresText.match(/\[[\s\S]*\]/);
+        const jsonText = jsonMatch ? jsonMatch[0] : scoresText;
+        scores = JSON.parse(jsonText);
       } catch (e) {
         console.error('Failed to parse AI response:', scoresText);
         sonnerToast.error('Napaka pri obdelavi AI odgovora');
         return;
       }
 
-      // Filter and sort tutors by AI scores
+      // Filter and sort tutors by AI scores (threshold: 45 for quality)
       const scoredTutors = (allTutors as PublicTutor[])
         .map(tutor => {
           const scoreObj = scores.find(s => s.tutor_id === tutor.id);
-          return { ...tutor, aiScore: scoreObj?.score || 0 };
+          return { ...tutor, aiScore: scoreObj?.score || 0, aiReason: scoreObj?.reason };
         })
-        .filter(tutor => tutor.aiScore >= 40)
+        .filter(tutor => tutor.aiScore >= 45)
         .sort((a, b) => b.aiScore - a.aiScore);
 
       handleAISearchResults(scoredTutors);
       
       if (scoredTutors.length === 0) {
-        sonnerToast.info('Ni najdenih ustreznih inštruktorjev za tvojo poizvedbo');
+        sonnerToast.info('Ni najdenih ustreznih inštruktorjev za tvojo poizvedbo. Poskusi bolj splošno iskanje.');
       } else {
-        sonnerToast.success(`Najdenih ${scoredTutors.length} ustreznih inštruktorjev`);
+        sonnerToast.success(`Najdenih ${scoredTutors.length} primernih inštruktorjev`);
       }
     } catch (error) {
       console.error('AI search error:', error);

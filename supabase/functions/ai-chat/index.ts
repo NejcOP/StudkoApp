@@ -328,8 +328,11 @@ POMEMBNO: Odgovori morajo biti TEMELJITI in PODROBNI. Ne skopari z razlago. Štu
     const openaiRequestBody = {
       model: "gpt-4o-mini",
       messages: messagesWithSystem,
-      temperature: 0.7,
+      temperature: 0.8, // Slightly higher for more creative and natural explanations
       max_tokens: 4096, // Increased for longer, detailed responses
+      top_p: 0.95, // Nucleus sampling for better quality and coherence
+      frequency_penalty: 0.3, // Reduce repetitive phrases
+      presence_penalty: 0.2, // Encourage exploration of related topics
     };
     
     console.log('===========================================');

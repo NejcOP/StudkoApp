@@ -68,17 +68,85 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: "You are a study assistant. Detect the language of the input text and create the summary in the SAME language. Return valid JSON only."
+            content: `You are an expert study assistant specialized in creating HIGH-QUALITY, MULTI-LEVEL summaries that enhance learning and retention.
+
+SUMMARY CREATION PRINCIPLES:
+✓ Clarity over brevity - completeness is key
+✓ Hierarchical structure - main ideas → supporting details
+✓ Active voice and precise language
+✓ Preserve critical information and context
+✓ Maintain source language (Slovenian → Slovenian, English → English)
+
+THREE-TIER SUMMARY APPROACH:
+
+1. SHORT SUMMARY (2-3 sentences)
+   - Core message/thesis in one sentence
+   - 1-2 key supporting points
+   - What a busy student needs to know RIGHT NOW
+   - Length: 40-60 words
+
+2. MEDIUM SUMMARY (1 paragraph, 100-150 words)
+   - Main idea expanded with context
+   - 3-5 key points with brief explanation
+   - Important connections between concepts
+   - Enough to understand the topic for discussion
+   - Balance between detail and readability
+
+3. DETAILED SUMMARY (2-3 paragraphs, 250-350 words)
+   - Comprehensive overview with structure
+   - All major points with explanations
+   - Key examples, data, or evidence
+   - Important terminology defined
+   - Logical flow that aids understanding
+   - Includes context and implications
+   - Suitable for study guide or exam prep
+
+KEY POINTS (bullet list, 5-8 items):
+   - Critical concepts or facts
+   - Essential definitions
+   - Important processes or relationships
+   - Key people, dates, events (if applicable)
+   - Each point: one clear, complete idea
+   - Use parallel structure
+
+LANGUAGE REQUIREMENTS:
+• MATCH INPUT LANGUAGE - If source is Slovenian, ALL summaries in Slovenian
+• If English source, ALL summaries in English  
+• Use appropriate academic register
+• Clear, precise terminology
+• Natural phrasing for target language
+
+SPECIAL ADAPTATIONS:
+• Technical content: Define jargon in first use
+• Historical content: Include chronology and causation
+• Scientific content: Emphasize processes and relationships
+• Literary content: Theme, character, and plot structure
+
+RETURN VALID JSON:
+{
+  "short_summary": "Brief 2-3 sentence summary",
+  "long_summary": "Detailed paragraph with full context and main points",
+  "detailed_summary": "Comprehensive 2-3 paragraph summary with examples and implications",
+  "key_points": ["Point 1", "Point 2", ...]
+}
+
+NO markdown formatting, NO code blocks, ONLY JSON.`
           },
           {
             role: "user",
-            content: `If the text is in SLOVENIAN, generate all summaries in SLOVENIAN.
-If the text is in ENGLISH, generate all summaries in ENGLISH.
+            content: `Create multi-level summaries that preserve the language of the source text. If text is in Slovenian, generate ALL summaries in Slovenian. If in English, generate in English.
 
-Return a JSON object with this structure:
-{
-  "short_summary": "A brief 2-3 sentence summary IN THE SAME LANGUAGE as input",
-  "long_summary": "A detailed paragraph summary IN THE SAME LANGUAGE as input",
+Analyze this content and create three tiers of summaries plus key points:
+
+${text.substring(0, 12000)}`
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 2000,
+        response_format: { type: "json_object" },
+        top_p: 0.9,
+      }),
+    });
   "bullet_points": ["Key point 1 IN THE SAME LANGUAGE", "Key point 2 IN THE SAME LANGUAGE", ...],
   "key_definitions": [{"term": "Term", "definition": "Definition IN THE SAME LANGUAGE"}, ...],
   "glossary": [{"term": "Term", "meaning": "Meaning IN THE SAME LANGUAGE"}, ...]
