@@ -17,7 +17,7 @@ const Footer = () => {
             </Link>
             <p className="text-muted-foreground max-w-md">
               Tvoja nova alternativa za zapiske, AI pomoč in učenje. 
-              Enostavno, hitro in prilagojeno študentom.
+              Enostavno, hitro in prilagojeno študentom in dijakom.
             </p>
           </div>
 
