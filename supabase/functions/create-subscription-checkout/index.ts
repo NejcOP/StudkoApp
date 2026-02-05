@@ -43,16 +43,31 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get user email
+    // Get user profile and check trial status from database (authoritative source)
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('full_name')
+      .select('full_name, trial_used, trial_ends_at')
       .eq('id', userId)
       .single();
 
     if (profileError) {
       console.error('Profile fetch error:', profileError);
     }
+
+    // Double-check trial status from database - this is the authoritative check
+    // to prevent users from bypassing trial restrictions
+    const hasUsedTrialDb = profile?.trial_used || 
+      (profile?.trial_ends_at && new Date(profile.trial_ends_at) < new Date());
+    
+    // Use the database value as the source of truth, not the frontend value
+    const actualTrialUsed = hasUsedTrialDb || trialUsed;
+    
+    console.log('Trial status check:', { 
+      trialUsedFromClient: trialUsed, 
+      trialUsedFromDb: profile?.trial_used,
+      trialEndsAt: profile?.trial_ends_at,
+      finalTrialUsed: actualTrialUsed 
+    });
 
     const { data: { user }, error: userError } = await supabase.auth.admin.getUserById(userId);
 
@@ -89,17 +104,20 @@ serve(async (req) => {
       client_reference_id: userId,
       metadata: {
         user_id: userId,
-        trial_used: trialUsed ? 'true' : 'false',
+        trial_used: actualTrialUsed ? 'true' : 'false',
       },
       success_url: `${req.headers.get('origin')}/profile?pro=activated&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.get('origin')}/profile?tab=subscription`,
     };
 
-    // Add trial only if not used
-    if (!trialUsed) {
+    // Add trial only if not used (based on database check)
+    if (!actualTrialUsed) {
       sessionConfig.subscription_data = {
         trial_period_days: 7,
       };
+      console.log('Adding 7-day trial to subscription');
+    } else {
+      console.log('Trial already used, no trial period added');
     }
 
     console.log('Session config:', JSON.stringify(sessionConfig, null, 2));

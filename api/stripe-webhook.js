@@ -141,9 +141,17 @@ export default async function handler(req, res) {
           stripe_customer_id: session.customer
         };
         
-        if (!trialUsed && subscription.status === 'trialing') {
+        // Always set trial_used to true if user is starting a trial
+        // This ensures that even if they cancel and re-subscribe, they won't get another trial
+        if (subscription.status === 'trialing') {
           updateData.trial_used = true;
           updateData.trial_ends_at = trialEndsAt;
+          console.log('Setting trial_used to true for user starting trial');
+        }
+        
+        // If they already used trial before, keep it marked as used
+        if (trialUsed) {
+          updateData.trial_used = true;
         }
 
         const { data, error } = await supabase
