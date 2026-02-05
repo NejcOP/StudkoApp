@@ -197,7 +197,7 @@ export function welcomeToProTemplate(userName: string): string {
     </div>
 
     <div style="text-align: center; margin: 30px 0;">
-      <a href="https://studko.si/dashboard" class="button">Začni Uporabljati PRO</a>
+      <a href="https://studko.si/ai" class="button">Začni Uporabljati AI Asistenta</a>
     </div>
 
     <div class="divider"></div>

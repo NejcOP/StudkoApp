@@ -165,6 +165,9 @@ serve(async (req) => {
               </ul>
               <p><strong>Preizkus poteče:</strong> ${trialEndsAt ? new Date(trialEndsAt).toLocaleDateString('sl-SI', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Neznano'}</p>
               <p>Če preizkus prekličete pred koncem, vam ne bomo zaračunali ničesar.</p>
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="https://studko.si/ai" style="display: inline-block; padding: 12px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">Začni Uporabljati AI Asistenta</a>
+              </div>
               <p>Srečno pri učenju! 🚀</p>
               <p>Ekipa Študko</p>
             `
@@ -180,7 +183,9 @@ serve(async (req) => {
                 <li>🎯 Prednostna podpora</li>
                 <li>💾 Večji shranjevalni prostor</li>
               </ul>
-              <p>Prijavite se na <a href="https://studko.si">studko.si</a> in začnite uporabljati PRO funkcije!</p>
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="https://studko.si/ai" style="display: inline-block; padding: 12px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">Začni Uporabljati AI Asistenta</a>
+              </div>
               <p>Srečno pri učenju! 🚀</p>
               <p>Ekipa Študko</p>
             `;
