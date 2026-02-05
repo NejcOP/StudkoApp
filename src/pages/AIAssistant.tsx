@@ -881,6 +881,8 @@ const AIAssistant = () => {
     const lastAiMessage = [...conversation].reverse().find(m => m.role === "assistant");
     if (!lastAiMessage) return;
 
+    // Add empty assistant message immediately to trigger typing indicator
+    setConversation(prev => [...prev, { role: "assistant", content: "" }]);
     setIsLoading(true);
 
     try {
@@ -889,6 +891,8 @@ const AIAssistant = () => {
       
       if (sessionError || !currentSession) {
         toast.error('Seja je potekla. Prosimo prijavite se ponovno.');
+        // Remove empty message on error
+        setConversation(prev => prev.slice(0, -1));
         setIsLoading(false);
         return;
       }
@@ -898,6 +902,8 @@ const AIAssistant = () => {
       if (!accessToken) {
         toast.error('Seja je potekla. Osvežujem...');
         await supabase.auth.refreshSession();
+        // Remove empty message on error
+        setConversation(prev => prev.slice(0, -1));
         setIsLoading(false);
         return;
       }
@@ -908,6 +914,8 @@ const AIAssistant = () => {
       if (!supabaseUrl || !supabaseKey) {
         console.error('Supabase configuration missing!');
         toast.error('Napaka konfiguracije - manjkajoči podatki');
+        // Remove empty message on error
+        setConversation(prev => prev.slice(0, -1));
         setIsLoading(false);
         return;
       }
@@ -923,7 +931,7 @@ const AIAssistant = () => {
           "apikey": supabaseKey,
         },
         body: JSON.stringify({
-          messages: conversation,
+          messages: conversation.slice(0, -1), // Don't include the empty message we just added
           quickAction: action,
           lastResponse: lastAiMessage.content,
         }),
@@ -935,11 +943,15 @@ const AIAssistant = () => {
         if (response.status === 404) {
           console.error('AI API 404 Error - Function not found:', functionUrl);
           toast.error('AI funkcija ni na voljo. Preverite namestitev.');
+          // Remove empty message on error
+          setConversation(prev => prev.slice(0, -1));
           setIsLoading(false);
           return;
         }
         if (response.status === 401) {
           toast.error('Avtentikacija ni uspela. Prosimo prijavite se ponovno.');
+          // Remove empty message on error
+          setConversation(prev => prev.slice(0, -1));
           setIsLoading(false);
           return;
         }
@@ -950,8 +962,7 @@ const AIAssistant = () => {
       const decoder = new TextDecoder();
       let aiResponse = "";
 
-      setConversation(prev => [...prev, { role: "assistant", content: "" }]);
-
+      // Stream already has empty message, just update it
       while (reader) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -984,6 +995,8 @@ const AIAssistant = () => {
       }
     } catch (error) {
       toast.error("Napaka pri komunikaciji z AI.");
+      // Remove empty message on error
+      setConversation(prev => prev.slice(0, -1));
     } finally {
       setIsLoading(false);
     }
@@ -1506,20 +1519,27 @@ const AIAssistant = () => {
                             </div>
                           ) : (
                             <>
-                              {conversation.map((message, index) => (
-                                <ChatMessage 
-                                  key={`${index}-${message.role}-${message.content.length}`}
-                                  role={message.role} 
-                                  content={message.content}
-                                  attachment={message.attachment}
-                                  isStreaming={
-                                    message.role === "assistant" && 
-                                    index === conversation.length - 1 && 
-                                    isLoading
-                                  }
-                                />
-                              ))}
-                              {isLoading && conversation.length > 0 && conversation[conversation.length - 1].role === "user" && <TypingIndicator />}
+                              {conversation.map((message, index) => {
+                                // Don't render empty assistant messages - show TypingIndicator instead
+                                if (message.role === "assistant" && message.content === "" && isLoading && index === conversation.length - 1) {
+                                  return null;
+                                }
+                                
+                                return (
+                                  <ChatMessage 
+                                    key={`${index}-${message.role}-${message.content.length}`}
+                                    role={message.role} 
+                                    content={message.content}
+                                    attachment={message.attachment}
+                                    isStreaming={
+                                      message.role === "assistant" && 
+                                      index === conversation.length - 1 && 
+                                      isLoading
+                                    }
+                                  />
+                                );
+                              })}
+                              {isLoading && conversation.length > 0 && conversation[conversation.length - 1].role === "assistant" && conversation[conversation.length - 1].content === "" && <TypingIndicator />}
                               <div ref={chatEndRef} />
                             </>
                           )}
