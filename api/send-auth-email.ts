@@ -101,7 +101,7 @@ export default async function handler(
       to: body.email,
       subject,
       html: emailHtml,
-      from: 'Študko <info@studko.si>',
+      from: 'Študko <noreply@studko.si>',
     });
 
     if (!result.success) {

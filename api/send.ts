@@ -124,7 +124,7 @@ export default async function handler(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'Študko <info@studko.si>',
+        from: 'Študko <noreply@studko.si>',
         to: body.to,
         subject: subject,
         html: emailHtml,

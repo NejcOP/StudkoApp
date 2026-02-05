@@ -94,7 +94,7 @@ export default withAuth(async (req, res, user) => {
       to: userEmail,
       subject: 'Zahtevek za izplačilo prejet - Študko',
       html: emailHtml,
-      from: 'Študko <info@studko.si>',
+      from: 'Študko <noreply@studko.si>',
     });
 
     if (!userEmailResult.success) {
