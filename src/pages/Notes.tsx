@@ -95,15 +95,42 @@ const Notes = () => {
   const [subjectsList, setSubjectsList] = useState<string[]>([]);
   const [subjectsLoading, setSubjectsLoading] = useState(false);
   const [purchasedNoteIds, setPurchasedNoteIds] = useState<Set<string>>(new Set());
+  const [trialUsed, setTrialUsed] = useState(false);
+  const [checkingTrialStatus, setCheckingTrialStatus] = useState(true);
 
   useEffect(() => {
     // Load notes immediately on mount, don't wait for user
     fetchNotes();
     if (user) {
       fetchPurchasedNotes();
+      checkTrialStatus();
+    } else {
+      setCheckingTrialStatus(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
+
+  const checkTrialStatus = async () => {
+    if (!user?.id) {
+      setCheckingTrialStatus(false);
+      return;
+    }
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('trial_used, trial_ends_at')
+        .eq('id', user.id)
+        .single();
+      
+      const hasUsedTrial = data?.trial_used || 
+        (data?.trial_ends_at && new Date(data.trial_ends_at) < new Date());
+      setTrialUsed(hasUsedTrial || false);
+    } catch (error) {
+      console.error('Error checking trial status:', error);
+    } finally {
+      setCheckingTrialStatus(false);
+    }
+  };
 
   const fetchPurchasedNotes = async () => {
     if (!user) return;
@@ -525,9 +552,11 @@ const Notes = () => {
                   Več informacij
                 </Button>
               </div>
-              <p className="text-center mt-3 text-sm text-slate-600 dark:text-slate-400">
-                Samo 3,49 €/mesec • <span className="font-semibold text-purple-600 dark:text-purple-400">7 dni brezplačno</span>
-              </p>
+              {!checkingTrialStatus && (
+                <p className="text-center mt-3 text-sm text-slate-600 dark:text-slate-400">
+                  Samo 3,49 €/mesec{!trialUsed && " • "}{!trialUsed && <span className="font-semibold text-purple-600 dark:text-purple-400">7 dni brezplačno</span>}
+                </p>
+              )}
             </div>
           )}
         </div>

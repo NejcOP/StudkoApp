@@ -77,6 +77,8 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
   const [aiAnalysisLoading, setAiAnalysisLoading] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
   const [dailyTip, setDailyTip] = useState<string>("");
+  const [trialUsed, setTrialUsed] = useState(false);
+  const [checkingTrialStatus, setCheckingTrialStatus] = useState(true);
 
   useEffect(() => {
     const cached = getCachedBookings();
@@ -86,8 +88,31 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
     } else if (tutorId && user) {
       loadBookings();
     }
+    checkTrialStatus();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tutorId]);
+
+  const checkTrialStatus = async () => {
+    if (!user?.id) {
+      setCheckingTrialStatus(false);
+      return;
+    }
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('trial_used, trial_ends_at')
+        .eq('id', user.id)
+        .single();
+      
+      const hasUsedTrial = data?.trial_used || 
+        (data?.trial_ends_at && new Date(data.trial_ends_at) < new Date());
+      setTrialUsed(hasUsedTrial || false);
+    } catch (error) {
+      console.error('Error checking trial status:', error);
+    } finally {
+      setCheckingTrialStatus(false);
+    }
+  };
 
   useEffect(() => {
     if (hasProAccess) {
@@ -972,9 +997,11 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
                     <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                     Nadgradi na Študko PRO
                   </Button>
-                  <p className="mt-3 sm:mt-4 text-xs sm:text-sm text-muted-foreground">
-                    Samo 3,49 €/mesec • 7 dni brezplačno
-                  </p>
+                  {!checkingTrialStatus && (
+                    <p className="mt-3 sm:mt-4 text-xs sm:text-sm text-muted-foreground">
+                      Samo 3,49 €/mesec{!trialUsed && " • 7 dni brezplačno"}
+                    </p>
+                  )}
                 </CardContent>
               </Card>
             </div>

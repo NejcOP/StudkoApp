@@ -101,6 +101,8 @@ const AIAssistant = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [accessCheckError, setAccessCheckError] = useState(false);
   const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null);
+  const [trialUsed, setTrialUsed] = useState(false);
+  const [checkingTrialStatus, setCheckingTrialStatus] = useState(true);
   
   // Flashcard mode states
   const [flashcardText, setFlashcardText] = useState("");
@@ -368,14 +370,19 @@ const AIAssistant = () => {
       loadUserNotes();
       loadConversations();
       
-      // Load trial days left (only once, cached)
+      // Load trial days left and trial used status (only once, cached)
       const checkTrialDays = async () => {
         try {
           const { data } = await supabase
             .from('profiles')
-            .select('subscription_status, trial_ends_at')
+            .select('subscription_status, trial_ends_at, trial_used')
             .eq('id', user.id)
             .single();
+          
+          // Check if trial was used
+          const hasUsedTrial = data?.trial_used || 
+            (data?.trial_ends_at && new Date(data.trial_ends_at) < new Date());
+          setTrialUsed(hasUsedTrial || false);
           
           if (data?.subscription_status === 'trialing' && data.trial_ends_at) {
             const daysLeft = Math.ceil((new Date(data.trial_ends_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
@@ -383,6 +390,8 @@ const AIAssistant = () => {
           }
         } catch (err) {
           // Silently fail
+        } finally {
+          setCheckingTrialStatus(false);
         }
       };
       checkTrialDays();
@@ -1420,10 +1429,10 @@ const AIAssistant = () => {
                 size="lg" 
                 className="w-full shadow-glow-primary mb-3"
                 onClick={handleStartTrial}
-                disabled={isRedirecting}
+                disabled={isRedirecting || checkingTrialStatus}
               >
                 <Sparkles className="w-5 h-5 mr-2" />
-                {isRedirecting ? "Preusmerjanje..." : "Začni 7-dnevni brezplačni preizkus"}
+                {checkingTrialStatus ? "Preverjam..." : isRedirecting ? "Preusmerjanje..." : trialUsed ? "Postani član Študko PRO" : "Začni 7-dnevni brezplačni preizkus"}
                 {isRedirecting && (
                   <svg className="animate-spin ml-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -1431,6 +1440,11 @@ const AIAssistant = () => {
                   </svg>
                 )}
               </Button>
+              {!checkingTrialStatus && !trialUsed && (
+                <p className="text-xs text-muted-foreground text-center mb-3">
+                  Brezplačen preizkus 7 dni, nato 3,49 €/mesec
+                </p>
+              )}
               
               <button 
                 onClick={async () => {
