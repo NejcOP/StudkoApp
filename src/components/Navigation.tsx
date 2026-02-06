@@ -157,7 +157,7 @@ const Navigation = () => {
   
   // Removed Instructor Dashboard from nav - now inside Profile page
   const navLinks = [
-    { path: "/notes", label: "Zapiski", icon: BookOpen },
+    { path: "/notes", label: "Zapiskii", icon: BookOpen },
     { path: "/tutors", label: "Inštruktorji", icon: GraduationCap },
     { path: "/ai", label: "AI", icon: Brain },
     { path: "/profile", label: "Profil", icon: User },
