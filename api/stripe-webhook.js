@@ -5,12 +5,25 @@ import { welcomeToProTemplate, subscriptionCancelledTemplate } from './lib/email
 
 export const config = { api: { bodyParser: false } };
 
+// Validate required environment variables
+const requiredEnvVars = ['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'VITE_SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY'];
+for (const varName of requiredEnvVars) {
+  if (!process.env[varName]) {
+    console.error(`❌ CRITICAL: Missing required environment variable: ${varName}`);
+  }
+}
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-console.log('Povezujem se na Supabase URL:', process.env.VITE_SUPABASE_URL ? 'Najden' : 'NI NAJDEN');
 const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
+  
+  // Check env vars on each request (in case they change)
+  if (!process.env.STRIPE_WEBHOOK_SECRET) {
+    console.error('❌ STRIPE_WEBHOOK_SECRET not set!');
+    return res.status(500).json({ error: 'Server configuration error' });
+  }
 
   const chunks = [];
   for await (const chunk of req) { chunks.push(chunk); }

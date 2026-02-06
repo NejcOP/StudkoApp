@@ -59,8 +59,8 @@ serve(async (req) => {
     const hasUsedTrialDb = profile?.trial_used || 
       (profile?.trial_ends_at && new Date(profile.trial_ends_at) < new Date());
     
-    // Use the database value as the source of truth, not the frontend value
-    const actualTrialUsed = hasUsedTrialDb || trialUsed;
+    // SECURITY: Only trust database value, ignore frontend input to prevent trial bypass
+    const actualTrialUsed = hasUsedTrialDb;
     
     console.log('Trial status check:', { 
       trialUsedFromClient: trialUsed, 
