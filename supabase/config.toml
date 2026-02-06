@@ -9,13 +9,7 @@ verify_jwt = true
 [functions.create-portal-session]
 verify_jwt = true
 
-[functions.stripe-webhook]
-verify_jwt = false
-
 [functions.improve-notes]
-verify_jwt = true
-
-[functions.generate-flashcards]
 verify_jwt = true
 
 [functions.generate-notes]
@@ -24,17 +18,11 @@ verify_jwt = true
 [functions.cancel-subscription]
 verify_jwt = true
 
-[functions.complete-bookings]
-verify_jwt = true
-
 [functions.create-connect-account]
 verify_jwt = true
 
 [functions.create-tutoring-payment]
 verify_jwt = true
-
-[functions.stripe-tutoring-webhook]
-verify_jwt = false
 
 [functions.generate-quiz]
 verify_jwt = true
@@ -51,36 +39,11 @@ verify_jwt = true
 [functions.ai-chat]
 verify_jwt = true
 
-[functions.create-note-checkout]
-verify_jwt = true
-
-[functions.note-purchase-webhook]
-verify_jwt = false
-
-[functions.get-signed-url]
-verify_jwt = true
-
 [functions.stripe-connect-onboarding]
 enabled = true
 verify_jwt = true
 import_map = "./functions/stripe-connect-onboarding/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
 entrypoint = "./functions/stripe-connect-onboarding/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/stripe-connect-onboarding/*.html" ]
-
-[functions.create-portal-link]
-enabled = true
-verify_jwt = true
-import_map = "./functions/create-portal-link/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
-entrypoint = "./functions/create-portal-link/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/create-portal-link/*.html" ]
 
 [functions.send-auth-email]
 enabled = true
@@ -88,10 +51,27 @@ verify_jwt = false
 import_map = "./functions/send-auth-email/deno.json"
 entrypoint = "./functions/send-auth-email/index.ts"
 
-[functions.check-trial-expiry]
-enabled = true
-verify_jwt = false
-
 [functions.send-booking-email]
 enabled = true
 verify_jwt = false
+
+[functions.create-subscription-checkout]
+verify_jwt = true
+
+[functions.analyze-instructor-profile]
+verify_jwt = true
+
+[functions.process-referral-reward]
+verify_jwt = true
+
+[functions.reactivate-subscription]
+verify_jwt = true
+
+[functions.send-booking-notification]
+verify_jwt = false
+
+[functions.stripe-connect-dashboard]
+verify_jwt = true
+
+[functions.submit-social-claim]
+verify_jwt = true
