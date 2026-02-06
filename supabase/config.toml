@@ -45,12 +45,6 @@ verify_jwt = true
 import_map = "./functions/stripe-connect-onboarding/deno.json"
 entrypoint = "./functions/stripe-connect-onboarding/index.ts"
 
-[functions.send-auth-email]
-enabled = true
-verify_jwt = false
-import_map = "./functions/send-auth-email/deno.json"
-entrypoint = "./functions/send-auth-email/index.ts"
-
 [functions.send-booking-email]
 enabled = true
 verify_jwt = false
