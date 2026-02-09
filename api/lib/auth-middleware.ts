@@ -86,7 +86,7 @@ export function withAuth(handler: AuthenticatedHandler) {
       // Call the original handler with user data
       return await handler(req as AuthenticatedRequest, res, user);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Authentication error:', error);
       return res.status(500).json({ 
         error: 'Authentication failed',
@@ -151,7 +151,7 @@ export function withProAccess(handler: AuthenticatedHandler) {
       // User has PRO access, continue to handler
       return await handler(req as AuthenticatedRequest, res, user);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('PRO access verification error:', error);
       return res.status(500).json({ error: 'Failed to verify PRO access' });
     }
