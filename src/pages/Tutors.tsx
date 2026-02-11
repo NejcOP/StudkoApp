@@ -26,6 +26,7 @@ interface PublicTutor {
   school_type: string | null;
   status: string;
   created_at: string;
+  profile_image_url?: string | null;
 }
 
 export default function Tutors() {
@@ -576,9 +577,17 @@ ${JSON.stringify(allTutors?.map((t: PublicTutor) => ({
                 <CardHeader>
                   <div className="flex items-start gap-4">
                     {/* Avatar */}
-                    <div className="w-16 h-16 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-bold text-xl shrink-0">
-                      {initials}
-                    </div>
+                    {tutor.profile_image_url ? (
+                      <img
+                        src={tutor.profile_image_url}
+                        alt={tutor.full_name}
+                        className="w-16 h-16 rounded-full object-cover border-2 border-primary/30"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-bold text-xl shrink-0">
+                        {initials}
+                      </div>
+                    )}
                     <div className="flex-1 min-w-0">
                       <CardTitle className="text-xl mb-2">{tutor.full_name}</CardTitle>
                       <div className="flex flex-wrap gap-1 mb-2">
