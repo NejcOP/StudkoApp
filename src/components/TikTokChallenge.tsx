@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,22 +22,34 @@ export const TikTokChallenge = () => {
   const [submitting, setSubmitting] = useState(false);
   const [videoLink1, setVideoLink1] = useState("");
   const [videoLink2, setVideoLink2] = useState("");
-  const [hasClaim, setHasClaim] = useState(false);
+  const [claimStatus, setClaimStatus] = useState<null | 'pending' | 'approved' | 'rejected'>(null);
+  const [rejectionReason, setRejectionReason] = useState<string | null>(null);
 
-  // Check if user already submitted a claim
-  useState(() => {
+  // Check if user already submitted a claim and get status
+  useEffect(() => {
     if (user) {
       supabase
         .from("social_claims")
-        .select("id")
+        .select("id, status, admin_notes")
         .eq("user_id", user.id)
         .eq("claim_type", "tiktok_challenge")
+        .order('created_at', { ascending: false })
+        .limit(1)
         .maybeSingle()
         .then(({ data }) => {
-          if (data) setHasClaim(true);
+          if (data) {
+            setClaimStatus(data.status);
+            setRejectionReason(data.status === 'rejected' ? data.admin_notes : null);
+          } else {
+            setClaimStatus(null);
+            setRejectionReason(null);
+          }
         });
+    } else {
+      setClaimStatus(null);
+      setRejectionReason(null);
     }
-  });
+  }, [user]);
 
   const handleSubmit = async () => {
     if (!user) return;
@@ -96,7 +108,7 @@ export const TikTokChallenge = () => {
       });
 
       setOpen(false);
-      setHasClaim(true);
+      setClaimStatus('pending');
       setVideoLink1("");
       setVideoLink2("");
     } catch (error) {
@@ -157,14 +169,21 @@ export const TikTokChallenge = () => {
           <DialogTrigger asChild>
             <Button
               className="w-full bg-gradient-to-r from-cyan-500 via-pink-500 to-cyan-500 hover:from-cyan-600 hover:via-pink-600 hover:to-cyan-600 text-white font-bold py-2 text-xs shadow-lg hover:shadow-cyan-500/50 transition-all duration-300"
-              disabled={hasClaim}
+              disabled={claimStatus === 'pending' || claimStatus === 'approved'}
             >
-              {hasClaim ? (
+              {claimStatus === 'pending' && (
                 <>
                   <Video className="w-3.5 h-3.5 mr-1.5" />
                   Prijava oddana ✓
                 </>
-              ) : (
+              )}
+              {claimStatus === 'approved' && (
+                <>
+                  <Video className="w-3.5 h-3.5 mr-1.5" />
+                  Prijava odobrena 🎉
+                </>
+              )}
+              {(!claimStatus || claimStatus === 'rejected') && (
                 <>
                   <Video className="w-3.5 h-3.5 mr-1.5" />
                   Oddaj dokazilo
@@ -233,10 +252,22 @@ export const TikTokChallenge = () => {
           </DialogContent>
         </Dialog>
 
-        {hasClaim && (
+        {claimStatus === 'pending' && (
           <p className="text-xs text-center text-yellow-400 bg-yellow-400/10 py-2 rounded-lg">
             ⏳ Tvoja prijava je v pregledu. PRO dostop bo aktiviran v nekaj dneh!
           </p>
+        )}
+        {claimStatus === 'approved' && (
+          <p className="text-xs text-center text-green-400 bg-green-400/10 py-2 rounded-lg">
+            ✅ Tvoja prijava je bila odobrena! PRO dostop je aktiviran.
+          </p>
+        )}
+        {claimStatus === 'rejected' && (
+          <div className="text-xs text-center text-red-400 bg-red-400/10 py-2 rounded-lg space-y-1">
+            <p>❌ Tvoja prijava je bila zavrnjena.</p>
+            {rejectionReason && <p><span className="font-semibold">Razlog:</span> {rejectionReason}</p>}
+            <p>Lahko ponovno oddaš dva nova TikTok videa!</p>
+          </div>
         )}
       </div>
     </div>
