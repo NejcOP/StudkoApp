@@ -87,10 +87,10 @@ export default function AdminTutorApplications() {
 
       if (error) throw error;
 
-      // Send approval email
+      // Send approval email (notification + lepši email)
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        
+
         await fetch('/api/send-notification', {
           method: 'POST',
           headers: {
@@ -115,6 +115,22 @@ export default function AdminTutorApplications() {
             `,
             actionLink: 'https://studko.si/tutor/dashboard',
             actionText: 'Pojdi na nadzorno ploščo',
+          }),
+        });
+
+        // Pošlji še lepši e-mail prek /api/send
+        await fetch('/api/send', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session?.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            type: 'instructor-approved',
+            to: application.email,
+            data: {
+              userName: application.full_name,
+            },
           }),
         });
       } catch (emailError) {
@@ -156,10 +172,10 @@ export default function AdminTutorApplications() {
 
       if (error) throw error;
 
-      // Send rejection email
+      // Send rejection email (notification + lepši email)
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        
+
         await fetch('/api/send-notification', {
           method: 'POST',
           headers: {
@@ -179,6 +195,23 @@ export default function AdminTutorApplications() {
               <p>Zahvaljujemo se ti za zanimanje in tvoj čas. Če imaš kakršna koli vprašanja, nas lahko kontaktiraš na info@studko.si.</p>
               <p>Želimo ti veliko uspeha pri prihodnjih projektih!</p>
             `,
+          }),
+        });
+
+        // Pošlji še lepši e-mail prek /api/send
+        await fetch('/api/send', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session?.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            type: 'instructor-rejected',
+            to: application.email,
+            data: {
+              userName: application.full_name,
+              reason: rejectionReason,
+            },
           }),
         });
       } catch (emailError) {

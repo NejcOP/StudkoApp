@@ -17,16 +17,31 @@ import { render } from '@react-email/render';
 
 // Import all email templates from emails/index.js
 // @ts-ignore
+
 import {
   WelcomeEmail,
   ResetPasswordEmail,
   ProActivationEmail,
   PayoutConfirmationEmail,
-  EmailChangeEmail
+  EmailChangeEmail,
+  TikTokApprovedEmail,
+  TikTokRejectedEmail,
+  InstructorApprovedEmail,
+  InstructorRejectedEmail
 } from '../emails/index.js';
 
+
 interface SendEmailRequest {
-  type: 'welcome' | 'reset-password' | 'pro-activation' | 'payout' | 'email-change';
+  type:
+    | 'welcome'
+    | 'reset-password'
+    | 'pro-activation'
+    | 'payout'
+    | 'email-change'
+    | 'tiktok-approved'
+    | 'tiktok-rejected'
+    | 'instructor-approved'
+    | 'instructor-rejected';
   to: string;
   data: any;
 }
@@ -59,6 +74,7 @@ export default async function handler(
     let emailHtml: string;
     let subject: string;
 
+
     // Render appropriate email template
     switch (body.type) {
       case 'welcome':
@@ -70,7 +86,6 @@ export default async function handler(
           })
         );
         break;
-
       case 'reset-password':
         subject = 'Navodila za ponastavitev gesla 🔑';
         emailHtml = await render(
@@ -80,7 +95,6 @@ export default async function handler(
           })
         );
         break;
-
       case 'pro-activation':
         subject = 'Tvoj Študko PRO je tu! 🔥';
         emailHtml = await render(
@@ -89,7 +103,6 @@ export default async function handler(
           })
         );
         break;
-
       case 'payout':
         subject = 'Tvoj zahtevek za izplačilo je prejet! 💸';
         emailHtml = await render(
@@ -100,7 +113,6 @@ export default async function handler(
           })
         );
         break;
-
       case 'email-change':
         subject = 'Potrdi spremembo e-poštnega naslova 📧';
         emailHtml = await render(
@@ -111,7 +123,41 @@ export default async function handler(
           })
         );
         break;
-
+      case 'tiktok-approved':
+        subject = '🎉 TikTok izziv odobren - Dobil si 1 mesec PRO!';
+        emailHtml = await render(
+          TikTokApprovedEmail({
+            userName: body.data.userName,
+            proUntil: body.data.proUntil,
+          })
+        );
+        break;
+      case 'tiktok-rejected':
+        subject = 'TikTok izziv ni bil odobren';
+        emailHtml = await render(
+          TikTokRejectedEmail({
+            userName: body.data.userName,
+            reason: body.data.reason,
+          })
+        );
+        break;
+      case 'instructor-approved':
+        subject = '🎉 Tvoja prijava za inštruktorja je bila odobrena!';
+        emailHtml = await render(
+          InstructorApprovedEmail({
+            userName: body.data.userName,
+          })
+        );
+        break;
+      case 'instructor-rejected':
+        subject = 'Glede tvoje prijave za inštruktorja';
+        emailHtml = await render(
+          InstructorRejectedEmail({
+            userName: body.data.userName,
+            reason: body.data.reason,
+          })
+        );
+        break;
       default:
         return res.status(400).json({ error: 'Neveljaven tip e-maila' });
     }

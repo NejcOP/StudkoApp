@@ -153,6 +153,23 @@ export default function AdminTikTokChallenges() {
               `,
             }),
           });
+
+            // Pošlji še lepši e-mail prek /api/send
+            await fetch('/api/send', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${session?.access_token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                type: 'tiktok-approved',
+                to: userEmail,
+                data: {
+                  userName,
+                  proUntil: oneMonthFromNow.toLocaleDateString('sl-SI'),
+                },
+              }),
+            });
         }
       } catch (emailError) {
         console.error('Error sending email:', emailError);
@@ -193,6 +210,50 @@ export default function AdminTikTokChallenges() {
         .eq("id", selectedClaim);
 
       if (error) throw error;
+
+      // Pošlji notification in lepši e-mail
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const userEmail = claim.profiles?.email;
+        const userName = claim.profiles?.full_name || 'Uporabnik';
+        if (userEmail) {
+          await fetch('/api/send-notification', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${session?.access_token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              to: userEmail,
+              title: 'TikTok izziv ni bil odobren',
+              message: `
+                <h2>Pozdravljeni, ${userName}</h2>
+                <p>Žal tvoj TikTok izziv ni bil odobren.</p>
+                ${rejectionNotes ? `<p><b>Razlog:</b> ${rejectionNotes}</p>` : ''}
+                <p>Za vprašanja piši na info@studko.si.</p>
+              `,
+            }),
+          });
+
+          await fetch('/api/send', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${session?.access_token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              type: 'tiktok-rejected',
+              to: userEmail,
+              data: {
+                userName,
+                reason: rejectionNotes,
+              },
+            }),
+          });
+        }
+      } catch (emailError) {
+        console.error('Error sending email:', emailError);
+      }
 
       toast({
         title: "Zavrnjeno",
