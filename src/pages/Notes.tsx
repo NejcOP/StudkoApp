@@ -586,7 +586,7 @@ const Notes = () => {
                         variant="outline"
                         size="sm"
                         onClick={resetFilters}
-                        className="text-xs border-slate-400 dark:border-slate-600"
+                        className="text-xs border-primary text-primary hover:bg-primary/10 hover:text-primary font-semibold shadow-glow-primary"
                       >
                         Ponastavi filtre
                       </Button>
