@@ -999,7 +999,7 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
                   </Button>
                   {!checkingTrialStatus && (
                     <p className="mt-3 sm:mt-4 text-xs sm:text-sm text-muted-foreground">
-                      Samo 3,49 €/mesec{!trialUsed && " • 7 dni brezplačno"}
+                      Samo 3,99 €/mesec{!trialUsed && " • 7 dni brezplačno"}
                     </p>
                   )}
                 </CardContent>

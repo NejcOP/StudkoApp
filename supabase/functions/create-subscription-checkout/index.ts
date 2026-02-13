@@ -91,7 +91,7 @@ serve(async (req) => {
             name: 'Študko PRO Naročnina',
             description: 'Neomejeni AI pogovori, napredni načini, preverjanje dela in prednostna podpora',
           },
-          unit_amount: 349, // 3.49 EUR in cents
+          unit_amount: 399, // 3.99 EUR in cents
           recurring: {
             interval: 'month',
             interval_count: 1,

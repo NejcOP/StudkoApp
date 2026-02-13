@@ -154,7 +154,7 @@ export default function SubscriptionUpgrade() {
           <div className="bg-gradient-to-br from-primary/10 to-purple-500/10 rounded-xl p-6 text-center border-2 border-primary/20">
             <div className="mb-4">
               <div className="text-5xl font-bold text-primary mb-2">
-                3,49 €
+                3,99 €
                 <span className="text-lg text-muted-foreground font-normal">/mesec</span>
               </div>
               <p className="text-sm text-muted-foreground">
@@ -184,7 +184,7 @@ export default function SubscriptionUpgrade() {
             </Button>
             {!checkingTrial && !trialUsed && (
               <p className="text-xs text-muted-foreground text-center mt-2">
-                Brezplačen preizkus 7 dni, nato 3,49 €/mesec
+                Brezplačen preizkus 7 dni, nato 3,99 €/mesec
               </p>
             )}
           </div>

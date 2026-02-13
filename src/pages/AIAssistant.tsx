@@ -1433,7 +1433,7 @@ const AIAssistant = () => {
               <div className="bg-muted rounded-xl p-4 mb-6">
                 <p className="text-sm text-muted-foreground mb-1">Samo</p>
                 <p className="text-4xl font-bold text-foreground">
-                  3,49 €<span className="text-lg font-normal text-muted-foreground">/mesec</span>
+                  3,99 €<span className="text-lg font-normal text-muted-foreground">/mesec</span>
                 </p>
               </div>
 
@@ -1455,7 +1455,7 @@ const AIAssistant = () => {
               </Button>
               {!checkingTrialStatus && !trialUsed && (
                 <p className="text-xs text-muted-foreground text-center mb-3">
-                  Brezplačen preizkus 7 dni, nato 3,49 €/mesec
+                  Brezplačen preizkus 7 dni, nato 3,99 €/mesec
                 </p>
               )}
               

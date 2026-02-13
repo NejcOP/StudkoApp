@@ -571,7 +571,7 @@ const Notes = () => {
               </div>
               {!checkingTrialStatus && (
                 <p className="text-center mt-3 text-sm text-slate-600 dark:text-slate-400">
-                  Samo 3,49 €/mesec{!trialUsed && " • "}{!trialUsed && <span className="font-semibold text-purple-600 dark:text-purple-400">7 dni brezplačno</span>}
+                  Samo 3,99 €/mesec{!trialUsed && " • "}{!trialUsed && <span className="font-semibold text-purple-600 dark:text-purple-400">7 dni brezplačno</span>}
                 </p>
               )}
             </div>

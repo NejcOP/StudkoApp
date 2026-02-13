@@ -1321,7 +1321,7 @@ const Profile = () => {
                                     </li>
                                   </ul>
                                   <p className="text-xl sm:text-2xl font-bold text-foreground mb-4">
-                                    3,49 €<span className="text-xs sm:text-sm font-normal text-muted-foreground">/mesec</span>
+                                    3,99 €<span className="text-xs sm:text-sm font-normal text-muted-foreground">/mesec</span>
                                   </p>
                                   <Button
                                     onClick={handleUpgradeToPro}
@@ -1389,14 +1389,26 @@ const Profile = () => {
                                         {loadingSubscription ? "Nalagam..." : "Uredi plačilne podatke"}
                                       </Button>
                                       <div className="space-y-2">
-                                        <Button
-                                          variant="outline"
-                                          onClick={() => setShowCancelDialog(true)}
-                                          disabled={loadingSubscription}
-                                          className="w-full text-red-600 dark:text-red-400 border-red-300 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-950/30 hover:border-red-400 dark:hover:border-red-700"
-                                        >
-                                          Prekliči naročnino
-                                        </Button>
+                                        {/* Special case: PRO via referral/challenge (social_claim) */}
+                                        {profile?.subscription_status === 'social_claim' ? (
+                                          <div className="w-full bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-700 rounded-lg p-3 text-center mb-2">
+                                            <p className="text-yellow-800 dark:text-yellow-200 font-semibold">
+                                              PRO dostop si pridobil preko izziva ali referral sistema in ga ni mogoče preklicati.
+                                            </p>
+                                            <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
+                                              Dostop bo samodejno izklopljen, ko poteče obdobje ali pogoji.
+                                            </p>
+                                          </div>
+                                        ) : (
+                                          <Button
+                                            variant="outline"
+                                            onClick={() => setShowCancelDialog(true)}
+                                            disabled={loadingSubscription}
+                                            className="w-full text-red-600 dark:text-red-400 border-red-300 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-950/30 hover:border-red-400 dark:hover:border-red-700"
+                                          >
+                                            Prekliči naročnino
+                                          </Button>
+                                        )}
                                         {profile?.current_period_end && (
                                           <p className="text-xs text-center text-muted-foreground">
                                             Tvoja naročnina je veljavna do: <span className="font-semibold text-foreground">{formatDate(profile.current_period_end)}</span>
