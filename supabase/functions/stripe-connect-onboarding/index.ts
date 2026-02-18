@@ -1,9 +1,14 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import Stripe from "https://esm.sh/stripe@12.0.0?target=deno"
+import { Stripe } from "https://deno.land/x/stripe@v1.2.0/mod.ts";
 
-const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
-  httpClient: Stripe.createFetchHttpClient(),
-})
+const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
+if (!stripeSecretKey) {
+  console.error('STRIPE_SECRET_KEY ni nastavljen v okolju!');
+  throw new Error('Stripe skrivni ključ ni nastavljen.');
+}
+const stripe = new Stripe(stripeSecretKey, {
+  apiVersion: '2022-11-15',
+});
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -25,7 +30,7 @@ serve(async (req) => {
         card_payments: { requested: true },
         transfers: { requested: true },
       },
-    })
+    });
 
     // 2. Ustvarimo link za onboarding
     const accountLink = await stripe.accountLinks.create({
@@ -33,7 +38,7 @@ serve(async (req) => {
       refresh_url: `${req.headers.get('origin')}/profile`,
       return_url: `${req.headers.get('origin')}/profile?stripe=success&account_id=${account.id}`,
       type: 'account_onboarding',
-    })
+    });
 
     return new Response(JSON.stringify({ url: accountLink.url, accountId: account.id }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
