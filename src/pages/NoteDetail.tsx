@@ -563,7 +563,7 @@ const NoteDetail = () => {
                         onClick={() => navigate(`/ai?tab=flashcards`)}
                       >
                         <Zap className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                        Odpri flashcards
+                        Odpri kartice
                       </Button>
                     )}
                   </div>

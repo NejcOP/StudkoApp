@@ -133,7 +133,7 @@ export const QuizMode = ({ isLoading, setIsLoading, initialQuestions, initialTit
 
   const handleGenerateQuiz = async () => {
     if (!inputText.trim()) {
-      toast.error("Prosim, vnesi besedilo za quiz.");
+      toast.error("Prosim, vnesi besedilo za kviz.");
       return;
     }
 

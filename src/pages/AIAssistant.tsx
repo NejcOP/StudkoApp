@@ -351,7 +351,7 @@ const AIAssistant = () => {
           }
         } catch (error) {
           console.error('Auto-generate error:', error);
-          toast.error("Napaka pri avtomatskem generiranju flashcards.");
+          toast.error("Napaka pri avtomatskem generiranju kartic.");
         } finally {
           setIsLoading(false);
           // Clear action and noteId params after processing
@@ -1004,7 +1004,7 @@ const AIAssistant = () => {
 
   const handleGenerateFlashcards = async () => {
     if (!flashcardText.trim() || !flashcardTitle.trim()) {
-      toast.error("Prosim, vnesi naslov in besedilo za flashcards.");
+      toast.error("Prosim, vnesi naslov in besedilo za kartice.");
       return;
     }
 

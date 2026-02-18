@@ -146,7 +146,7 @@ export default function AdminTikTokChallenges() {
                 <ul>
                   <li>✨ AI asistent za učenje</li>
                   <li>📚 Neomejen dostop do vseh zapiskov</li>
-                  <li>🎯 Personalizirane kvize in flashcards</li>
+                  <li>🎯 Personalizirane kvize in kartice</li>
                   <li>📊 Napredna analitika učenja</li>
                 </ul>
                 <p>Hvala za sodelovanje v TikTok izzivu! 💜</p>
