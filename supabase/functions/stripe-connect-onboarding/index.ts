@@ -1,7 +1,7 @@
 import Stripe from 'https://esm.sh/stripe@13.10.0?target=deno';
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
-const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
+const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY') ?? '';
 if (!stripeSecretKey) {
   console.error('STRIPE_SECRET_KEY ni nastavljen v okolju!');
   throw new Error('Stripe skrivni ključ ni nastavljen.');
@@ -17,7 +17,9 @@ const corsHeaders = {
 };
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
   try {
     // Read JWT from Authorization header
     const authHeader = req.headers.get('authorization') || req.headers.get('Authorization');
@@ -44,7 +46,7 @@ Deno.serve(async (req) => {
     let accountId = profile.stripe_connect_account_id;
     let account = null;
     if (!accountId) {
-      // Create new Stripe Connect account
+      // Create new Stripe Connect account (Live mode for SI)
       account = await stripe.accounts.create({
         type: 'express',
         email: profile.email,
@@ -76,7 +78,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('stripe-connect-onboarding ERROR:', error);
     return new Response(
-      JSON.stringify({ error: error.message ?? String(error) }),
+      JSON.stringify({ error: error instanceof Error ? error.message : String(error) }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
     );
   }
