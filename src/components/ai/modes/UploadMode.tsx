@@ -55,7 +55,7 @@ export const UploadMode = ({ isLoading, setIsLoading, onAction }: UploadModeProp
 
   const actions = [
     { id: "explain", label: "Razloži", icon: <Brain className="w-4 h-4" /> },
-    { id: "flashcards", label: "Naredi Flashcards", icon: <Layers className="w-4 h-4" /> },
+    { id: "flashcards", label: "Generiraj kartice", icon: <Layers className="w-4 h-4" /> },
     { id: "summary", label: "Povzemi", icon: <SummaryIcon className="w-4 h-4" /> },
     { id: "quiz", label: "Generiraj Quiz", icon: <HelpCircle className="w-4 h-4" /> },
   ];

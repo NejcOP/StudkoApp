@@ -18,7 +18,7 @@ const actions = [
   { id: "simplify", label: "Razloži enostavneje", icon: <Lightbulb className="w-3 h-3" /> },
   { id: "detailed", label: "Razloži bolj podrobno", icon: <BookOpen className="w-3 h-3" /> },
   { id: "examples", label: "Naredi primere", icon: <ListChecks className="w-3 h-3" /> },
-  { id: "flashcards", label: "Naredi flashcards", icon: <Layers className="w-3 h-3" /> },
+  { id: "flashcards", label: "Generiraj kartice", icon: <Layers className="w-3 h-3" /> },
   { id: "quiz", label: "Naredi kviz", icon: <HelpCircle className="w-3 h-3" /> },
   { id: "translate", label: "Prevedi odgovor", icon: <Languages className="w-3 h-3" /> },
 ];
