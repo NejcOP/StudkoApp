@@ -1,5 +1,4 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { Stripe } from "https://deno.land/x/stripe@v1.2.0/mod.ts";
+import Stripe from 'https://esm.sh/stripe@12.0.0?target=deno';
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
@@ -16,7 +15,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   try {
     // Read JWT from Authorization header
@@ -72,14 +71,15 @@ serve(async (req) => {
       return_url: returnUrl,
       type: 'account_onboarding',
     });
-    return new Response(JSON.stringify({ url: accountLink.url, accountId }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({ url: accountLink.url }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   } catch (error) {
     console.error('stripe-connect-onboarding ERROR:', error);
-    return new Response(JSON.stringify({ error: error.message, details: error }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 400,
-    });
+    return new Response(
+      JSON.stringify({ error: error.message ?? String(error) }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+    );
   }
 });
