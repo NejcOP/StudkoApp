@@ -641,7 +641,8 @@ const Profile = () => {
         });
         if (error) {
           console.error('Error invoking Stripe function:', error);
-          toast.error('Napaka pri povezovanju s Stripe');
+          const msg = error?.message || (typeof error === 'string' ? error : 'Napaka pri povezovanju s Stripe');
+          toast.error(msg);
           return;
         }
         if (data?.url) {

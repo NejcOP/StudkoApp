@@ -48,6 +48,10 @@ Deno.serve(async (req) => {
       account = await stripe.accounts.create({
         type: 'express',
         email: profile.email,
+        capabilities: {
+          card_payments: { requested: true },
+          transfers: { requested: true },
+        },
       });
       accountId = account.id;
       // Save to profile
