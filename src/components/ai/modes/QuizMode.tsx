@@ -491,11 +491,11 @@ export const QuizMode = ({ isLoading, setIsLoading, initialQuestions, initialTit
           {isExtracting ? (
             <>Branje dokumenta...</>
           ) : isLoading ? (
-            <>Generiranje quiza...</>
+            <>Generiranje kviza...</>
           ) : (
             <>
               <Sparkles className="w-5 h-5 mr-2" />
-              Generiraj Quiz
+              Generiraj kviz
             </>
           )}
         </Button>
