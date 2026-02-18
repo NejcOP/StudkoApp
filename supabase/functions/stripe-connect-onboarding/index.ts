@@ -1,4 +1,4 @@
-import Stripe from 'https://esm.sh/stripe@12.0.0?target=deno';
+import Stripe from 'https://esm.sh/stripe@13.10.0?target=deno';
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
@@ -7,7 +7,8 @@ if (!stripeSecretKey) {
   throw new Error('Stripe skrivni ključ ni nastavljen.');
 }
 const stripe = new Stripe(stripeSecretKey, {
-  apiVersion: '2022-11-15',
+  apiVersion: '2023-10-16',
+  httpClient: Stripe.createFetchHttpClient(),
 });
 
 const corsHeaders = {
@@ -32,7 +33,7 @@ Deno.serve(async (req) => {
     if (userError || !userData.user) throw new Error('Unauthorized');
     const user = userData.user;
     // Parse body
-    const { email, returnUrl, refreshUrl } = await req.json();
+    const { returnUrl, refreshUrl } = await req.json();
     // Check if user already has a Stripe account
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
@@ -46,16 +47,7 @@ Deno.serve(async (req) => {
       // Create new Stripe Connect account
       account = await stripe.accounts.create({
         type: 'express',
-        email: email,
-        capabilities: {
-          card_payments: { requested: true },
-          transfers: { requested: true },
-        },
-        business_type: 'individual',
-        business_profile: {
-          name: profile.full_name || 'Študko Tutor',
-          url: returnUrl,
-        },
+        email: profile.email,
       });
       accountId = account.id;
       // Save to profile
