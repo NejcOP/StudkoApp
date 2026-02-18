@@ -48,6 +48,8 @@ Deno.serve(async (req) => {
       account = await stripe.accounts.create({
         type: 'express',
         email: profile.email,
+        country: 'SI',
+        business_type: 'individual',
         capabilities: {
           card_payments: { requested: true },
           transfers: { requested: true },
@@ -69,7 +71,7 @@ Deno.serve(async (req) => {
     });
     return new Response(
       JSON.stringify({ url: accountLink.url }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
     );
   } catch (error) {
     console.error('stripe-connect-onboarding ERROR:', error);
