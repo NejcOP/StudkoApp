@@ -15,6 +15,7 @@ serve(async (req) => {
 
   try {
     const { userId, email } = await req.json()
+    console.log('stripe-connect-onboarding request:', { userId, email })
 
     // 1. Ustvarimo Stripe Connect račun za študenta, če ga še nima
     const account = await stripe.accounts.create({
@@ -38,7 +39,8 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error('stripe-connect-onboarding ERROR:', error)
+    return new Response(JSON.stringify({ error: error.message, details: error }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
     })
