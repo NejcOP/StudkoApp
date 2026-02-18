@@ -81,22 +81,21 @@ serve(async (req) => {
 
     console.log('Creating checkout for user:', user.email);
 
+
+    // Use Stripe Price ID from environment
+    const priceId = Deno.env.get('STRIPE_PRO_PRICE_ID');
+    if (!priceId) {
+      return new Response(JSON.stringify({ error: 'Missing STRIPE_PRO_PRICE_ID' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      });
+    }
+
     // Create checkout session configuration
     const sessionConfig: any = {
       payment_method_types: ['card'],
       line_items: [{
-        price_data: {
-          currency: 'eur',
-          product_data: {
-            name: 'Študko PRO Naročnina',
-            description: 'Neomejeni AI pogovori, napredni načini, preverjanje dela in prednostna podpora',
-          },
-          unit_amount: 399, // 3.99 EUR in cents
-          recurring: {
-            interval: 'month',
-            interval_count: 1,
-          },
-        },
+        price: priceId,
         quantity: 1,
       }],
       mode: 'subscription',
