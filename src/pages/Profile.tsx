@@ -627,21 +627,23 @@ const Profile = () => {
 
     const handleStripeOnboarding = async () => {
       if (!user) return;
-
+      const returnUrl = window.location.origin + '/settings';
+      const refreshUrl = window.location.origin + '/settings';
+      const payload = {
+        email: user.email,
+        returnUrl,
+        refreshUrl
+      };
+      console.log('Stripe onboarding payload:', payload);
       try {
         const { data, error } = await supabase.functions.invoke('stripe-connect-onboarding', {
-          body: {
-            userId: user.id,
-            email: user.email
-          }
+          body: payload
         });
-
         if (error) {
           console.error('Error invoking Stripe function:', error);
           toast.error('Napaka pri povezovanju s Stripe');
           return;
         }
-
         if (data?.url) {
           window.location.href = data.url;
         } else {
