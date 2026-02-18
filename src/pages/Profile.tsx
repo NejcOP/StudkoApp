@@ -631,7 +631,7 @@ const Profile = () => {
       try {
         const { data, error } = await supabase.functions.invoke('stripe-connect-onboarding', {
           body: {
-            user_id: user.id,
+            userId: user.id,
             email: user.email
           }
         });
