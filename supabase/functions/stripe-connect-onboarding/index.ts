@@ -1,4 +1,3 @@
-import Stripe from 'https://esm.sh/stripe@13.10.0?target=deno';
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY') ?? '';
@@ -6,10 +5,7 @@ if (!stripeSecretKey) {
   console.error('STRIPE_SECRET_KEY ni nastavljen v okolju!');
   throw new Error('Stripe skrivni ključ ni nastavljen.');
 }
-const stripe = new Stripe(stripeSecretKey, {
-  apiVersion: '2023-10-16',
-  httpClient: Stripe.createFetchHttpClient(),
-});
+const STRIPE_API = 'https://api.stripe.com/v1';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -48,40 +44,50 @@ Deno.serve(async (req) => {
     console.log('Profile:', profile, 'profileError:', profileError);
     if (profileError) throw new Error('Profile not found');
     let accountId = profile.stripe_connect_account_id;
-    let account = null;
     if (!accountId) {
-      // Create new Stripe Connect account (Live mode for SI)
-      const accountPayload = {
+      // Create Stripe Connect account via fetch
+      const form = new URLSearchParams({
         type: 'express',
         email: profile.email,
         country: 'SI',
         business_type: 'individual',
-        capabilities: {
-          card_payments: { requested: true },
-          transfers: { requested: true },
+        'capabilities[card_payments][requested]': 'true',
+        'capabilities[transfers][requested]': 'true',
+      });
+      const accountRes = await fetch(`${STRIPE_API}/accounts`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${stripeSecretKey}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
         },
-      };
-      console.log('Creating Stripe account with:', accountPayload);
-      account = await stripe.accounts.create(accountPayload);
-      console.log('Stripe account created:', account);
+        body: form,
+      });
+      const account = await accountRes.json();
+      if (!account.id) throw new Error(account.error?.message || 'Stripe account creation failed');
       accountId = account.id;
       // Save to profile
-      const updateRes = await supabase
+      await supabase
         .from('profiles')
         .update({ stripe_connect_account_id: accountId })
         .eq('id', user.id);
-      console.log('Supabase profile update result:', updateRes);
     }
-    // Create onboarding link
-    const accountLinkPayload = {
+    // Create onboarding link via fetch
+    const linkForm = new URLSearchParams({
       account: accountId,
       refresh_url: refreshUrl,
       return_url: returnUrl,
       type: 'account_onboarding',
-    };
-    console.log('Creating Stripe accountLink with:', accountLinkPayload);
-    const accountLink = await stripe.accountLinks.create(accountLinkPayload);
-    console.log('Stripe accountLink created:', accountLink);
+    });
+    const linkRes = await fetch(`${STRIPE_API}/account_links`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${stripeSecretKey}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: linkForm,
+    });
+    const accountLink = await linkRes.json();
+    if (!accountLink.url) throw new Error(accountLink.error?.message || 'Stripe onboarding link creation failed');
     return new Response(
       JSON.stringify({ url: accountLink.url }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
