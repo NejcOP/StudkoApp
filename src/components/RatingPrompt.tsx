@@ -10,8 +10,8 @@ import { Star, Loader2 } from "lucide-react";
 interface CompletedBooking {
   id: string;
   tutor_id: string;
-  tutors: {
-    user_id: string;
+  profiles: {
+    id: string;
     full_name: string;
   };
 }
@@ -46,7 +46,7 @@ export const RatingPrompt = () => {
         .select(`
           id,
           tutor_id,
-          tutors (user_id, full_name)
+          profiles:tutor_id (id, full_name)
         `)
         .eq('student_id', user.id)
         .eq('status', 'completed')
@@ -64,7 +64,7 @@ export const RatingPrompt = () => {
           .from('profile_reviews')
           .select('id')
           .eq('reviewer_id', user.id)
-          .eq('target_profile_id', booking.tutors.user_id)
+          .eq('target_profile_id', booking.profiles.id)
           .single();
 
         // Only show prompt if no review exists
@@ -87,7 +87,7 @@ export const RatingPrompt = () => {
         .from('profile_reviews')
         .insert({
           reviewer_id: user.id,
-          target_profile_id: booking.tutors.user_id,
+          target_profile_id: booking.profiles.id,
           rating,
           comment: comment.trim() || null
         });
@@ -120,7 +120,7 @@ export const RatingPrompt = () => {
         <DialogHeader>
           <DialogTitle>Oceni tutorja</DialogTitle>
           <DialogDescription>
-            Kako bi ocenil svojo izkušnjo z {booking.tutors.full_name}?
+            Kako bi ocenil svojo izkušnjo z {booking.profiles.full_name}?
           </DialogDescription>
         </DialogHeader>
 
