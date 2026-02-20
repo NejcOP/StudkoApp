@@ -1346,14 +1346,14 @@ const Profile = () => {
                               </div>
                             ) : (
                               <div className="space-y-4">
-                                {profile?.cancel_at_period_end && (profile?.subscription_status !== "active" && profile?.subscription_status !== "trialing") ? (
+                                {profile?.cancel_at_period_end ? (
                                   <>
-                                    <div className="bg-orange-50 dark:bg-orange-950/30 rounded-xl p-4 border border-orange-200 dark:border-orange-800">
-                                      <p className="text-sm text-orange-700 dark:text-orange-300 flex items-center gap-2 mb-2">
+                                    <div className="bg-yellow-50 dark:bg-yellow-950/30 rounded-xl p-4 border border-yellow-200 dark:border-yellow-800">
+                                      <p className="text-sm text-yellow-700 dark:text-yellow-300 flex items-center gap-2 mb-2 font-semibold">
                                         <MessageSquare className="w-4 h-4" />
                                         Naročnina je preklicana
                                       </p>
-                                      <p className="text-xs text-orange-600 dark:text-orange-400">
+                                      <p className="text-xs text-yellow-600 dark:text-yellow-400">
                                         Tvoj dostop do PRO funkcij ostaja aktiven do konca plačanega obdobja.
                                         {(profile?.current_period_end || profile?.trial_ends_at) && 
                                           ` Dostop do: ${formatDate(profile.current_period_end || profile.trial_ends_at)}`}
@@ -1370,7 +1370,7 @@ const Profile = () => {
                                           Ponovno aktiviram...
                                         </>
                                       ) : (
-                                        "Ponovno aktiviraj naročnino"
+                                        "Obnovi naročnino"
                                       )}
                                     </Button>
                                     <div className="bg-muted rounded-xl p-4 border border-border">

@@ -57,7 +57,10 @@ serve(async (req) => {
 
     logStep("Profile fetched", { customerId: profile.stripe_customer_id, subscriptionId: profile.stripe_subscription_id });
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+    const stripe = new Stripe(stripeKey, { 
+      apiVersion: "2025-08-27.basil",
+      httpClient: Stripe.createFetchHttpClient(),
+    });
 
     // Reactivate subscription by removing cancel_at_period_end flag
     const subscription = await stripe.subscriptions.update(
