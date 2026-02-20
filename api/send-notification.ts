@@ -25,7 +25,6 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { withAuth } from './lib/auth-middleware.js';
 import { sendEmail } from './lib/emails/resend-client.js';
 import { notificationTemplate } from './lib/emails/templates.js';
 
@@ -37,7 +36,16 @@ interface NotificationRequest {
   actionText?: string;
 }
 
-export default withAuth(async (req, res, user) => {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // Enable CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -93,6 +101,9 @@ export default withAuth(async (req, res, user) => {
 
   } catch (error: any) {
     console.error('Error sending notification:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ 
+      error: 'Internal server error',
+      details: error.message 
+    });
   }
-});
+}
