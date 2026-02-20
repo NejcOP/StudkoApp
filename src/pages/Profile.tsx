@@ -1554,8 +1554,8 @@ const Profile = () => {
                       </p>
                     </div>
 
-                    {/* Stripe Connect Status - Only show green if stripe_connect_id is NOT null */}
-                    {profile?.stripe_connect_id ? (
+                    {/* Stripe Connect Status - Only show green if stripe_connect_account_id is NOT null */}
+                    {profile?.stripe_connect_account_id ? (
                       <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-xl p-4 border border-green-200 dark:border-green-800">
                         <p className="text-sm text-green-700 dark:text-green-300 mb-3 flex items-center gap-2">
                           <CheckCircle2 className="w-4 h-4" />
@@ -1565,10 +1565,10 @@ const Profile = () => {
                           variant="outline" 
                           className="w-full text-foreground"
                           onClick={async () => {
-                            if (!profile?.stripe_connect_id) return;
+                            if (!profile?.stripe_connect_account_id) return;
                             try {
                               const { data, error } = await supabase.functions.invoke('stripe-connect-dashboard', {
-                                body: { accountId: profile.stripe_connect_id }
+                                body: { accountId: profile.stripe_connect_account_id }
                               });
                               if (error || !data?.url) {
                                 toast.error('Napaka pri odpiranju Stripe dashboarda');

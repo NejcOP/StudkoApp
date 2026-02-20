@@ -83,10 +83,13 @@ Deno.serve(async (req) => {
       const account = await accountRes.json();
       if (!account.id) throw new Error(account.error?.message || 'Stripe account creation failed');
       accountId = account.id;
-      // Save to profile
+      // Save to profile (both fields for compatibility)
       await supabase
         .from('profiles')
-        .update({ stripe_connect_account_id: accountId })
+        .update({ 
+          stripe_connect_account_id: accountId,
+          stripe_connect_id: accountId 
+        })
         .eq('id', user.id);
     }
     // Create onboarding link via fetch
