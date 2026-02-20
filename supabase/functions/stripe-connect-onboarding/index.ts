@@ -12,6 +12,10 @@ const corsHeaders = {
 Deno.serve(async (req) => {
   console.log('PURE FETCH STRIPE EDGE FUNCTION STARTED');
   
+  // DEBUG: Print all env variables
+  console.log('Available env variables:', Object.keys(Deno.env.toObject()));
+  console.log('STRIPE_SECRET_KEY value:', Deno.env.get('STRIPE_SECRET_KEY')?.substring(0, 10) + '...');
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { 
       status: 200,
@@ -24,6 +28,7 @@ Deno.serve(async (req) => {
     const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY') ?? '';
     if (!stripeSecretKey) {
       console.error('STRIPE_SECRET_KEY ni nastavljen v okolju!');
+      console.error('Available env keys:', Object.keys(Deno.env.toObject()));
       throw new Error('Stripe skrivni ključ ni nastavljen.');
     }
     // Read JWT from Authorization header
