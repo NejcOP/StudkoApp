@@ -214,32 +214,8 @@ const handler = async (req: Request): Promise<Response> => {
       console.error("Error creating notification:", notifError);
     }
 
-    // Send email if we have an address
-    if (recipientEmail && RESEND_API_KEY) {
-      const emailContent = getEmailContent(data);
-      
-      try {
-        const emailResponse = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${RESEND_API_KEY}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            from: "Študko <onboarding@resend.dev>",
-            to: [recipientEmail],
-            subject: emailContent.subject,
-            html: emailContent.html,
-          })
-        });
-
-        const result = await emailResponse.json();
-        console.log("Email sent:", result);
-      } catch (emailError) {
-        console.error("Email send error:", emailError);
-        // Don't fail the whole request if email fails
-      }
-    }
+    // Note: Email sending is handled by send-booking-email function
+    // This function only creates in-app notifications
 
     return new Response(
       JSON.stringify({ success: true }),
