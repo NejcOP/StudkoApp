@@ -151,7 +151,7 @@ serve(async (req) => {
         </div>
 
         <div style="text-align: center; margin: 30px 0;">
-          <a href="https://xjnffvqtqxnqobqezouv.supabase.co/functions/v1/pay-booking?bookingId=${bookingId}" class="button" style="font-size: 18px; padding: 16px 40px;">
+          <a href="https://studko.si/profile?tab=bookings" class="button" style="font-size: 18px; padding: 16px 40px;">
             💳 Plačaj zdaj (${priceEur} €)
           </a>
         </div>

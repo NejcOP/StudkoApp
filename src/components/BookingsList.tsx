@@ -125,17 +125,18 @@ export const BookingsList = ({ userId }: { userId: string }) => {
 
       if (error) throw error;
 
+      // Get tutor profiles (tutor_id now references profiles.id)
       const tutorIds = [...new Set(bookingsData?.map(b => b.tutor_id) || [])];
-      const { data: tutors } = await supabase
-        .from('tutors')
+      const { data: profiles } = await supabase
+        .from('profiles')
         .select('id, full_name')
         .in('id', tutorIds);
 
-      const tutorsMap = new Map(tutors?.map(t => [t.id, t.full_name]) || []);
+      const profilesMap = new Map(profiles?.map(p => [p.id, p.full_name]) || []);
       
       const enrichedBookings = bookingsData?.map(b => ({
         ...b,
-        tutor_name: tutorsMap.get(b.tutor_id) || 'Neznano'
+        tutor_name: profilesMap.get(b.tutor_id) || 'Neznano'
       })) || [];
 
       setBookings(enrichedBookings);
