@@ -105,6 +105,7 @@ serve(async (req) => {
         user_id: userId,
         trial_used: actualTrialUsed ? 'true' : 'false',
       },
+      allow_promotion_codes: true, // Enable promotion codes in checkout
       success_url: `${req.headers.get('origin')}/profile?pro=activated&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.get('origin')}/profile?tab=subscription`,
     };
