@@ -461,3 +461,165 @@ export function bookingRejectedTemplate(
   `;
   return emailWrapper(content);
 }
+
+/**
+ * Note purchase notification for seller
+ */
+export function notePurchaseTemplate(
+  sellerName: string,
+  buyerName: string,
+  noteTitle: string,
+  priceEur: number
+): string {
+  const content = `
+    <h2>Tvoje zapiski so bili kupljeni! 💰</h2>
+    <p>Pozdravljeni, <strong>${sellerName}</strong>!</p>
+    <p><strong>${buyerName}</strong> je kupil tvoje zapiske.</p>
+    
+    <div class="info-box">
+      <h3 style="margin-top: 0; color: ${BRAND_COLOR};">Podrobnosti prodaje:</h3>
+      <p style="margin: 5px 0;"><strong>Naslov zapiskov:</strong> ${noteTitle}</p>
+      <p style="margin: 5px 0;"><strong>Kupec:</strong> ${buyerName}</p>
+      <p style="margin: 5px 0;"><strong>Zaslužek:</strong> ${priceEur.toFixed(2)}€</p>
+    </div>
+
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="https://studko.si/profile" class="button">Poglej profil</a>
+    </div>
+
+    <div class="divider"></div>
+
+    <p style="font-size: 14px; color: #666;">
+      Zaslužke lahko dvigneš preko Stripe Connect na svojem profilu.
+    </p>
+  `;
+  return emailWrapper(content);
+}
+
+/**
+ * Instructor application approved notification
+ */
+export function instructorApprovedTemplate(
+  applicantName: string
+): string {
+  const content = `
+    <h2>Tvoja prijava je bila odobrena! 🎉</h2>
+    <p>Pozdravljeni, <strong>${applicantName}</strong>!</p>
+    <p>Veseli nas, da ti sporočimo, da je bila tvoja prijava za instruktorja <strong>odobrena</strong>.</p>
+    
+    <div class="info-box">
+      <h3 style="margin-top: 0; color: ${BRAND_COLOR};">Kaj zdaj?</h3>
+      <p style="margin: 5px 0;">✅ Zdaj lahko nastaviš svojo razpoložljivost za inštrukcije</p>
+      <p style="margin: 5px 0;">✅ Študentje lahko pri tebi rezervirajo termine</p>
+      <p style="margin: 5px 0;">✅ Povezati moraš Stripe Connect za prejemanje plačil</p>
+    </div>
+
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="https://studko.si/profile?tab=instructor" class="button">Nastavi razpoložljivost</a>
+    </div>
+
+    <div class="divider"></div>
+
+    <p style="font-size: 14px; color: #666;">
+      Dobrodošel v ekipi instruktorjev Študko!
+    </p>
+  `;
+  return emailWrapper(content);
+}
+
+/**
+ * Instructor application rejected notification
+ */
+export function instructorRejectedTemplate(
+  applicantName: string,
+  reason?: string
+): string {
+  const content = `
+    <h2>Obvestilo o prijavi za instruktorja</h2>
+    <p>Pozdravljeni, <strong>${applicantName}</strong>!</p>
+    <p>Žal ti moramo sporočiti, da tvoja prijava za instruktorja trenutno ni bila odobrena.</p>
+    
+    ${reason ? `
+    <div class="info-box">
+      <h3 style="margin-top: 0; color: ${BRAND_COLOR};">Razlog:</h3>
+      <p style="margin: 5px 0;">${reason}</p>
+    </div>
+    ` : ''}
+
+    <p>Če želiš več informacij ali se želiš ponovno prijaviti, nas kontaktiraj.</p>
+
+    <div class="divider"></div>
+
+    <p style="font-size: 14px; color: #666;">
+      Kontakt: <a href="mailto:info@studko.si" style="color: ${BRAND_COLOR};">info@studko.si</a>
+    </p>
+  `;
+  return emailWrapper(content);
+}
+
+/**
+ * TikTok challenge approved notification
+ */
+export function tiktokApprovedTemplate(
+  userName: string,
+  videoUrl: string
+): string {
+  const content = `
+    <h2>TikTok izziv potrjen! 🎉</h2>
+    <p>Pozdravljeni, <strong>${userName}</strong>!</p>
+    <p>Tvoj video za TikTok izziv je bil <strong>potrjen</strong>!</p>
+    
+    <div class="info-box">
+      <h3 style="margin-top: 0; color: ${BRAND_COLOR};">Nagrada:</h3>
+      <p style="margin: 5px 0;">🎁 <strong>1 mesec brezplačnega PRO dostopa</strong></p>
+      <p style="margin: 5px 0;">✅ Dostop do vseh PRO funkcij</p>
+      <p style="margin: 5px 0;">📚 Neomejeno pregledov zapiskov</p>
+    </div>
+
+    ${videoUrl ? `<p style="margin: 15px 0;">Tvoj video: <a href="${videoUrl}" style="color: ${BRAND_COLOR};">${videoUrl}</a></p>` : ''}
+
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="https://studko.si/dashboard" class="button">Raziskuj PRO funkcije</a>
+    </div>
+
+    <div class="divider"></div>
+
+    <p style="font-size: 14px; color: #666;">
+      Hvala za tvojo podporo Študko! 🚀
+    </p>
+  `;
+  return emailWrapper(content);
+}
+
+/**
+ * TikTok challenge rejected notification
+ */
+export function tiktokRejectedTemplate(
+  userName: string,
+  videoUrl: string,
+  reason?: string
+): string {
+  const content = `
+    <h2>Obvestilo o TikTok izzivu</h2>
+    <p>Pozdravljeni, <strong>${userName}</strong>!</p>
+    <p>Žal ti moramo sporočiti, da tvoj video za TikTok izziv ni bil potrjen.</p>
+    
+    ${reason ? `
+    <div class="info-box">
+      <h3 style="margin-top: 0; color: ${BRAND_COLOR};">Razlog:</h3>
+      <p style="margin: 5px 0;">${reason}</p>
+    </div>
+    ` : ''}
+
+    ${videoUrl ? `<p style="margin: 15px 0;">Tvoj video: <a href="${videoUrl}" style="color: ${BRAND_COLOR};">${videoUrl}</a></p>` : ''}
+
+    <p>Poskusi ponovno z drugim videom, ki ustreza vsem pogojem izziva!</p>
+
+    <div class="divider"></div>
+
+    <p style="font-size: 14px; color: #666;">
+      Kontakt: <a href="mailto:info@studko.si" style="color: ${BRAND_COLOR};">info@studko.si</a>
+    </p>
+  `;
+  return emailWrapper(content);
+}

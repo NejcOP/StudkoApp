@@ -5,7 +5,8 @@ import {
   welcomeToProTemplate, 
   subscriptionCancelledTemplate,
   proTrialEndingTemplate,
-  proExpiringReminderTemplate 
+  proExpiringReminderTemplate,
+  notePurchaseTemplate
 } from './lib/emails/templates.js';
 
 export const config = { api: { bodyParser: false } };
@@ -131,6 +132,63 @@ export default async function handler(req, res) {
           console.error('❌ SUPABASE NAPAKA PRI VPISU:', JSON.stringify(error));
         } else {
           console.log('✅ SUPABASE USPEH. Vpisani podatki:', JSON.stringify(data));
+          
+          // Send email notification to seller
+          try {
+            // Get note details
+            const { data: note, error: noteError } = await supabase
+              .from('notes')
+              .select('title, user_id')
+              .eq('id', session.metadata.note_id)
+              .single();
+
+            if (noteError || !note) {
+              console.error('❌ Napaka pri pridobivanju note podatkov:', noteError);
+            } else {
+              // Get seller profile
+              const { data: sellerProfile, error: sellerError } = await supabase
+                .from('profiles')
+                .select('email, full_name')
+                .eq('id', note.user_id)
+                .single();
+
+              // Get buyer profile
+              const { data: buyerProfile, error: buyerError } = await supabase
+                .from('profiles')
+                .select('full_name')
+                .eq('id', session.metadata.user_id)
+                .single();
+
+              if (sellerError || !sellerProfile) {
+                console.error('❌ Napaka pri pridobivanju seller profila:', sellerError);
+              } else if (buyerError || !buyerProfile) {
+                console.error('❌ Napaka pri pridobivanju buyer profila:', buyerError);
+              } else if (sellerProfile.email) {
+                // Send email to seller
+                const emailHtml = notePurchaseTemplate(
+                  sellerProfile.full_name || 'Prodajalec',
+                  buyerProfile.full_name || 'Kupec',
+                  note.title,
+                  price
+                );
+
+                const emailResult = await sendEmail({
+                  to: sellerProfile.email,
+                  subject: 'Tvoji zapiski so bili kupljeni! 💰',
+                  html: emailHtml,
+                  from: 'Študko <no-reply@studko.si>'
+                });
+
+                if (emailResult.success) {
+                  console.log('✅ Email poslan prodajalcu:', sellerProfile.email);
+                } else {
+                  console.error('❌ Napaka pri pošiljanju emaila:', emailResult.error);
+                }
+              }
+            }
+          } catch (emailError) {
+            console.error('❌ Napaka pri pošiljanju emaila prodajalcu:', emailError);
+          }
         }
       }
       
