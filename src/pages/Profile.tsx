@@ -635,6 +635,11 @@ const Profile = () => {
         refreshUrl
       };
       console.log('Stripe onboarding payload:', payload);
+      
+      toast.info('Prosim počakaj nekaj sekund, pripravlja se povezava s Stripe...', {
+        duration: 5000
+      });
+      
       try {
         const { data, error } = await supabase.functions.invoke('stripe-connect-onboarding', {
           body: payload

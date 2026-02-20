@@ -25,10 +25,14 @@ Deno.serve(async (req) => {
   
   try {
     // Check for Stripe key inside handler to allow CORS
-    const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY') ?? '';
+    // Handle potential whitespace in env var name
+    const envObj = Deno.env.toObject();
+    const stripeKeyEntry = Object.entries(envObj).find(([key]) => key.trim() === 'STRIPE_SECRET_KEY');
+    const stripeSecretKey = stripeKeyEntry ? stripeKeyEntry[1] : '';
+    
     if (!stripeSecretKey) {
       console.error('STRIPE_SECRET_KEY ni nastavljen v okolju!');
-      console.error('Available env keys:', Object.keys(Deno.env.toObject()));
+      console.error('Available env keys:', Object.keys(envObj));
       throw new Error('Stripe skrivni ključ ni nastavljen.');
     }
     // Read JWT from Authorization header
