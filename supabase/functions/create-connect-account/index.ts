@@ -5,11 +5,17 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Max-Age": "86400",
 };
 
 serve(async (req) => {
+  // Handle CORS preflight
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { 
+      headers: corsHeaders,
+      status: 200 
+    });
   }
 
   try {
@@ -30,7 +36,7 @@ serve(async (req) => {
     // Get user profile
     const { data: profile, error: profileError } = await supabaseClient
       .from("profiles")
-      .select("stripe_connect_account_id, full_name, email")
+      .select("stripe_connect_id, full_name, email")
       .eq("id", user.id)
       .single();
 
@@ -41,16 +47,16 @@ serve(async (req) => {
     });
 
     // If user already has a Connect account, create account link
-    if (profile.stripe_connect_account_id) {
+    if (profile.stripe_connect_id) {
       const accountLink = await stripe.accountLinks.create({
-        account: profile.stripe_connect_account_id,
+        account: profile.stripe_connect_id,
         refresh_url: `${req.headers.get("origin")}/profile`,
         return_url: `${req.headers.get("origin")}/profile`,
         type: "account_onboarding",
       });
 
       return new Response(
-        JSON.stringify({ url: accountLink.url, accountId: profile.stripe_connect_account_id }),
+        JSON.stringify({ url: accountLink.url, accountId: profile.stripe_connect_id }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -74,7 +80,7 @@ serve(async (req) => {
     // Save account ID to profile
     await supabaseClient
       .from("profiles")
-      .update({ stripe_connect_account_id: account.id })
+      .update({ stripe_connect_id: account.id })
       .eq("id", user.id);
 
     // Create account link for onboarding
