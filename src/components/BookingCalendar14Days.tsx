@@ -194,12 +194,8 @@ export const BookingCalendar14Days = ({
       const durationHours = (endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60);
       const price = Math.round(pricePerHour * durationHours * 100) / 100;
 
-      // Get tutor's user_id for notification
-      const { data: tutorData } = await supabase
-        .from('tutors')
-        .select('user_id')
-        .eq('id', tutorId)
-        .single();
+      // tutorId is already the user_id from profiles table
+      // No need to query tutors table since tutorId = user_id
 
       // Get student name
       const { data: profileData } = await supabase
@@ -237,24 +233,23 @@ export const BookingCalendar14Days = ({
       }
 
       // Send notification to tutor
-      if (tutorData?.user_id) {
-        await sendBookingNotification({
-          type: 'booking_request',
-          recipientUserId: tutorData.user_id,
-          senderName: profileData?.full_name || 'Študent',
-          bookingDate: format(selectedDate, 'd. MMMM yyyy', { locale: sl }),
-          bookingTime: `${selectedSlot.start_time} - ${selectedSlot.end_time}`,
-          bookingId: bookingData?.id,
-          message: bookingNotes
-        });
+      await sendBookingNotification({
+        type: 'booking_request',
+        recipientUserId: tutorId,
+        senderName: profileData?.full_name || 'Študent',
+        bookingDate: format(selectedDate, 'd. MMMM yyyy', { locale: sl }),
+        bookingTime: `${selectedSlot.start_time} - ${selectedSlot.end_time}`,
+        bookingId: bookingData?.id,
+        message: bookingNotes
+      });
 
-        // Send email notification to instructor
-        try {
-          const { data: instructorProfile } = await supabase
-            .from('profiles')
-            .select('full_name, email')
-            .eq('id', tutorData.user_id)
-            .single();
+      // Send email notification to instructor
+      try {
+        const { data: instructorProfile } = await supabase
+          .from('profiles')
+          .select('full_name, email')
+          .eq('id', tutorId)
+          .single();
           
           console.log('Pošiljam email instruktorju:', instructorProfile?.email);
           
@@ -289,7 +284,6 @@ export const BookingCalendar14Days = ({
             description: 'Rezervacija je bila ustvarjena, ampak email ni bil poslan.'
           });
         }
-      }
 
       toast.success('Rezervacija poslana!', {
         description: 'Inštruktor jo bo pregledal in potrdil.'

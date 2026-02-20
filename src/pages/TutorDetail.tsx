@@ -328,9 +328,9 @@ export default function TutorDetail() {
 
             {/* 14-Day Booking Calendar */}
             <div id="booking-calendar">
-              {tutor.id && (
+              {tutor.user_id && (
                 <BookingCalendar14Days 
-                  tutorId={tutor.id}
+                  tutorId={tutor.user_id}
                   tutorName={tutor.full_name}
                   pricePerHour={Number(tutor.price_per_hour)}
                 />
