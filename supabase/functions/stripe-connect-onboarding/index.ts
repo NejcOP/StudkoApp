@@ -1,12 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
-console.log('PURE FETCH STRIPE EDGE FUNCTION STARTED');
-
-const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY') ?? '';
-if (!stripeSecretKey) {
-  console.error('STRIPE_SECRET_KEY ni nastavljen v okolju!');
-  throw new Error('Stripe skrivni ključ ni nastavljen.');
-}
 const STRIPE_API = 'https://api.stripe.com/v1';
 
 const corsHeaders = {
@@ -17,13 +10,22 @@ const corsHeaders = {
 };
 
 Deno.serve(async (req) => {
+  console.log('PURE FETCH STRIPE EDGE FUNCTION STARTED');
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { 
       status: 200,
       headers: corsHeaders 
     });
   }
+  
   try {
+    // Check for Stripe key inside handler to allow CORS
+    const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY') ?? '';
+    if (!stripeSecretKey) {
+      console.error('STRIPE_SECRET_KEY ni nastavljen v okolju!');
+      throw new Error('Stripe skrivni ključ ni nastavljen.');
+    }
     // Read JWT from Authorization header
     const authHeader = req.headers.get('authorization') || req.headers.get('Authorization');
     console.log('Auth header:', authHeader);
