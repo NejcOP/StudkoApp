@@ -1368,20 +1368,30 @@ const Profile = () => {
                                           ` Dostop do: ${formatDate(profile.current_period_end || profile.trial_ends_at)}`}
                                       </p>
                                     </div>
-                                    <Button
-                                      onClick={handleReactivateSubscription}
-                                      disabled={reactivating}
-                                      className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:opacity-90 text-white"
-                                    >
-                                      {reactivating ? (
-                                        <>
-                                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                          Ponovno aktiviram...
-                                        </>
-                                      ) : (
-                                        "Obnovi naročnino"
-                                      )}
-                                    </Button>
+                                    <div className="space-y-3">
+                                      <Button
+                                        variant="outline"
+                                        onClick={handleManageSubscription}
+                                        disabled={loadingSubscription}
+                                        className="w-full text-foreground"
+                                      >
+                                        {loadingSubscription ? "Nalagam..." : "Uredi plačilne podatke"}
+                                      </Button>
+                                      <Button
+                                        onClick={handleReactivateSubscription}
+                                        disabled={reactivating}
+                                        className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:opacity-90 text-white"
+                                      >
+                                        {reactivating ? (
+                                          <>
+                                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                            Ponovno aktiviram...
+                                          </>
+                                        ) : (
+                                          "Obnovi naročnino"
+                                        )}
+                                      </Button>
+                                    </div>
                                     <div className="bg-muted rounded-xl p-4 border border-border">
                                       <p className="text-sm text-muted-foreground">
                                         S ponovnim aktiviranjem se bo tvoja naročnina normalno podaljševala vsak mesec.
