@@ -1,7 +1,12 @@
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 import { sendEmail } from './lib/emails/resend-client.js';
-import { welcomeToProTemplate, subscriptionCancelledTemplate } from './lib/emails/templates.js';
+import { 
+  welcomeToProTemplate, 
+  subscriptionCancelledTemplate,
+  proTrialEndingTemplate,
+  proExpiringReminderTemplate 
+} from './lib/emails/templates.js';
 
 export const config = { api: { bodyParser: false } };
 
@@ -267,6 +272,76 @@ export default async function handler(req, res) {
             console.log('✅ PRO preklic email poslan na:', authUser.user.email);
           } catch (emailError) {
             console.error('❌ Napaka pri pošiljanju preklic emaila:', emailError);
+          }
+        }
+      }
+    }
+    
+    // Handle trial ending (3 days before trial ends)
+    if (event.type === 'customer.subscription.trial_will_end') {
+      const subscription = event.data.object;
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, trial_ends_at')
+        .eq('stripe_customer_id', subscription.customer)
+        .single();
+      
+      if (profiles?.id) {
+        const { data: authUser } = await supabase.auth.admin.getUserById(profiles.id);
+        
+        if (authUser?.user?.email) {
+          // Calculate days left
+          const trialEnd = new Date(subscription.trial_end * 1000);
+          const now = new Date();
+          const daysLeft = Math.ceil((trialEnd - now) / (1000 * 60 * 60 * 24));
+          
+          try {
+            await sendEmail({
+              to: authUser.user.email,
+              subject: `Tvoj PRO preizkus se izteka čez ${daysLeft} ${daysLeft === 1 ? 'dan' : 'dni'}! ⏰`,
+              html: proTrialEndingTemplate(profiles.full_name || 'Študent', daysLeft)
+            });
+            console.log('✅ PRO trial ending email poslan na:', authUser.user.email);
+          } catch (emailError) {
+            console.error('❌ Napaka pri pošiljanju trial ending emaila:', emailError);
+          }
+        }
+      }
+    }
+    
+    // Handle upcoming invoice (3-7 days before renewal)
+    if (event.type === 'invoice.upcoming') {
+      const invoice = event.data.object;
+      
+      // Only handle subscription invoices, not one-time payments
+      if (invoice.subscription) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, full_name')
+          .eq('stripe_customer_id', invoice.customer)
+          .single();
+        
+        if (profiles?.id) {
+          const { data: authUser } = await supabase.auth.admin.getUserById(profiles.id);
+          
+          if (authUser?.user?.email) {
+            // Format renewal date
+            const renewalDate = new Date(invoice.period_end * 1000).toLocaleDateString('sl-SI', {
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric'
+            });
+            
+            try {
+              await sendEmail({
+                to: authUser.user.email,
+                subject: 'Tvoja PRO naročnina se obnavlja! 💳',
+                html: proExpiringReminderTemplate(profiles.full_name || 'Študent', renewalDate)
+              });
+              console.log('✅ PRO renewal reminder email poslan na:', authUser.user.email);
+            } catch (emailError) {
+              console.error('❌ Napaka pri pošiljanju renewal reminder emaila:', emailError);
+            }
           }
         }
       }

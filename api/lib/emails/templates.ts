@@ -245,6 +245,71 @@ export function subscriptionCancelledTemplate(userName: string): string {
 }
 
 /**
+ * PRO trial ending reminder template
+ */
+export function proTrialEndingTemplate(userName: string, daysLeft: number): string {
+  const content = `
+    <h2>Tvoj PRO preizkus se izteka! ⏰</h2>
+    <p>Pozdravljeni, <strong>${userName}</strong>!</p>
+    <p>Tvoj 7-dnevni brezplačni preizkus Študko PRO se bo iztekol čez <strong>${daysLeft} ${daysLeft === 1 ? 'dan' : 'dni'}</strong>.</p>
+    
+    <div class="info-box">
+      <h3 style="margin-top: 0; color: ${BRAND_COLOR};">Kaj se bo zgodilo:</h3>
+      <p style="margin: 10px 0;">
+        Po koncu preizkusnega obdobja se bo tvoja naročnina <strong>samodejno aktivirala za 3,99 €/mesec</strong>. 
+        Kadarkoli jo lahko prekliceš v nastavitvah profila.
+      </p>
+    </div>
+
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="https://studko.si/profile?tab=subscription" class="button">Upravljaj Naročnino</a>
+    </div>
+
+    <div class="divider"></div>
+
+    <p><strong>Ne želiš nadaljevati?</strong></p>
+    <p>Če ne želiš nadaljevati s PRO naročnino, lahko kadarkoli prekliceš naročnino v nastavitvah profila. Po preklicu boš še vedno lahko uporabljal PRO funkcije do konca preizkusnega obdobja.</p>
+
+    <p style="margin-top: 30px; color: #666; font-size: 14px;">
+      Hvala ker si poskusil Študko PRO! 💜
+    </p>
+  `;
+  return emailWrapper(content);
+}
+
+/**
+ * PRO subscription expiring reminder template
+ */
+export function proExpiringReminderTemplate(userName: string, expiryDate: string): string {
+  const content = `
+    <h2>Tvoja PRO naročnina se obnavlja! 💳</h2>
+    <p>Pozdravljeni, <strong>${userName}</strong>!</p>
+    <p>Tvoja Študko PRO naročnina se bo avtomatsko obnovila <strong>${expiryDate}</strong>.</p>
+    
+    <div class="info-box">
+      <p style="margin: 0;">
+        Znesek <strong>3,99 €</strong> bo zaračunan na kartico, ki si jo dodal ob naročilu. 
+        Če želiš spremeniti način plačila, lahko to storiš v nastavitvah profila.
+      </p>
+    </div>
+
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="https://studko.si/profile?tab=subscription" class="button">Upravljaj Naročnino</a>
+    </div>
+
+    <div class="divider"></div>
+
+    <p><strong>Želiš preklicati?</strong></p>
+    <p>Če ne želiš nadaljevati s PRO naročnino, lahko kadarkoli prekliceš naročnino v nastavitvah profila.</p>
+
+    <p style="margin-top: 30px; color: #666; font-size: 14px;">
+      Hvala ker si del Študko PRO! 🚀
+    </p>
+  `;
+  return emailWrapper(content);
+}
+
+/**
  * Payout request confirmation template
  */
 export function payoutRequestTemplate(userName: string, amount: number, method: string): string {
