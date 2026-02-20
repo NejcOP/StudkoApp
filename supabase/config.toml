@@ -41,7 +41,7 @@ verify_jwt = true
 
 [functions.stripe-connect-onboarding]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 import_map = "./functions/stripe-connect-onboarding/deno.json"
 entrypoint = "./functions/stripe-connect-onboarding/index.ts"
 
