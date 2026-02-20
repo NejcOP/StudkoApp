@@ -75,7 +75,7 @@ serve(async (req) => {
       case 'signup': {
         // Email confirmation - use Supabase verify endpoint directly
         const supabaseUrl = Deno.env.get('SUPABASE_URL') || 'https://xjnffvqtqxnqobqezouv.supabase.co'
-        confirmLink = `${supabaseUrl}/auth/v1/verify?token=${tokenValue}&type=signup&redirect_to=${encodeURIComponent(APP_URL + '/login')}`
+        confirmLink = `${supabaseUrl}/auth/v1/verify?token=${tokenValue}&type=signup&redirect_to=${encodeURIComponent(APP_URL + '/notes')}`
         subject = '🎉 Dobrodošel v Študko!'
         break
       }
