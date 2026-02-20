@@ -627,8 +627,8 @@ const Profile = () => {
 
     const handleStripeOnboarding = async () => {
       if (!user) return;
-      const returnUrl = window.location.origin + '/settings';
-      const refreshUrl = window.location.origin + '/settings';
+      const returnUrl = window.location.origin + '/profile';
+      const refreshUrl = window.location.origin + '/profile';
       const payload = {
         email: user.email,
         returnUrl,
