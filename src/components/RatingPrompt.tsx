@@ -46,7 +46,7 @@ export const RatingPrompt = () => {
         .select(`
           id,
           tutor_id,
-          profiles:tutor_id (id, full_name)
+          profiles!tutor_id(id, full_name)
         `)
         .eq('student_id', user.id)
         .eq('status', 'completed')
