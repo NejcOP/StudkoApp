@@ -87,38 +87,11 @@ export default function AdminTutorApplications() {
 
       if (error) throw error;
 
-      // Send approval email (notification + lepši email)
+      // Send approval email
       try {
         const { data: { session } } = await supabase.auth.getSession();
 
-        await fetch('/api/send-notification', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session?.access_token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            to: application.email,
-            title: '🎉 Tvoja prijava za inštruktorja je bila odobrena!',
-            message: `
-              <h2>Čestitamo, ${application.full_name}!</h2>
-              <p>Tvoja prijava za inštruktorja je bila odobrena.</p>
-              <p>Zdaj si viden na seznamu inštruktorjev na Študko platformi in študenti te lahko kontaktirajo za inštrukcije.</p>
-              <h3>Tvoji podatki:</h3>
-              <ul>
-                <li><strong>Predmeti:</strong> ${application.subjects.join(', ')}</li>
-                <li><strong>Cena:</strong> ${application.price_per_hour}€/uro</li>
-                <li><strong>Način poučevanja:</strong> ${application.mode}</li>
-              </ul>
-              <p>Prijavi se na platformo in začni prejemati povpraševanja za inštrukcije!</p>
-              <p><strong>Priporočilo:</strong> Nastavi svojo razpoložljivost v nastavitvah profila, da študenti vedo kdaj si na voljo.</p>
-            `,
-            actionLink: 'https://studko.si/tutor/dashboard',
-            actionText: 'Pojdi na nadzorno ploščo',
-          }),
-        });
-
-        // Pošlji še lepši e-mail prek /api/send
+        // Pošlji lepši e-mail prek /api/send
         await fetch('/api/send', {
           method: 'POST',
           headers: {
@@ -179,33 +152,11 @@ export default function AdminTutorApplications() {
 
       if (error) throw error;
 
-      // Send rejection email (notification + lepši email)
+      // Send rejection email
       try {
         const { data: { session } } = await supabase.auth.getSession();
 
-        await fetch('/api/send-notification', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session?.access_token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            to: application.email,
-            title: 'Glede tvoje prijave za inštruktorja',
-            message: `
-              <h2>Pozdravljeni, ${application.full_name}</h2>
-              <p>Žal ti moramo sporočiti, da tvoja prijava za inštruktorja na Študko platformi tokrat ni bila odobrena.</p>
-              ${rejectionReason ? `
-                <h3>Razlog:</h3>
-                <p>${rejectionReason}</p>
-              ` : ''}
-              <p>Zahvaljujemo se ti za zanimanje in tvoj čas. Če imaš kakršna koli vprašanja, nas lahko kontaktiraš na info@studko.si.</p>
-              <p>Želimo ti veliko uspeha pri prihodnjih projektih!</p>
-            `,
-          }),
-        });
-
-        // Pošlji še lepši e-mail prek /api/send
+        // Pošlji lepši e-mail prek /api/send
         await fetch('/api/send', {
           method: 'POST',
           headers: {
