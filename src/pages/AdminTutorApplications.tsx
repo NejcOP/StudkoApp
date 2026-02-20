@@ -143,6 +143,13 @@ export default function AdminTutorApplications() {
         description: "Prijava je bila odobrena. Inštruktor je zdaj viden na seznamu.",
       });
 
+      // Clear tutors cache so the list refreshes
+      try {
+        sessionStorage.removeItem('tutors_cache');
+      } catch (e) {
+        console.error('Error clearing tutors cache:', e);
+      }
+
       // Refresh list
       fetchApplications();
     } catch (error: any) {
@@ -223,6 +230,13 @@ export default function AdminTutorApplications() {
         title: "Prijava zavrnjena",
         description: "Prijava je bila zavrnjena.",
       });
+
+      // Clear tutors cache
+      try {
+        sessionStorage.removeItem('tutors_cache');
+      } catch (e) {
+        console.error('Error clearing tutors cache:', e);
+      }
 
       setRejectDialogOpen(false);
       setRejectionReason("");
