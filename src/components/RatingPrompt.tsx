@@ -10,10 +10,7 @@ import { Star, Loader2 } from "lucide-react";
 interface CompletedBooking {
   id: string;
   tutor_id: string;
-  profiles: {
-    id: string;
-    full_name: string;
-  };
+  tutor_name: string;
 }
 
 export const RatingPrompt = () => {
@@ -43,11 +40,7 @@ export const RatingPrompt = () => {
       
       const { data: completedBookings, error } = await supabase
         .from('tutor_bookings')
-        .select(`
-          id,
-          tutor_id,
-          profiles!tutor_id(id, full_name)
-        `)
+        .select('id, tutor_id')
         .eq('student_id', user.id)
         .eq('status', 'completed')
         .gte('end_time', oneHourAgo)
@@ -64,12 +57,22 @@ export const RatingPrompt = () => {
           .from('profile_reviews')
           .select('id')
           .eq('reviewer_id', user.id)
-          .eq('target_profile_id', booking.profiles.id)
+          .eq('target_profile_id', booking.tutor_id)
           .single();
 
         // Only show prompt if no review exists
         if (!existingReview) {
-          setBooking(booking as any);
+          // Fetch tutor name separately
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('id', booking.tutor_id)
+            .single();
+
+          setBooking({
+            ...booking,
+            tutor_name: profile?.full_name || 'Neznano'
+          });
           setOpen(true);
         }
       }
@@ -87,7 +90,7 @@ export const RatingPrompt = () => {
         .from('profile_reviews')
         .insert({
           reviewer_id: user.id,
-          target_profile_id: booking.profiles.id,
+          target_profile_id: booking.tutor_id,
           rating,
           comment: comment.trim() || null
         });
@@ -120,7 +123,7 @@ export const RatingPrompt = () => {
         <DialogHeader>
           <DialogTitle>Oceni tutorja</DialogTitle>
           <DialogDescription>
-            Kako bi ocenil svojo izkušnjo z {booking.profiles.full_name}?
+            Kako bi ocenil svojo izkušnjo z {booking.tutor_name}?
           </DialogDescription>
         </DialogHeader>
 
