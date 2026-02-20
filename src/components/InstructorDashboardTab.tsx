@@ -708,7 +708,7 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
                 </p>
               </div>
               <div className="w-full sm:w-auto flex-shrink-0">
-                <StripeConnectButton hasConnectAccount={false} />
+                <StripeConnectButton hasConnectAccount={hasPayoutSetup} />
               </div>
             </div>
           </CardContent>
