@@ -696,15 +696,21 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
       {/* Payout Warning */}
       {!hasPayoutSetup && (
         <Card className="border-orange-500/50 bg-orange-50 dark:bg-orange-950/30">
-          <CardContent className="flex items-center gap-4 py-4">
-            <AlertTriangle className="w-8 h-8 text-orange-600 dark:text-orange-400" />
-            <div className="flex-1">
-              <p className="font-semibold text-orange-900 dark:text-orange-200">Nastavi podatke za izplačila</p>
-              <p className="text-sm text-orange-800 dark:text-orange-300">
-                Za prejemanje plačil moraš najprej povezati svoj Stripe račun.
-              </p>
+          <CardContent className="py-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <AlertTriangle className="w-8 h-8 text-orange-600 dark:text-orange-400 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-orange-900 dark:text-orange-200 whitespace-nowrap overflow-hidden text-ellipsis">
+                  Nastavi podatke za izplačila
+                </p>
+                <p className="text-sm text-orange-800 dark:text-orange-300 mt-1">
+                  Za prejemanje plačil moraš najprej povezati svoj Stripe račun.
+                </p>
+              </div>
+              <div className="w-full sm:w-auto flex-shrink-0">
+                <StripeConnectButton hasConnectAccount={false} />
+              </div>
             </div>
-            <StripeConnectButton hasConnectAccount={false} />
           </CardContent>
         </Card>
       )}
