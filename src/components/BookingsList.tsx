@@ -117,20 +117,34 @@ export const BookingsList = ({ userId }: { userId: string }) => {
 
   const loadBookings = async () => {
     try {
+      console.log('Loading bookings for user:', userId);
       const { data: bookingsData, error } = await supabase
         .from('tutor_bookings')
         .select('*')
         .eq('student_id', userId)
         .order('start_time', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error loading bookings:', error);
+        throw error;
+      }
+
+      console.log('Bookings loaded:', bookingsData?.length, bookingsData);
 
       // Get tutor profiles (tutor_id now references profiles.id)
       const tutorIds = [...new Set(bookingsData?.map(b => b.tutor_id) || [])];
-      const { data: profiles } = await supabase
+      console.log('Loading profiles for tutor IDs:', tutorIds);
+      
+      const { data: profiles, error: profileError } = await supabase
         .from('profiles')
         .select('id, full_name')
         .in('id', tutorIds);
+
+      if (profileError) {
+        console.error('Error loading profiles:', profileError);
+      }
+
+      console.log('Profiles loaded:', profiles);
 
       const profilesMap = new Map(profiles?.map(p => [p.id, p.full_name]) || []);
       
@@ -139,6 +153,7 @@ export const BookingsList = ({ userId }: { userId: string }) => {
         tutor_name: profilesMap.get(b.tutor_id) || 'Neznano'
       })) || [];
 
+      console.log('Enriched bookings:', enrichedBookings);
       setBookings(enrichedBookings);
     } catch (error) {
       console.error('Error loading bookings:', error);
