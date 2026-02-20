@@ -1,5 +1,6 @@
-console.log('PURE FETCH STRIPE EDGE FUNCTION STARTED');
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+
+console.log('PURE FETCH STRIPE EDGE FUNCTION STARTED');
 
 const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY') ?? '';
 if (!stripeSecretKey) {
