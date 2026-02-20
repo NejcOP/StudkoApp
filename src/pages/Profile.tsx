@@ -1378,23 +1378,16 @@ const Profile = () => {
                                         {loadingSubscription ? "Nalagam..." : "Uredi plačilne podatke"}
                                       </Button>
                                       <Button
-                                        onClick={handleReactivateSubscription}
-                                        disabled={reactivating}
-                                        className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:opacity-90 text-white"
+                                        onClick={handleUpgradeToPro}
+                                        disabled={loadingSubscription}
+                                        className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-90 text-white"
                                       >
-                                        {reactivating ? (
-                                          <>
-                                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                            Ponovno aktiviram...
-                                          </>
-                                        ) : (
-                                          "Obnovi naročnino"
-                                        )}
+                                        {loadingSubscription ? "Nalagam..." : "Postani član Študko PRO"}
                                       </Button>
                                     </div>
                                     <div className="bg-muted rounded-xl p-4 border border-border">
                                       <p className="text-sm text-muted-foreground">
-                                        S ponovnim aktiviranjem se bo tvoja naročnina normalno podaljševala vsak mesec.
+                                        Ker si že uporabljal PRO, preizkusno obdobje ni več na voljo. Naročnina se bo mesečno obnavljala.
                                       </p>
                                     </div>
                                   </>
