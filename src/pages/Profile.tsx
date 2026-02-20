@@ -1000,9 +1000,18 @@ const Profile = () => {
     const handleReactivateSubscription = async () => {
       setReactivating(true);
       try {
-        const { data, error } = await supabase.functions.invoke("reactivate-subscription");
+        const { data, error } = await supabase.functions.invoke("reactivate-subscription", {
+          headers: {
+            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+          }
+        });
         
         if (error) throw error;
+        
+        if (data?.error) {
+          toast.error(data.error);
+          return;
+        }
         
         if (data?.success) {
           toast.success(
