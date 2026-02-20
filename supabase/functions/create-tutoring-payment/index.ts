@@ -77,29 +77,21 @@ serve(async (req) => {
 
     logStep("Booking found", { bookingId: booking.id, tutorId: booking.tutor_id });
 
-    // Get tutor details from tutors table
-    const { data: tutor, error: tutorError } = await supabaseClient
-      .from("tutors")
-      .select("id, full_name, user_id")
+    // Get tutor's profile directly (tutor_id references profiles.id)
+    const { data: tutorProfile, error: profileError } = await supabaseClient
+      .from("profiles")
+      .select("full_name, stripe_connect_id")
       .eq("id", booking.tutor_id)
       .single();
 
-    if (tutorError || !tutor) {
-      logStep("Tutor not found", { tutorError });
-      throw new Error("Tutor not found");
+    if (profileError || !tutorProfile) {
+      logStep("Tutor profile not found", { profileError });
+      throw new Error("Tutor profile not found");
     }
 
-    // Get tutor's stripe connect account from profiles
-    const { data: tutorProfile, error: profileError } = await supabaseClient
-      .from("profiles")
-      .select("stripe_connect_id")
-      .eq("id", tutor.user_id)
-      .single();
-
-    if (profileError || !tutorProfile?.stripe_connect_id) {
+    if (!tutorProfile.stripe_connect_id) {
       logStep("Tutor payout not setup", { 
-        profileError, 
-        hasConnectId: !!tutorProfile?.stripe_connect_id 
+        hasConnectId: !!tutorProfile.stripe_connect_id 
       });
       return new Response(
         JSON.stringify({ error: "Inštruktor še ni nastavil izplačil. Prosim kontaktiraj inštruktorja." }),
@@ -108,7 +100,7 @@ serve(async (req) => {
     }
 
     logStep("Tutor found", { 
-      tutorName: tutor.full_name, 
+      tutorName: tutorProfile.full_name, 
       connectAccountId: tutorProfile.stripe_connect_id 
     });
 
@@ -139,8 +131,8 @@ serve(async (req) => {
           price_data: {
             currency: "eur",
             product_data: {
-              name: `Tutoring session with ${tutor.full_name}`,
-              description: `Session on ${new Date(booking.start_time).toLocaleString('sl-SI')}`,
+              name: `Lekcija pri inštruktorju ${tutorProfile.full_name}`,
+              description: `Lekcija ${new Date(booking.start_time).toLocaleString('sl-SI')}`,
             },
             unit_amount: amount,
           },
