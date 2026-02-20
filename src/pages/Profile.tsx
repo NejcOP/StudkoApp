@@ -231,17 +231,36 @@ const Profile = () => {
 
         // If user is an instructor, get their tutor status and set tutorId to user.id
         if (profileData?.is_instructor) {
-          const { data: tutorData } = await supabase
-            .from("tutors")
-            .select("id, status")
-            .eq("user_id", user.id)
-            .limit(1);
+          // Query tutors table - with retry logic for newly approved tutors
+          let tutorData = null;
+          let retries = 3;
           
+          while (retries > 0 && !tutorData) {
+            const { data } = await supabase
+              .from("tutors")
+              .select("id, status")
+              .eq("user_id", user.id)
+              .limit(1);
+            
+            if (data && data.length > 0) {
+              tutorData = data;
+              break;
+            }
+            
+            // Wait a bit and retry (for newly approved tutors)
+            if (retries > 1) {
+              await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            retries--;
+          }
           
           if (tutorData && tutorData.length > 0) {
             // Use user.id for tutor_availability_dates table (references profiles.id)
             setTutorId(user.id);
             setIsApprovedTutor(tutorData[0].status === 'approved');
+            console.log('Tutor found:', { tutorId: user.id, status: tutorData[0].status });
+          } else {
+            console.warn('Tutor record not found despite is_instructor=true');
           }
         } else {
           setIsApprovedTutor(false);
@@ -609,12 +628,25 @@ const Profile = () => {
             filter: `id=eq.${user.id}`,
           },
           (payload) => {
+            console.log('Profile changed:', { old: payload.old, new: payload.new });
+            
             // Reload profile when updated but don't reset the edit form
             loadProfileData(false);
             
             // Show success toast if is_pro becomes true
             if (payload.new?.is_pro && !payload.old?.is_pro) {
               toast.success('PRO naročnina je aktivna! 🚀');
+            }
+            
+            // Show success toast if is_instructor becomes true
+            if (payload.new?.is_instructor && !payload.old?.is_instructor) {
+              toast.success('Tvoja prijava za instruktorja je bila odobrena! Ponovno naloži stran za dostop do kontrolne plošče.', {
+                duration: 8000,
+              });
+              // Force reload tutor status after a short delay
+              setTimeout(() => {
+                loadProfileData(false);
+              }, 1000);
             }
           }
         )

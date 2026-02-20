@@ -69,7 +69,7 @@ export default withAuth(async (req, res, user) => {
           to: email,
           subject: body.title,
           html: emailHtml.replace('{{email}}', email),
-          from: 'Študko <no-reply@studko.si>',
+          from: 'Študko <noreply@studko.si>',
         })
       )
     );
