@@ -91,8 +91,7 @@ serve(async (req) => {
       }],
       mode: 'payment',
       payment_intent_data: {
-        application_fee_amount: Math.round(note.price * 100 * 0.20),
-        transfer_data: { destination: note.profiles.stripe_connect_id },
+        application_fee_amount: Math.round(note.price * 100 * 0.20), // 20% platform fee
       },
       metadata: {
         user_id: userId,
@@ -100,6 +99,8 @@ serve(async (req) => {
       },
       success_url: `${req.headers.get('origin')}/profile?tab=purchased&payment=success`,
       cancel_url: `${req.headers.get('origin')}/notes/${noteId}?payment=cancelled`,
+    }, {
+      stripeAccount: note.profiles.stripe_connect_id, // Direct charge - only requires card_payments capability
     })
 
     return new Response(JSON.stringify({ url: session.url }), {
