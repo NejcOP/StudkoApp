@@ -64,15 +64,16 @@ export default async function handler(req, res) {
           try {
             const { data: booking } = await supabase
               .from('tutor_bookings')
-              .select('*, tutors!inner(user_id)')
+              .select('*')
               .eq('id', session.metadata.booking_id)
               .single();
 
             if (booking) {
+              // tutor_bookings.tutor_id now references profiles.id directly (auth.users.id)
               const { data: instructorProfile } = await supabase
                 .from('profiles')
                 .select('full_name, email')
-                .eq('id', booking.tutors.user_id)
+                .eq('id', booking.tutor_id)
                 .single();
 
               const { data: studentProfile } = await supabase
