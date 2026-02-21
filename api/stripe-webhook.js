@@ -77,7 +77,7 @@ export default async function handler(req, res) {
 
               const { data: studentProfile } = await supabase
                 .from('profiles')
-                .select('full_name')
+                .select('full_name, email')
                 .eq('id', booking.student_id)
                 .single();
 
@@ -98,6 +98,7 @@ export default async function handler(req, res) {
                     type: 'payment_received',
                     instructorName: instructorProfile.full_name || 'Inštruktor',
                     studentName: studentProfile?.full_name || 'Študent',
+                    studentEmail: studentProfile?.email || '',
                     bookingDate: bookingDate,
                     bookingTime: bookingTime,
                     priceEur: booking.price_eur

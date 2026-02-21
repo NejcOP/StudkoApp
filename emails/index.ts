@@ -8,3 +8,4 @@ export { TikTokApprovedEmail } from './tiktok-approved.js';
 export { TikTokRejectedEmail } from './tiktok-rejected.js';
 export { InstructorApprovedEmail } from './instructor-approved.js';
 export { InstructorRejectedEmail } from './instructor-rejected.js';
+export { BookingPaidEmail } from './booking-paid.js';

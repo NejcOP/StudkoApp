@@ -363,6 +363,30 @@ const Profile = () => {
         setSettingsTab('subscription');
         setIsSettingsOpen(true);
       }
+
+      // Handle tutoring payment success
+      if (urlParams.get('payment') === 'success' && urlParams.get('tab') === 'bookings') {
+        toast.success("Plačilo uspešno! 🎉", {
+          description: "Tvoja lekcija je plačana. Inštruktor ti bo kmalu poslal Zoom link za lekcijo.",
+          duration: 7000,
+        });
+        // Remove payment parameter from URL, keep tab=bookings
+        urlParams.delete('payment');
+        window.history.replaceState({}, '', `/profile?${urlParams.toString()}`);
+        setMainTab('bookings');
+      }
+
+      // Handle payment cancelled
+      if (urlParams.get('payment') === 'cancelled' && urlParams.get('tab') === 'bookings') {
+        toast.error("Plačilo preklicano", {
+          description: "Če imaš težave s plačilom, nas kontaktiraj na info@studko.si",
+          duration: 5000,
+        });
+        // Remove payment parameter from URL, keep tab=bookings
+        urlParams.delete('payment');
+        window.history.replaceState({}, '', `/profile?${urlParams.toString()}`);
+        setMainTab('bookings');
+      }
       
       if (urlParams.get('tab') === 'purchased') {
         setMainTab('purchases');

@@ -193,22 +193,37 @@ serve(async (req) => {
       `
       html = emailWrapper(content)
     } else if (type === 'payment_received') {
-      subject = 'Plačilo prejeto - Lekcija plačana! 💰'
+      subject = 'Novo plačano naročilo - Pošlji Zoom link! 💰'
       const content = `
-        <h2>Plačilo prejeto! 💰</h2>
+        <h2>Novo plačano naročilo! 💰</h2>
         <p>Pozdravljeni, <strong>${instructorName}</strong>!</p>
-        <p>Študent <strong>${studentName}</strong> je uspešno plačal lekcijo.</p>
+        <p>Študent <strong>${studentName}</strong> je uspešno plačal lekcijo pri tebi.</p>
         
         <div class="info-box">
-          <h3 style="margin-top: 0; color: ${BRAND_COLOR};">Podrobnosti plačila:</h3>
-          <p style="margin: 5px 0;"><strong>Datum lekcije:</strong> ${bookingDate}</p>
+          <h3 style="margin-top: 0; color: ${BRAND_COLOR};">Podrobnosti lekcije:</h3>
+          <p style="margin: 5px 0;"><strong>Datum:</strong> ${bookingDate}</p>
           <p style="margin: 5px 0;"><strong>Čas:</strong> ${bookingTime}</p>
           <p style="margin: 5px 0;"><strong>Študent:</strong> ${studentName}</p>
-          <p style="margin: 15px 0 5px; font-size: 24px; color: ${BRAND_COLOR};"><strong>Znesek: ${priceEur} €</strong></p>
+          <p style="margin: 15px 0 5px; font-size: 24px; color: ${BRAND_COLOR};"><strong>Plačano: ${priceEur} €</strong></p>
+        </div>
+
+        <div style="background-color: #fff3cd; border-left: 4px solid #f59e0b; padding: 20px; margin: 25px 0; border-radius: 4px;">
+          <h3 style="margin: 0 0 10px 0; color: #92400e; font-size: 18px;">⚠️ POMEMBNO - Naslednji koraki:</h3>
+          <p style="margin: 8px 0; color: #78350f; font-size: 15px;">
+            <strong>Prosimo, da študentu čim prej pošlješ:</strong>
+          </p>
+          <ul style="margin: 10px 0; padding-left: 20px; color: #78350f;">
+            <li style="margin: 8px 0;"><strong>🔗 Zoom link</strong> ali povezavo do online sestanka</li>
+            <li style="margin: 8px 0;"><strong>📝 Navodila</strong> za pripravo na lekcijo (če je potrebno)</li>
+            <li style="margin: 8px 0;"><strong>🎯 Potrditev termina</strong> in morebitne dodatne informacije</li>
+          </ul>
+          <p style="margin: 10px 0 0 0; color: #78350f; font-size: 14px;">
+            Študent pričakuje Zoom link vsaj <strong>1 uro pred lekcijo</strong>.
+          </p>
         </div>
 
         <div style="background-color: #d4edda; border-left: 4px solid #28a745; padding: 15px; margin: 20px 0; border-radius: 4px;">
-          <p style="margin: 0; color: #155724;"><strong>✅ Plačilo uspešno:</strong> Sredstva bodo nakazana na tvoj Stripe račun.</p>
+          <p style="margin: 0; color: #155724;"><strong>✅ Plačilo uspešno:</strong> Po zaključku lekcije bodo sredstva (${Math.round(priceEur * 0.8)} € = 80%) avtomatsko nakazana na tvoj Stripe Connect račun.</p>
         </div>
 
         <div style="text-align: center; margin: 30px 0;">
@@ -218,7 +233,7 @@ serve(async (req) => {
         <div class="divider"></div>
 
         <p style="font-size: 14px; color: #666;">
-          Lekcija bo potekala ob dogovorjenem času. Dobiček bo avtomatsko nakazan na tvoj Stripe Connect račun po uspešno zaključeni lekciji.
+          Hvala, ker uporabljaš Študko! Če imaš vprašanja, nas kontaktiraj na info@studko.si
         </p>
       `
       html = emailWrapper(content)
