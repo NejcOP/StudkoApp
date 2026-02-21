@@ -108,6 +108,60 @@ serve(async (req) => {
       apiVersion: "2025-08-27.basil",
     });
 
+    // Verify Stripe Connect account is ready for payments
+    let stripeAccount;
+    try {
+      stripeAccount = await stripe.accounts.retrieve(tutorProfile.stripe_connect_id);
+      
+      logStep("Stripe account retrieved", {
+        accountId: stripeAccount.id,
+        chargesEnabled: stripeAccount.charges_enabled,
+        detailsSubmitted: stripeAccount.details_submitted,
+        payoutsEnabled: stripeAccount.payouts_enabled,
+        cardPaymentsCapability: stripeAccount.capabilities?.card_payments
+      });
+
+      if (!stripeAccount.charges_enabled) {
+        logStep("Charges not enabled", { 
+          chargesEnabled: stripeAccount.charges_enabled,
+          requirements: stripeAccount.requirements
+        });
+        return new Response(
+          JSON.stringify({ 
+            error: "Inštruktor še ni dokončal nastavitve plačilnega računa. Prosim kontaktiraj inštruktorja.",
+            details: "Stripe charges not enabled"
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+        );
+      }
+
+      if (stripeAccount.capabilities?.card_payments !== 'active') {
+        logStep("Card payments not active", { 
+          capability: stripeAccount.capabilities?.card_payments
+        });
+        return new Response(
+          JSON.stringify({ 
+            error: "Inštruktorjev plačilni račun še ni aktiviran. Prosim kontaktiraj inštruktorja.",
+            details: "Card payments capability not active"
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+        );
+      }
+
+    } catch (accountError: any) {
+      logStep("Error retrieving Stripe account", {
+        error: accountError.message,
+        accountId: tutorProfile.stripe_connect_id
+      });
+      return new Response(
+        JSON.stringify({ 
+          error: "Napaka pri preverjanju inštruktorjevega plačilnega računa.",
+          details: accountError.message
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
+    }
+
     const bookingPriceEur = booking.price_eur || 20;
     const amount = Math.round(bookingPriceEur * 100);
     const applicationFee = Math.round(amount * 0.20); // 20% platform fee

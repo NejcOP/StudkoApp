@@ -68,7 +68,8 @@ serve(async (req) => {
       email: user.email,
       capabilities: {
         card_payments: { requested: true },
-        transfers: { requested: true },
+        // Note: We only need card_payments for direct charges
+        // transfers capability is NOT needed and can cause delays in onboarding
       },
       business_type: "individual",
       business_profile: {
