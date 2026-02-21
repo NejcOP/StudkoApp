@@ -245,9 +245,22 @@ export const BookingCalendar14Days = ({
       }
 
       // Immediately update local state to hide the slot
-      setAvailability(prev => prev.map(slot => 
-        slot.id === selectedSlot.id ? { ...slot, is_booked: true } : slot
-      ));
+      setAvailability(prev => {
+        const updated = prev.map(slot => 
+          slot.id === selectedSlot.id ? { ...slot, is_booked: true } : slot
+        );
+        console.log('Local state updated - slot marked as booked');
+        console.log('Updated availability:', updated.filter(s => s.available_date === format(selectedDate, 'yyyy-MM-dd')));
+        return updated;
+      });
+
+      // Force UI update by briefly resetting and restoring selected date
+      const currentSelectedDate = selectedDate;
+      setSelectedDate(null);
+      setTimeout(() => {
+        setSelectedDate(currentSelectedDate);
+        console.log('Selected date restored - UI should update now');
+      }, 50);
 
       // Send notification to tutor
       await sendBookingNotification({
@@ -306,21 +319,16 @@ export const BookingCalendar14Days = ({
         description: 'Inštruktor jo bo pregledal in potrdil.'
       });
       
-      // Wait a bit for database to update, then reload
-      await new Promise(resolve => setTimeout(resolve, 500));
-      await loadData();
-      
-      // Then close dialog and reset form
+      // Close dialog and reset form immediately
       setShowBookingDialog(false);
       setBookingNotes("");
       setSelectedSlot(null);
       
-      // Force re-select the day to show updated slots
-      if (selectedDate) {
-        const dateStr = format(selectedDate, 'yyyy-MM-dd');
-        const daySlots = availability.filter(s => s.available_date === dateStr);
-        console.log('Slots after reload:', daySlots.filter(s => !s.is_booked).length, 'available');
-      }
+      // Reload data in background to sync with database
+      setTimeout(() => {
+        console.log('Background reload triggered');
+        loadData();
+      }, 1000);
     } catch (error) {
       console.error('Error creating booking:', error);
       toast.error('Napaka pri rezervaciji');
