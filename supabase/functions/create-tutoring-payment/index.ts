@@ -172,9 +172,21 @@ serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: any) {
-    logStep("ERROR", { message: error.message });
+    logStep("ERROR", { 
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      type: error.type,
+      raw: error
+    });
+    
+    console.error("Full error details:", JSON.stringify(error, null, 2));
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message || "Unknown error",
+        details: error.stack || error.toString()
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
     );
   }

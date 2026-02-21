@@ -186,11 +186,13 @@ export const BookingsList = ({ userId }: { userId: string }) => {
 
       if (error) {
         console.error('Supabase function error:', error);
+        console.error('Error details:', JSON.stringify(error, null, 2));
         throw error;
       }
       
       if (data?.error) {
         console.error('Payment creation error:', data.error);
+        console.error('Error details from backend:', data.details);
         throw new Error(data.error);
       }
 
