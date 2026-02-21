@@ -329,7 +329,7 @@ export const BookingCalendar14Days = ({
     switch (status) {
       case 'open': return 'bg-green-100 dark:bg-green-900/30 border-green-300 dark:border-green-700 hover:bg-green-200 dark:hover:bg-green-900/50';
       case 'partial': return 'bg-yellow-100 dark:bg-yellow-900/30 border-yellow-300 dark:border-yellow-700 hover:bg-yellow-200 dark:hover:bg-yellow-900/50';
-      case 'booked': return 'bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700';
+      case 'booked': return 'bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-700';
       case 'closed': return 'bg-muted border-border opacity-60';
     }
   };
@@ -338,7 +338,7 @@ export const BookingCalendar14Days = ({
     switch (status) {
       case 'open': return <Badge className="bg-green-600 text-white text-[10px] px-1">Prosto</Badge>;
       case 'partial': return <Badge className="bg-yellow-600 text-white text-[10px] px-1">Delno</Badge>;
-      case 'booked': return <Badge className="bg-blue-600 text-white text-[10px] px-1">Zasedeno</Badge>;
+      case 'booked': return <Badge className="bg-red-600 text-white text-[10px] px-1">Zasedeno</Badge>;
       case 'closed': return <Badge variant="secondary" className="text-[10px] px-1">Zaprto</Badge>;
     }
   };
