@@ -120,38 +120,52 @@ serve(async (req) => {
     });
 
     // Create checkout session with destination charge
-    const session = await stripe.checkout.sessions.create({
-      payment_intent_data: {
-        application_fee_amount: applicationFee,
-        transfer_data: {
-          destination: tutorProfile.stripe_connect_id,
+    let session;
+    try {
+      session = await stripe.checkout.sessions.create({
+        payment_intent_data: {
+          application_fee_amount: applicationFee,
+          transfer_data: {
+            destination: tutorProfile.stripe_connect_id,
+          },
+          metadata: {
+            booking_id: bookingId,
+            tutor_id: booking.tutor_id,
+            student_id: userData.user.id,
+          },
         },
+        line_items: [
+          {
+            price_data: {
+              currency: "eur",
+              product_data: {
+                name: `Lekcija pri inštruktorju ${tutorProfile.full_name}`,
+                description: `Lekcija ${new Date(booking.start_time).toLocaleString('sl-SI')}`,
+              },
+              unit_amount: amount,
+            },
+            quantity: 1,
+          },
+        ],
+        mode: "payment",
+        success_url: `${req.headers.get("origin")}/profile?tab=bookings&payment=success`,
+        cancel_url: `${req.headers.get("origin")}/profile?tab=bookings&payment=cancelled`,
         metadata: {
           booking_id: bookingId,
-          tutor_id: booking.tutor_id,
-          student_id: userData.user.id,
         },
-      },
-      line_items: [
-        {
-          price_data: {
-            currency: "eur",
-            product_data: {
-              name: `Lekcija pri inštruktorju ${tutorProfile.full_name}`,
-              description: `Lekcija ${new Date(booking.start_time).toLocaleString('sl-SI')}`,
-            },
-            unit_amount: amount,
-          },
-          quantity: 1,
-        },
-      ],
-      mode: "payment",
-      success_url: `${req.headers.get("origin")}/profile?tab=bookings&payment=success`,
-      cancel_url: `${req.headers.get("origin")}/profile?tab=bookings&payment=cancelled`,
-      metadata: {
-        booking_id: bookingId,
-      },
-    });
+      });
+    } catch (stripeError: any) {
+      logStep("STRIPE API ERROR", {
+        message: stripeError.message,
+        type: stripeError.type,
+        code: stripeError.code,
+        param: stripeError.param,
+        statusCode: stripeError.statusCode,
+        raw: stripeError.raw,
+        stripeConnectId: tutorProfile.stripe_connect_id
+      });
+      throw new Error(`Stripe error: ${stripeError.message}`);
+    }
 
     logStep("Checkout session created", { sessionId: session.id });
 
