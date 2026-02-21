@@ -229,6 +229,12 @@ export const BookingsList = ({ userId }: { userId: string }) => {
   const confirmedBookings = bookings.filter(b => b.status === 'confirmed');
   const upcomingBookings = confirmedBookings.filter(b => new Date(b.start_time) > new Date());
   const awaitingPayment = confirmedBookings.filter(b => !b.paid && new Date(b.start_time) > new Date());
+  
+  // Combine pending and upcoming confirmed bookings for the "Prihajajoče" tab
+  const allUpcomingBookings = [...pendingBookings, ...upcomingBookings].sort((a, b) => 
+    new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
+  );
+  
   const pastBookings = bookings.filter(b => 
     b.status === 'completed' || b.status === 'cancelled' || 
     (b.status === 'confirmed' && new Date(b.end_time) < new Date())
@@ -267,7 +273,7 @@ export const BookingsList = ({ userId }: { userId: string }) => {
         </TabsList>
 
         <TabsContent value="upcoming">
-          {upcomingBookings.length === 0 ? (
+          {allUpcomingBookings.length === 0 ? (
             <div className="text-center py-12 bg-card rounded-xl border">
               <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
               <p className="text-muted-foreground mb-4">Nimaš nobenih prihajajočih ur</p>
@@ -277,7 +283,7 @@ export const BookingsList = ({ userId }: { userId: string }) => {
             </div>
           ) : (
             <div className="space-y-4">
-              {upcomingBookings.map((booking) => (
+              {allUpcomingBookings.map((booking) => (
                 <Card key={booking.id} className="bg-card/95 backdrop-blur-sm">
                   <CardContent className="p-4">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -314,10 +320,21 @@ export const BookingsList = ({ userId }: { userId: string }) => {
                         {booking.meeting_url && booking.paid && (
                           <Button
                             variant="hero"
-                            onClick={() => navigate(booking.meeting_url!)}
+                            onClick={() => window.open(booking.meeting_url!, '_blank')}
                           >
                             <Video className="w-4 h-4 mr-2" />
                             Pridruži se
+                          </Button>
+                        )}
+                        {(booking.status === 'pending' || (booking.status === 'confirmed' && !booking.paid)) && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleCancel(booking.id)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <XCircle className="w-4 h-4 mr-2" />
+                            Prekliči
                           </Button>
                         )}
                       </div>
