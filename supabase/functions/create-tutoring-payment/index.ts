@@ -108,10 +108,16 @@ serve(async (req) => {
       apiVersion: "2025-08-27.basil",
     });
 
-    const amount = Math.round((booking.price_eur || 20) * 100);
+    const bookingPriceEur = booking.price_eur || 20;
+    const amount = Math.round(bookingPriceEur * 100);
     const applicationFee = Math.round(amount * 0.20); // 20% platform fee
 
-    logStep("Creating checkout session", { amount, applicationFee });
+    logStep("Creating checkout session", { 
+      bookingPriceEur, 
+      amount, 
+      applicationFee,
+      tutorReceives: amount - applicationFee
+    });
 
     // Create checkout session with destination charge
     const session = await stripe.checkout.sessions.create({

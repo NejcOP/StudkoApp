@@ -166,7 +166,18 @@ export const BookingsList = ({ userId }: { userId: string }) => {
   const handlePayment = async (bookingId: string) => {
     setPaying(bookingId);
     try {
+      const booking = bookings.find(b => b.id === bookingId);
+      console.log('=== PAYMENT FLOW START ===');
       console.log('Creating payment for booking:', bookingId);
+      console.log('Booking details:', {
+        id: booking?.id,
+        price_eur: booking?.price_eur,
+        tutor_id: booking?.tutor_id,
+        student_id: booking?.student_id,
+        status: booking?.status,
+        paid: booking?.paid
+      });
+      
       const { data, error } = await supabase.functions.invoke('create-tutoring-payment', {
         body: { bookingId }
       });
@@ -184,13 +195,15 @@ export const BookingsList = ({ userId }: { userId: string }) => {
       }
 
       if (data?.url) {
-        console.log('Redirecting to payment:', data.url);
+        console.log('Redirecting to Stripe Checkout:', data.url);
+        console.log('=== PAYMENT FLOW: Redirecting ===');
         window.location.href = data.url;
       } else {
+        console.error('No URL in response:', data);
         throw new Error('Ni dobljen payment URL');
       }
     } catch (error: any) {
-      console.error('Error creating payment:', error);
+      console.error('=== PAYMENT FLOW ERROR ===', error);
       const errorMessage = error.message || 'Napaka pri ustvarjanju plačila';
       toast.error(errorMessage, {
         description: 'Prosim poskusi znova ali kontaktiraj inštruktorja.'
