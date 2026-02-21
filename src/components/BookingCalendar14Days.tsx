@@ -76,8 +76,10 @@ export const BookingCalendar14Days = ({
           table: 'tutor_availability_dates',
           filter: `tutor_id=eq.${tutorId}`
         },
-        () => {
-          console.log('Availability changed, reloading...');
+        (payload) => {
+          console.log('Availability changed via realtime:', payload);
+          console.log('Event type:', payload.eventType);
+          console.log('Updated data:', payload.new);
           loadData();
         }
       )
@@ -93,6 +95,8 @@ export const BookingCalendar14Days = ({
       const today = new Date().toISOString().split('T')[0];
       const twoWeeksLater = addDays(new Date(), 14).toISOString().split('T')[0];
 
+      console.log('Loading availability for tutor:', tutorId, 'from', today, 'to', twoWeeksLater);
+
       // Load availability slots
       const { data: availData, error: availError } = await supabase
         .from('tutor_availability_dates')
@@ -102,6 +106,10 @@ export const BookingCalendar14Days = ({
         .lte('available_date', twoWeeksLater)
         .order('available_date')
         .order('start_time');
+
+      console.log('Availability data loaded:', availData?.length, 'slots');
+      console.log('Booked slots:', availData?.filter(s => s.is_booked).length);
+      console.log('Available slots:', availData?.filter(s => !s.is_booked).length);
 
       if (availError) throw availError;
       setAvailability(availData || []);
@@ -162,6 +170,10 @@ export const BookingCalendar14Days = ({
   };
 
   const handleDayClick = (day: DayData) => {
+    console.log('Day clicked:', format(day.date, 'yyyy-MM-dd'), 'status:', day.status);
+    console.log('Total slots:', day.slots.length, 'Available:', day.slots.filter(s => !s.is_booked).length);
+    console.log('Slots details:', day.slots.map(s => ({ id: s.id, time: s.start_time, booked: s.is_booked })));
+    
     if (day.status === 'closed' || day.status === 'booked') return;
     if (!user) {
       toast.error('Za rezervacijo se moraš prijaviti');
@@ -231,6 +243,11 @@ export const BookingCalendar14Days = ({
       } else {
         console.log('Slot marked as booked:', selectedSlot.id);
       }
+
+      // Immediately update local state to hide the slot
+      setAvailability(prev => prev.map(slot => 
+        slot.id === selectedSlot.id ? { ...slot, is_booked: true } : slot
+      ));
 
       // Send notification to tutor
       await sendBookingNotification({
@@ -428,26 +445,29 @@ export const BookingCalendar14Days = ({
                 {format(selectedDayData.date, 'EEEE, d. MMMM', { locale: sl })}
               </h4>
               
-              {selectedDayData.slots.filter(slot => !slot.is_booked).length === 0 ? (
-                <p className="text-sm text-muted-foreground">Ni prostih terminov za ta dan.</p>
-              ) : (
-                <div className="flex flex-col gap-2">
-                  {selectedDayData.slots
-                    .filter(slot => !slot.is_booked)
-                    .map((slot) => (
-                    <Button
-                      key={slot.id}
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleSlotSelect(slot)}
-                      className="justify-start w-full hover:bg-primary hover:text-primary-foreground"
-                    >
-                      <Clock className="w-3 h-3 mr-2" />
-                      {slot.start_time.substring(0, 5)} - {slot.end_time.substring(0, 5)}
-                    </Button>
-                  ))}
-                </div>
-              )}
+              {(() => {
+                const availableSlots = selectedDayData.slots.filter(slot => !slot.is_booked);
+                console.log('Rendering slots for selected day:', format(selectedDayData.date, 'yyyy-MM-dd'));
+                console.log('Available slots to render:', availableSlots.length, availableSlots);
+                return availableSlots.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Ni prostih terminov za ta dan.</p>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    {availableSlots.map((slot) => (
+                      <Button
+                        key={slot.id}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleSlotSelect(slot)}
+                        className="justify-start w-full hover:bg-primary hover:text-primary-foreground"
+                      >
+                        <Clock className="w-3 h-3 mr-2" />
+                        {slot.start_time.substring(0, 5)} - {slot.end_time.substring(0, 5)}
+                      </Button>
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
           )}
 
