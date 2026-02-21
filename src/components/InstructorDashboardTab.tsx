@@ -383,6 +383,27 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
 
       if (error) throw error;
 
+      // Free up the availability slot again when rejected
+      if (booking) {
+        const bookingDate = format(new Date(booking.start_time), 'yyyy-MM-dd');
+        const bookingStartTime = format(new Date(booking.start_time), 'HH:mm:ss');
+        const bookingEndTime = format(new Date(booking.end_time), 'HH:mm:ss');
+
+        const { error: slotError } = await supabase
+          .from('tutor_availability_dates')
+          .update({ is_booked: false })
+          .eq('tutor_id', tutorId)
+          .eq('available_date', bookingDate)
+          .eq('start_time', bookingStartTime)
+          .eq('end_time', bookingEndTime);
+
+        if (slotError) {
+          console.error('Error freeing slot:', slotError);
+        } else {
+          console.log('Slot freed for other students');
+        }
+      }
+
       // Get instructor name for notification
       const { data: profileData } = await supabase
         .from('profiles')
@@ -438,7 +459,7 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
         }
       }
 
-      toast.success('Rezervacija zavrnjena');
+      toast.success('Rezervacija zavrnjena in termin ponovno na voljo');
       loadBookings(true);
     } catch (error) {
       console.error('Error rejecting:', error);

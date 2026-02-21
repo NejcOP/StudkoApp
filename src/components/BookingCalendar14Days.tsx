@@ -238,7 +238,7 @@ export const BookingCalendar14Days = ({
         recipientUserId: tutorId,
         senderName: profileData?.full_name || 'Študent',
         bookingDate: format(selectedDate, 'd. MMMM yyyy', { locale: sl }),
-        bookingTime: `${selectedSlot.start_time} - ${selectedSlot.end_time}`,
+        bookingTime: `${selectedSlot.start_time.substring(0, 5)} - ${selectedSlot.end_time.substring(0, 5)}`,
         bookingId: bookingData?.id,
         message: bookingNotes
       });
@@ -261,7 +261,7 @@ export const BookingCalendar14Days = ({
                 instructorName: instructorProfile.full_name || 'Inštruktor',
                 studentName: profileData?.full_name || 'Študent',
                 bookingDate: format(selectedDate, 'd. MMMM yyyy', { locale: sl }),
-                bookingTime: `${selectedSlot.start_time} - ${selectedSlot.end_time}`
+                bookingTime: `${selectedSlot.start_time.substring(0, 5)} - ${selectedSlot.end_time.substring(0, 5)}`
               }
             });
             
@@ -480,7 +480,7 @@ export const BookingCalendar14Days = ({
                   📅 {format(selectedDate, 'EEEE, d. MMMM yyyy', { locale: sl })}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  🕐 {selectedSlot.start_time} - {selectedSlot.end_time}
+                  🕐 {selectedSlot.start_time.substring(0, 5)} - {selectedSlot.end_time.substring(0, 5)}
                 </p>
                 <div className="flex items-center gap-2 mt-2">
                   <Badge variant="secondary" className="text-sm">

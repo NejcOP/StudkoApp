@@ -594,7 +594,7 @@ export const InstructorAvailabilityManager = ({ tutorId }: InstructorAvailabilit
                               "w-4 h-4",
                               slot.is_booked ? "text-orange-600 dark:text-orange-400" : "text-green-600 dark:text-green-400"
                             )} />
-                            <span className="font-medium text-sm">{slot.start_time} - {slot.end_time}</span>
+                            <span className="font-medium text-sm">{slot.start_time.substring(0, 5)} - {slot.end_time.substring(0, 5)}</span>
                             <Badge className={cn(
                               "text-white text-[10px]",
                               slot.is_booked ? "bg-orange-600" : "bg-green-600"
