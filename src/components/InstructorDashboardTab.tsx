@@ -89,6 +89,30 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
       loadBookings();
     }
     checkTrialStatus();
+    
+    // Set up realtime subscription for booking updates
+    if (tutorId) {
+      const channel = supabase
+        .channel('instructor-booking-updates')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'tutor_bookings',
+            filter: `tutor_id=eq.${tutorId}`
+          },
+          (payload) => {
+            console.log('Booking update received via realtime:', payload);
+            loadBookings(true); // Silent reload
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tutorId]);
 
@@ -238,18 +262,25 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
     if (!silent) setLoading(true);
 
     try {
+      console.log('Loading bookings for tutor:', tutorId);
+      
       const { data: bookingsData, error: bookingsError } = await supabase
         .from('tutor_bookings')
         .select('*')
         .eq('tutor_id', tutorId)
         .order('start_time', { ascending: false });
 
+      console.log('Bookings query result:', { bookingsData, bookingsError });
+
       if (bookingsError) throw bookingsError;
 
       // Fetch student names
       const studentIds = [...new Set(bookingsData?.map(b => b.student_id) || [])];
+      console.log('Student IDs:', studentIds);
+      
       if (studentIds.length === 0) {
         setBookings([]);
+        setLoading(false);
         return;
       }
       
@@ -258,6 +289,8 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
         .select('id, full_name')
         .in('id', studentIds);
 
+      console.log('Students loaded:', students);
+
       const studentsMap = new Map(students?.map(s => [s.id, s.full_name]) || []);
       
       const enrichedBookings = bookingsData?.map(b => ({
@@ -265,6 +298,7 @@ export const InstructorDashboardTab = ({ tutorId, hasPayoutSetup }: InstructorDa
         student_name: studentsMap.get(b.student_id) || 'Neznano'
       })) || [];
 
+      console.log('Enriched bookings:', enrichedBookings);
       setBookings(enrichedBookings);
       
       // Cache the bookings
