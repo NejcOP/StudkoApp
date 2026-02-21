@@ -264,12 +264,14 @@ export const BookingsList = ({ userId }: { userId: string }) => {
       <Tabs defaultValue="upcoming" className="space-y-6">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="upcoming">
-            Prihajajoče {(upcomingBookings.length + pendingBookings.length) > 0 && `(${upcomingBookings.length + pendingBookings.length})`}
+            Prihajajoče {allUpcomingBookings.length > 0 && `(${allUpcomingBookings.length})`}
           </TabsTrigger>
           <TabsTrigger value="pending">
             Na čakanju {pendingBookings.length > 0 && `(${pendingBookings.length})`}
           </TabsTrigger>
-          <TabsTrigger value="past">Pretekle</TabsTrigger>
+          <TabsTrigger value="past">
+            Pretekle {pastBookings.length > 0 && `(${pastBookings.length})`}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="upcoming">
