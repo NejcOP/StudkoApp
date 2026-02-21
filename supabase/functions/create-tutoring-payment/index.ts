@@ -119,15 +119,13 @@ serve(async (req) => {
       tutorReceives: amount - applicationFee
     });
 
-    // Create checkout session with destination charge
+    // Create checkout session with DIRECT charge to connected account
+    // This only requires card_payments capability, NOT transfers capability
     let session;
     try {
       session = await stripe.checkout.sessions.create({
         payment_intent_data: {
-          application_fee_amount: applicationFee,
-          transfer_data: {
-            destination: tutorProfile.stripe_connect_id,
-          },
+          application_fee_amount: applicationFee, // Platform takes 20% fee
           metadata: {
             booking_id: bookingId,
             tutor_id: booking.tutor_id,
@@ -153,6 +151,8 @@ serve(async (req) => {
         metadata: {
           booking_id: bookingId,
         },
+      }, {
+        stripeAccount: tutorProfile.stripe_connect_id, // Direct charge - payment goes directly to tutor's account
       });
     } catch (stripeError: any) {
       logStep("STRIPE API ERROR", {
