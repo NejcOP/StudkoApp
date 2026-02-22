@@ -21,14 +21,28 @@ export const StripeConnectButton = ({ hasConnectAccount }: StripeConnectButtonPr
     );
     
     try {
+      console.log('[StripeConnectButton] Calling create-connect-account...', { hasConnectAccount });
+      
       // Call function with shorter timeout
       const { data, error } = await supabase.functions.invoke('create-connect-account', {
         body: {},
       });
 
-      if (error) throw error;
+      console.log('[StripeConnectButton] Response:', { data, error });
+
+      if (error) {
+        console.error('[StripeConnectButton] Supabase function error:', error);
+        throw error;
+      }
+
+      // Check for error in response data
+      if (data?.error) {
+        console.error('[StripeConnectButton] Backend error:', data.error);
+        throw new Error(data.error);
+      }
 
       if (data?.url) {
+        console.log('[StripeConnectButton] Opening Stripe URL:', data.url);
         // Immediately open window without waiting
         window.open(data.url, '_blank');
         toast.success(hasConnectAccount 
@@ -36,10 +50,14 @@ export const StripeConnectButton = ({ hasConnectAccount }: StripeConnectButtonPr
           : 'Stripe povezava odprta!',
           { id: loadingToast }
         );
+      } else {
+        console.error('[StripeConnectButton] No URL in response:', data);
+        throw new Error('Ni dobljen URL za Stripe nastavitve');
       }
     } catch (error: any) {
-      console.error('Error setting up payouts:', error);
-      toast.error('Napaka pri nastavitvi izplačil. Poskusi ponovno.', { id: loadingToast });
+      console.error('[StripeConnectButton] Error:', error);
+      const errorMessage = error.message || 'Napaka pri nastavitvi izplačil';
+      toast.error(errorMessage, { id: loadingToast });
     } finally {
       setLoading(false);
     }
