@@ -8,7 +8,7 @@ const corsHeaders = {
 };
 
 Deno.serve(async (req) => {
-  console.log('STRIPE CONNECT DASHBOARD FUNCTION STARTED');
+  console.log('[STRIPE-CONNECT-DASHBOARD] Function started');
   
   if (req.method === 'OPTIONS') {
     return new Response(null, { 
@@ -20,14 +20,17 @@ Deno.serve(async (req) => {
   try {
     const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY') ?? '';
     if (!stripeSecretKey) {
-      console.error('STRIPE_SECRET_KEY ni nastavljen v okolju!');
+      console.error('[STRIPE-CONNECT-DASHBOARD] STRIPE_SECRET_KEY not set!');
       throw new Error('Stripe skrivni ključ ni nastavljen.');
     }
 
     const body = await req.json();
     const { accountId } = body;
     
+    console.log('[STRIPE-CONNECT-DASHBOARD] Request:', { accountId });
+    
     if (!accountId) {
+      console.error('[STRIPE-CONNECT-DASHBOARD] Missing accountId');
       return new Response(
         JSON.stringify({ error: 'Manjka Stripe Connect accountId' }), 
         {
@@ -38,6 +41,7 @@ Deno.serve(async (req) => {
     }
 
     // Create login link via fetch
+    console.log('[STRIPE-CONNECT-DASHBOARD] Creating login link for:', accountId);
     const res = await fetch(`${STRIPE_API}/accounts/${accountId}/login_links`, {
       method: 'POST',
       headers: {
@@ -47,10 +51,19 @@ Deno.serve(async (req) => {
     });
 
     const loginLink = await res.json();
+    console.log('[STRIPE-CONNECT-DASHBOARD] Stripe response:', { 
+      status: res.status,
+      hasUrl: !!loginLink.url,
+      error: loginLink.error
+    });
+    
     if (!loginLink.url) {
-      throw new Error(loginLink.error?.message || 'Stripe dashboard link creation failed');
+      const errorMsg = loginLink.error?.message || 'Stripe dashboard link creation failed';
+      console.error('[STRIPE-CONNECT-DASHBOARD] No URL returned:', errorMsg);
+      throw new Error(errorMsg);
     }
 
+    console.log('[STRIPE-CONNECT-DASHBOARD] Success, returning URL');
     return new Response(
       JSON.stringify({ url: loginLink.url }), 
       {
@@ -59,7 +72,7 @@ Deno.serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error('stripe-connect-dashboard ERROR:', error);
+    console.error('[STRIPE-CONNECT-DASHBOARD] Error:', error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : String(error) }), 
       {
