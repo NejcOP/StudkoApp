@@ -255,6 +255,27 @@ export const BookingsList = ({ userId }: { userId: string }) => {
     (b.status === 'confirmed' && new Date(b.end_time) < new Date())
   );
 
+  // Debug logs to diagnose tab grouping issues
+  console.log('Booking buckets computed:', {
+    total: bookings.length,
+    pending: pendingBookings.length,
+    confirmed: confirmedBookings.length,
+    upcoming: upcomingBookings.length,
+    awaitingPayment: awaitingPayment.length,
+    allUpcoming: allUpcomingBookings.length,
+    past: pastBookings.length
+  });
+
+  console.log('Booking details:', bookings.map(b => ({
+    id: b.id,
+    status: b.status,
+    paid: b.paid,
+    start_time: b.start_time,
+    end_time: b.end_time,
+    startIsFuture: new Date(b.start_time) > new Date(),
+    endIsPast: new Date(b.end_time) < new Date()
+  })));
+
   const getStatusBadge = (booking: Booking) => {
     if (booking.status === 'pending') {
       return <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">Na čakanju</Badge>;
