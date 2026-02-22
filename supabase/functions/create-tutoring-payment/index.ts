@@ -110,6 +110,8 @@ serve(async (req) => {
 
     // Verify Stripe Connect account is ready for payments
     let stripeAccount;
+    const isTestMode = tutorProfile.stripe_connect_id.startsWith('acct_test_');
+    
     try {
       stripeAccount = await stripe.accounts.retrieve(tutorProfile.stripe_connect_id);
       
@@ -118,34 +120,40 @@ serve(async (req) => {
         chargesEnabled: stripeAccount.charges_enabled,
         detailsSubmitted: stripeAccount.details_submitted,
         payoutsEnabled: stripeAccount.payouts_enabled,
-        cardPaymentsCapability: stripeAccount.capabilities?.card_payments
+        cardPaymentsCapability: stripeAccount.capabilities?.card_payments,
+        isTestMode
       });
 
-      if (!stripeAccount.charges_enabled) {
-        logStep("Charges not enabled", { 
-          chargesEnabled: stripeAccount.charges_enabled,
-          requirements: stripeAccount.requirements
-        });
-        return new Response(
-          JSON.stringify({ 
-            error: "Inštruktor še ni dokončal nastavitve plačilnega računa. Prosim kontaktiraj inštruktorja.",
-            details: "Stripe charges not enabled"
-          }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
-        );
-      }
+      // In test mode, skip validation to allow testing payment flow
+      if (!isTestMode) {
+        if (!stripeAccount.charges_enabled) {
+          logStep("Charges not enabled", { 
+            chargesEnabled: stripeAccount.charges_enabled,
+            requirements: stripeAccount.requirements
+          });
+          return new Response(
+            JSON.stringify({ 
+              error: "Inštruktor še ni dokončal nastavitve plačilnega računa. Prosim kontaktiraj inštruktorja.",
+              details: "Stripe charges not enabled"
+            }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+          );
+        }
 
-      if (stripeAccount.capabilities?.card_payments !== 'active') {
-        logStep("Card payments not active", { 
-          capability: stripeAccount.capabilities?.card_payments
-        });
-        return new Response(
-          JSON.stringify({ 
-            error: "Inštruktorjev plačilni račun še ni aktiviran. Prosim kontaktiraj inštruktorja.",
-            details: "Card payments capability not active"
-          }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
-        );
+        if (stripeAccount.capabilities?.card_payments !== 'active') {
+          logStep("Card payments not active", { 
+            capability: stripeAccount.capabilities?.card_payments
+          });
+          return new Response(
+            JSON.stringify({ 
+              error: "Inštruktorjev plačilni račun še ni aktiviran. Prosim kontaktiraj inštruktorja.",
+              details: "Card payments capability not active"
+            }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+          );
+        }
+      } else {
+        logStep("Test mode: skipping charges_enabled and card_payments validation");
       }
 
     } catch (accountError: any) {
