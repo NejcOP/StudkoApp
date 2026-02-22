@@ -187,6 +187,18 @@ export const BookingsList = ({ userId }: { userId: string }) => {
       if (error) {
         console.error('Supabase function error:', error);
         console.error('Error details:', JSON.stringify(error, null, 2));
+        
+        // Try to get error message from response body
+        if (error.context?.body) {
+          console.error('Response body:', error.context.body);
+        }
+        
+        // For 400 errors, check if data contains error message
+        if (data?.error) {
+          console.error('Backend error message:', data.error);
+          throw new Error(data.error);
+        }
+        
         throw error;
       }
       
