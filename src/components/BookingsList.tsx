@@ -242,25 +242,25 @@ export const BookingsList = ({ userId }: { userId: string }) => {
 
   const now = new Date();
   
-  // "Na čakanju" = Confirmed but not paid yet (waiting for payment)
+  // Priority 1: "Na čakanju" = Confirmed but NOT paid (regardless of time)
+  // These MUST be paid before they can proceed
   const awaitingPayment = bookings.filter(b => 
     b.status === 'confirmed' && 
-    !b.paid && 
-    new Date(b.start_time) > now
+    !b.paid
   );
   
-  // "Prihajajoče" = Paid bookings that are in the future
+  // Priority 2: "Prihajajoče" = Paid and future bookings
   const upcomingBookings = bookings.filter(b => 
     b.status === 'confirmed' && 
     b.paid && 
     new Date(b.start_time) > now
   );
   
-  // "Pretekle" = Completed, cancelled, or past bookings
+  // Priority 3: "Pretekle" = Paid past bookings, or cancelled/completed
   const pastBookings = bookings.filter(b => 
     b.status === 'completed' || 
     b.status === 'cancelled' || 
-    new Date(b.end_time) < now
+    (b.paid && new Date(b.end_time) < now)
   );
 
   // Debug logs to diagnose tab grouping issues
@@ -272,14 +272,11 @@ export const BookingsList = ({ userId }: { userId: string }) => {
     now: now.toISOString()
   });
 
-  console.log('Booking details:', bookings.map(b => ({
+  console.log('Awaiting payment (confirmed + unpaid):', awaitingPayment.map(b => ({
     id: b.id,
-    status: b.status,
-    paid: b.paid,
-    start_time: b.start_time,
-    end_time: b.end_time,
-    startIsFuture: new Date(b.start_time) > now,
-    endIsPast: new Date(b.end_time) < now
+    tutor: b.tutor_name,
+    start: b.start_time,
+    paid: b.paid
   })));
 
   const getStatusBadge = (booking: Booking) => {
