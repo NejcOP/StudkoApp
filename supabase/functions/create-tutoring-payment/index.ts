@@ -110,8 +110,7 @@ serve(async (req) => {
 
     // Verify Stripe Connect account is ready for payments
     let stripeAccount;
-    // FOR TESTING: Always skip validation temporarily
-    const isTestMode = true; // Temporarily force test mode to bypass validation
+    const isTestMode = tutorProfile.stripe_connect_id.startsWith('acct_test_');
     
     try {
       stripeAccount = await stripe.accounts.retrieve(tutorProfile.stripe_connect_id);
@@ -122,8 +121,7 @@ serve(async (req) => {
         detailsSubmitted: stripeAccount.details_submitted,
         payoutsEnabled: stripeAccount.payouts_enabled,
         cardPaymentsCapability: stripeAccount.capabilities?.card_payments,
-        isTestMode,
-        forcedTestMode: true
+        isTestMode
       });
 
       // In test mode, skip validation to allow testing payment flow
@@ -229,10 +227,21 @@ serve(async (req) => {
         stripeConnectId: tutorProfile.stripe_connect_id
       });
       
+      // User-friendly error messages
+      let userMessage = stripeError.message;
+      
+      if (stripeError.message?.includes('account or business name')) {
+        userMessage = 'Inštruktor mora dokončati Stripe Connect nastavitev (manjka ime podjetja). Prosim kontaktiraj inštruktorja.';
+      } else if (stripeError.message?.includes('No such account')) {
+        userMessage = 'Inštruktorjev Stripe račun ne obstaja več. Prosim kontaktiraj inštruktorja da nastavi nov račun.';
+      } else if (stripeError.message?.includes('charges')) {
+        userMessage = 'Inštruktorjev Stripe račun še ni potrjen. Prosim kontaktiraj inštruktorja.';
+      }
+      
       // Return 400 instead of throwing to avoid 500 error
       return new Response(
         JSON.stringify({ 
-          error: `Napaka pri ustvarjanju plačila: ${stripeError.message}`,
+          error: userMessage,
           details: stripeError.type || "Stripe API error"
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }

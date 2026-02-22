@@ -199,13 +199,21 @@ export const BookingsList = ({ userId }: { userId: string }) => {
             try {
               const errorJson = JSON.parse(errorText);
               if (errorJson.error) {
+                // Successfully parsed error message from backend
                 throw new Error(errorJson.error);
               }
             } catch (parseError) {
-              // If not JSON, just use the text
+              // parseError might be the error we just threw - check if it has our message
+              if (parseError instanceof Error && parseError.message.includes('Napaka pri ustvarjanju')) {
+                throw parseError; // Re-throw our intentional error
+              }
               console.error('Could not parse error JSON:', parseError);
             }
           } catch (readError) {
+            // Check if this is our intentional error being re-thrown
+            if (readError instanceof Error && readError.message.includes('Napaka pri ustvarjanju')) {
+              throw readError;
+            }
             console.error('Could not read response body:', readError);
           }
         }
