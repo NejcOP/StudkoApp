@@ -188,9 +188,26 @@ export const BookingsList = ({ userId }: { userId: string }) => {
         console.error('Supabase function error:', error);
         console.error('Error details:', JSON.stringify(error, null, 2));
         
-        // Try to get error message from response body
+        // Try to read error message from response body (ReadableStream)
         if (error.context?.body) {
-          console.error('Response body:', error.context.body);
+          try {
+            const reader = error.context.body.getReader();
+            const { value } = await reader.read();
+            const errorText = new TextDecoder().decode(value);
+            console.error('Response body:', errorText);
+            
+            try {
+              const errorJson = JSON.parse(errorText);
+              if (errorJson.error) {
+                throw new Error(errorJson.error);
+              }
+            } catch (parseError) {
+              // If not JSON, just use the text
+              console.error('Could not parse error JSON:', parseError);
+            }
+          } catch (readError) {
+            console.error('Could not read response body:', readError);
+          }
         }
         
         // For 400 errors, check if data contains error message

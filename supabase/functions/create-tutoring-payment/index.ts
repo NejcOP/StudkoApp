@@ -228,7 +228,15 @@ serve(async (req) => {
         raw: stripeError.raw,
         stripeConnectId: tutorProfile.stripe_connect_id
       });
-      throw new Error(`Stripe error: ${stripeError.message}`);
+      
+      // Return 400 instead of throwing to avoid 500 error
+      return new Response(
+        JSON.stringify({ 
+          error: `Napaka pri ustvarjanju plačila: ${stripeError.message}`,
+          details: stripeError.type || "Stripe API error"
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
     }
 
     logStep("Checkout session created", { sessionId: session.id });
