@@ -240,30 +240,36 @@ export const BookingsList = ({ userId }: { userId: string }) => {
     );
   }
 
-  const pendingBookings = bookings.filter(b => b.status === 'pending');
-  const confirmedBookings = bookings.filter(b => b.status === 'confirmed');
-  const upcomingBookings = confirmedBookings.filter(b => new Date(b.start_time) > new Date());
-  const awaitingPayment = confirmedBookings.filter(b => !b.paid && new Date(b.start_time) > new Date());
+  const now = new Date();
   
-  // Combine pending and upcoming confirmed bookings for the "Prihajajoče" tab
-  const allUpcomingBookings = [...pendingBookings, ...upcomingBookings].sort((a, b) => 
-    new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
+  // "Na čakanju" = Confirmed but not paid yet (waiting for payment)
+  const awaitingPayment = bookings.filter(b => 
+    b.status === 'confirmed' && 
+    !b.paid && 
+    new Date(b.start_time) > now
   );
   
+  // "Prihajajoče" = Paid bookings that are in the future
+  const upcomingBookings = bookings.filter(b => 
+    b.status === 'confirmed' && 
+    b.paid && 
+    new Date(b.start_time) > now
+  );
+  
+  // "Pretekle" = Completed, cancelled, or past bookings
   const pastBookings = bookings.filter(b => 
-    b.status === 'completed' || b.status === 'cancelled' || 
-    (b.status === 'confirmed' && new Date(b.end_time) < new Date())
+    b.status === 'completed' || 
+    b.status === 'cancelled' || 
+    new Date(b.end_time) < now
   );
 
   // Debug logs to diagnose tab grouping issues
   console.log('Booking buckets computed:', {
     total: bookings.length,
-    pending: pendingBookings.length,
-    confirmed: confirmedBookings.length,
-    upcoming: upcomingBookings.length,
     awaitingPayment: awaitingPayment.length,
-    allUpcoming: allUpcomingBookings.length,
-    past: pastBookings.length
+    upcomingPaid: upcomingBookings.length,
+    past: pastBookings.length,
+    now: now.toISOString()
   });
 
   console.log('Booking details:', bookings.map(b => ({
@@ -272,8 +278,8 @@ export const BookingsList = ({ userId }: { userId: string }) => {
     paid: b.paid,
     start_time: b.start_time,
     end_time: b.end_time,
-    startIsFuture: new Date(b.start_time) > new Date(),
-    endIsPast: new Date(b.end_time) < new Date()
+    startIsFuture: new Date(b.start_time) > now,
+    endIsPast: new Date(b.end_time) < now
   })));
 
   const getStatusBadge = (booking: Booking) => {
@@ -300,10 +306,10 @@ export const BookingsList = ({ userId }: { userId: string }) => {
       <Tabs defaultValue="upcoming" className="space-y-6">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="upcoming">
-            Prihajajoče {allUpcomingBookings.length > 0 && `(${allUpcomingBookings.length})`}
+            Prihajajoče {upcomingBookings.length > 0 && `(${upcomingBookings.length})`}
           </TabsTrigger>
           <TabsTrigger value="pending">
-            Na čakanju {pendingBookings.length > 0 && `(${pendingBookings.length})`}
+            Na čakanju {awaitingPayment.length > 0 && `(${awaitingPayment.length})`}
           </TabsTrigger>
           <TabsTrigger value="past">
             Pretekle {pastBookings.length > 0 && `(${pastBookings.length})`}
@@ -311,7 +317,7 @@ export const BookingsList = ({ userId }: { userId: string }) => {
         </TabsList>
 
         <TabsContent value="upcoming">
-          {allUpcomingBookings.length === 0 ? (
+          {upcomingBookings.length === 0 ? (
             <div className="text-center py-12 bg-card rounded-xl border">
               <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
               <p className="text-muted-foreground mb-4">Nimaš nobenih prihajajočih ur</p>
@@ -321,7 +327,7 @@ export const BookingsList = ({ userId }: { userId: string }) => {
             </div>
           ) : (
             <div className="space-y-4">
-              {allUpcomingBookings.map((booking) => (
+              {upcomingBookings.map((booking) => (
                 <Card key={booking.id} className="bg-card/95 backdrop-blur-sm">
                   <CardContent className="p-4">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -339,23 +345,7 @@ export const BookingsList = ({ userId }: { userId: string }) => {
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        {booking.status === 'confirmed' && !booking.paid && booking.tutor_id !== userId && (
-                          <Button
-                            onClick={() => handlePayment(booking.id)}
-                            disabled={paying === booking.id}
-                            className="bg-green-600 hover:bg-green-700"
-                          >
-                            {paying === booking.id ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <>
-                                <CreditCard className="w-4 h-4 mr-2" />
-                                Plačaj
-                              </>
-                            )}
-                          </Button>
-                        )}
-                        {booking.meeting_url && booking.paid && (
+                        {booking.meeting_url && (
                           <Button
                             variant="hero"
                             onClick={() => window.open(booking.meeting_url!, '_blank')}
@@ -364,16 +354,11 @@ export const BookingsList = ({ userId }: { userId: string }) => {
                             Pridruži se
                           </Button>
                         )}
-                        {(booking.status === 'pending' || (booking.status === 'confirmed' && !booking.paid)) && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleCancel(booking.id)}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                          >
-                            <XCircle className="w-4 h-4 mr-2" />
-                            Prekliči
-                          </Button>
+                        {!booking.meeting_url && (
+                          <div className="text-sm text-muted-foreground">
+                            <AlertCircle className="w-4 h-4 inline mr-1" />
+                            Inštruktor bo poslal Zoom link
+                          </div>
                         )}
                       </div>
                     </div>
@@ -385,15 +370,15 @@ export const BookingsList = ({ userId }: { userId: string }) => {
         </TabsContent>
 
         <TabsContent value="pending">
-          {pendingBookings.length === 0 ? (
+          {awaitingPayment.length === 0 ? (
             <div className="text-center py-12 bg-card rounded-xl border">
               <Clock className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
               <p className="text-muted-foreground">Ni rezervacij na čakanju</p>
             </div>
           ) : (
             <div className="space-y-4">
-              {pendingBookings.map((booking) => (
-                <Card key={booking.id} className="bg-card/95 backdrop-blur-sm border-yellow-500/50">
+              {awaitingPayment.map((booking) => (
+                <Card key={booking.id} className="bg-card/95 backdrop-blur-sm border-orange-500/50">
                   <CardContent className="p-4">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                       <div className="flex-1">
@@ -409,15 +394,31 @@ export const BookingsList = ({ userId }: { userId: string }) => {
                           <Badge variant="outline">{booking.price_eur}€</Badge>
                         </div>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleCancel(booking.id)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <XCircle className="w-4 h-4 mr-2" />
-                        Prekliči
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => handlePayment(booking.id)}
+                          disabled={paying === booking.id}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          {paying === booking.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <>
+                              <CreditCard className="w-4 h-4 mr-2" />
+                              Plačaj ({booking.price_eur}€)
+                            </>
+                          )}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleCancel(booking.id)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <XCircle className="w-4 h-4 mr-2" />
+                          Prekliči
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
