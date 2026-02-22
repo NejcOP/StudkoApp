@@ -1404,12 +1404,25 @@ const AIAssistant = () => {
               </div>
               
               <h2 className="text-3xl font-bold text-foreground mb-3">
-                Odkleni Študko PRO AI
+                {trialUsed ? "Pridruži se Študko PRO" : "Odkleni Študko PRO AI"}
               </h2>
               
-              <p className="text-muted-foreground mb-6 text-lg">
-                AI asistent in napredna pomoč za učenje sta na voljo samo z Študko PRO naročnino.
-              </p>
+              {trialUsed && !checkingTrialStatus ? (
+                <div className="mb-6">
+                  <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4 mb-4">
+                    <p className="text-orange-800 dark:text-orange-200 font-medium">
+                      ⏰ 7-dnevni preizkus je že bil porabljen
+                    </p>
+                  </div>
+                  <p className="text-muted-foreground text-lg">
+                    Postani član Študko PRO in odkleni neomejene AI funkcije za učenje!
+                  </p>
+                </div>
+              ) : (
+                <p className="text-muted-foreground mb-6 text-lg">
+                  AI asistent in napredna pomoč za učenje sta na voljo samo z Študko PRO naročnino.
+                </p>
+              )}
 
               <div className="space-y-3 text-left mb-8">
                 <div className="flex items-start gap-3">
@@ -1431,10 +1444,16 @@ const AIAssistant = () => {
               </div>
 
               <div className="bg-muted rounded-xl p-4 mb-6">
+                {!checkingTrialStatus && trialUsed && (
+                  <p className="text-sm text-primary font-semibold mb-2">Postani PRO član danes</p>
+                )}
                 <p className="text-sm text-muted-foreground mb-1">Samo</p>
                 <p className="text-4xl font-bold text-foreground">
                   3,99 €<span className="text-lg font-normal text-muted-foreground">/mesec</span>
                 </p>
+                {!checkingTrialStatus && trialUsed && (
+                  <p className="text-xs text-muted-foreground mt-2">Brez vezave • Prekliči kadarkoli</p>
+                )}
               </div>
 
               <Button 
