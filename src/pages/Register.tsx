@@ -55,7 +55,7 @@ const Register = () => {
 
     setLoading(true);
 
-    const { error } = await signUp(formData.email, formData.password, formData.name);
+    const { error, user: newUser } = await signUp(formData.email, formData.password, formData.name);
 
     if (error) {
       toast({
@@ -68,7 +68,7 @@ const Register = () => {
       setLoading(false);
     } else {
       // Handle referral if present
-      if (referralCode) {
+      if (referralCode && newUser) {
         try {
           // Get the referrer's ID from their referral code
           const { data: referrerProfile, error: referrerError } = await supabase
@@ -78,18 +78,13 @@ const Register = () => {
             .single();
 
           if (!referrerError && referrerProfile) {
-            // Get the new user's ID - but user won't be logged in until email is confirmed
-            const { data: { user: newUser } } = await supabase.auth.getUser();
-            
-            if (newUser) {
-              // Create referral record
-              await supabase
-                .from("referrals")
-                .insert({
-                  referrer_id: referrerProfile.id,
-                  referred_id: newUser.id,
-                });
-            }
+            // Create referral record
+            await supabase
+              .from("referrals")
+              .insert({
+                referrer_id: referrerProfile.id,
+                referred_id: newUser.id,
+              });
           }
         } catch (referralError) {
           console.error("Error processing referral:", referralError);
