@@ -79,8 +79,21 @@ export const BookingCalendar14Days = ({
         (payload) => {
           console.log('Availability changed via realtime:', payload);
           console.log('Event type:', payload.eventType);
-          console.log('Updated data:', payload.new);
-          loadData();
+          
+          // For UPDATE events, update only the changed slot to avoid race conditions
+          if (payload.eventType === 'UPDATE' && payload.new) {
+            console.log('Updating specific slot in local state:', payload.new);
+            setAvailability(prev => {
+              const updated = prev.map(slot => 
+                slot.id === payload.new.id ? { ...slot, ...payload.new } : slot
+              );
+              return updated;
+            });
+          } else {
+            // For INSERT/DELETE, reload all data
+            console.log('Reloading all availability data');
+            loadData();
+          }
         }
       )
       .subscribe();
@@ -241,7 +254,7 @@ export const BookingCalendar14Days = ({
       if (updateError) {
         console.error('Error marking slot as booked:', updateError);
       } else {
-        console.log('Slot marked as booked:', selectedSlot.id);
+        console.log('Slot marked as booked in database:', selectedSlot.id);
       }
 
       // Immediately update local state to hide the slot
@@ -250,17 +263,8 @@ export const BookingCalendar14Days = ({
           slot.id === selectedSlot.id ? { ...slot, is_booked: true } : slot
         );
         console.log('Local state updated - slot marked as booked');
-        console.log('Updated availability:', updated.filter(s => s.available_date === format(selectedDate, 'yyyy-MM-dd')));
         return updated;
       });
-
-      // Force UI update by briefly resetting and restoring selected date
-      const currentSelectedDate = selectedDate;
-      setSelectedDate(null);
-      setTimeout(() => {
-        setSelectedDate(currentSelectedDate);
-        console.log('Selected date restored - UI should update now');
-      }, 50);
 
       // Send notification to tutor
       await sendBookingNotification({
