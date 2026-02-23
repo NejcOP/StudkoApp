@@ -21,14 +21,10 @@ export const StripeConnectButton = ({ hasConnectAccount }: StripeConnectButtonPr
     );
     
     try {
-      console.log('[StripeConnectButton] Calling create-connect-account...', { hasConnectAccount });
-      
       // Call function with shorter timeout
       const { data, error } = await supabase.functions.invoke('create-connect-account', {
         body: {},
       });
-
-      console.log('[StripeConnectButton] Response:', { data, error });
 
       if (error) {
         console.error('[StripeConnectButton] Supabase function error:', error);
@@ -42,7 +38,6 @@ export const StripeConnectButton = ({ hasConnectAccount }: StripeConnectButtonPr
       }
 
       if (data?.url) {
-        console.log('[StripeConnectButton] Opening Stripe URL:', data.url);
         // Immediately open window without waiting
         window.open(data.url, '_blank');
         toast.success(hasConnectAccount 

@@ -27,6 +27,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { sendEmail } from './lib/emails/resend-client.js';
 import { notificationTemplate } from './lib/emails/templates.js';
+import { withAuth } from './lib/auth-middleware.js';
 
 interface NotificationRequest {
   to: string | string[];
@@ -36,7 +37,7 @@ interface NotificationRequest {
   actionText?: string;
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+async function notificationHandler(req: VercelRequest, res: VercelResponse) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -107,3 +108,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 }
+
+// Wrap handler with authentication to prevent unauthorized email sending
+export default withAuth(notificationHandler);

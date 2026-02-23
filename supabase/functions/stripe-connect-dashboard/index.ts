@@ -8,8 +8,6 @@ const corsHeaders = {
 };
 
 Deno.serve(async (req) => {
-  console.log('[STRIPE-CONNECT-DASHBOARD] Function started');
-  
   if (req.method === 'OPTIONS') {
     return new Response(null, { 
       status: 200,
@@ -27,8 +25,6 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { accountId } = body;
     
-    console.log('[STRIPE-CONNECT-DASHBOARD] Request:', { accountId });
-    
     if (!accountId) {
       console.error('[STRIPE-CONNECT-DASHBOARD] Missing accountId');
       return new Response(
@@ -41,7 +37,6 @@ Deno.serve(async (req) => {
     }
 
     // Create login link via fetch
-    console.log('[STRIPE-CONNECT-DASHBOARD] Creating login link for:', accountId);
     const res = await fetch(`${STRIPE_API}/accounts/${accountId}/login_links`, {
       method: 'POST',
       headers: {
@@ -51,11 +46,6 @@ Deno.serve(async (req) => {
     });
 
     const loginLink = await res.json();
-    console.log('[STRIPE-CONNECT-DASHBOARD] Stripe response:', { 
-      status: res.status,
-      hasUrl: !!loginLink.url,
-      error: loginLink.error
-    });
     
     if (!loginLink.url) {
       const errorMsg = loginLink.error?.message || 'Stripe dashboard link creation failed';
@@ -63,7 +53,6 @@ Deno.serve(async (req) => {
       throw new Error(errorMsg);
     }
 
-    console.log('[STRIPE-CONNECT-DASHBOARD] Success, returning URL');
     return new Response(
       JSON.stringify({ url: loginLink.url }), 
       {

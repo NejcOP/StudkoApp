@@ -10,8 +10,6 @@ const corsHeaders = {
 };
 
 Deno.serve(async (req) => {
-  console.log('[STRIPE-CONNECT-UPDATE] Function started');
-  
   if (req.method === 'OPTIONS') {
     return new Response(null, { 
       status: 200,
@@ -28,7 +26,6 @@ Deno.serve(async (req) => {
 
     // Read JWT from Authorization header
     const authHeader = req.headers.get('authorization') || req.headers.get('Authorization');
-    console.log('[STRIPE-CONNECT-UPDATE] Auth header present:', !!authHeader);
     if (!authHeader) throw new Error('No authorization header');
     const jwt = authHeader.replace('Bearer ', '');
 
@@ -40,13 +37,11 @@ Deno.serve(async (req) => {
 
     // Get user from JWT
     const { data: userData, error: userError } = await supabase.auth.getUser(jwt);
-    console.log('[STRIPE-CONNECT-UPDATE] User:', userData?.user?.id, 'error:', userError);
     if (userError || !userData.user) throw new Error('Unauthorized');
     const user = userData.user;
 
     // Parse body
     const { returnUrl, refreshUrl } = await req.json();
-    console.log('[STRIPE-CONNECT-UPDATE] Request body:', { returnUrl, refreshUrl });
 
     // Get user's Stripe account ID
     const { data: profile, error: profileError } = await supabase
@@ -54,12 +49,6 @@ Deno.serve(async (req) => {
       .select('stripe_connect_id')
       .eq('id', user.id)
       .single();
-
-    console.log('[STRIPE-CONNECT-UPDATE] Profile:', { 
-      hasProfile: !!profile,
-      hasAccountId: !!profile?.stripe_connect_id,
-      error: profileError 
-    });
 
     if (profileError || !profile?.stripe_connect_id) {
       throw new Error('Stripe račun ni nastavljen. Najprej dokončaj onboarding.');
@@ -76,7 +65,6 @@ Deno.serve(async (req) => {
       type: 'account_update',
     });
 
-    console.log('[STRIPE-CONNECT-UPDATE] Creating account_update link for:', accountId);
     const linkRes = await fetch(`${STRIPE_API}/account_links`, {
       method: 'POST',
       headers: {
@@ -87,17 +75,11 @@ Deno.serve(async (req) => {
     });
 
     const accountLink = await linkRes.json();
-    console.log('[STRIPE-CONNECT-UPDATE] Stripe response:', { 
-      status: linkRes.status,
-      hasUrl: !!accountLink.url,
-      error: accountLink.error
-    });
 
     if (!accountLink.url) {
       throw new Error(accountLink.error?.message || 'Stripe account update link creation failed');
     }
 
-    console.log('[STRIPE-CONNECT-UPDATE] Success, returning URL');
     return new Response(
       JSON.stringify({ url: accountLink.url }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

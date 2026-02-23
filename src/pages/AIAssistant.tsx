@@ -668,18 +668,6 @@ const AIAssistant = () => {
         }
         
         const functionUrl = `${supabaseUrl}/functions/v1/ai-chat`;
-        console.log('===========================================');
-        console.log('🚀 AI CHAT REQUEST - ZAČETEK');
-        console.log('===========================================');
-        console.log('📍 Full URL:', functionUrl);
-        console.log('🔑 Access Token EXISTS:', !!accessToken);
-        console.log('🔑 Access Token (first 30 chars):', accessToken?.substring(0, 30) + '...');
-        console.log('🔑 Access Token (last 10 chars):', '...' + accessToken?.substring(accessToken.length - 10));
-        console.log('🔑 API Key EXISTS:', !!supabaseKey);
-        console.log('🔑 API Key (first 30 chars):', supabaseKey?.substring(0, 30) + '...');
-        console.log('💬 Message count:', [...conversation, newUserMessage].length);
-        console.log('💬 Messages being sent:', [...conversation, newUserMessage].map(m => ({ role: m.role, content: m.content?.substring(0, 50) + '...' })));
-        console.log('🆔 Conversation ID:', convId);
         
         const requestBody = {
           messages: [...conversation, newUserMessage],
@@ -692,24 +680,11 @@ const AIAssistant = () => {
           "apikey": supabaseKey,
         };
         
-        console.log('📋 Headers:', Object.keys(requestHeaders));
-        console.log('📦 Request Body:', JSON.stringify(requestBody).substring(0, 200) + '...');
-        console.log('===========================================');
-        
         const response = await fetch(functionUrl, {
           method: "POST",
           headers: requestHeaders,
           body: JSON.stringify(requestBody),
         });
-
-        console.log('===========================================');
-        console.log('📥 AI CHAT RESPONSE');
-        console.log('===========================================');
-        console.log('📊 Status:', response.status);
-        console.log('📊 Status Text:', response.statusText);
-        console.log('📊 Response OK:', response.ok);
-        console.log('📋 Response Headers:', Object.fromEntries(response.headers.entries()));
-        console.log('===========================================');
 
         if (!response.ok) {
           // Try to read response body for more details

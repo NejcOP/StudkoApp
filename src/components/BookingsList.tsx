@@ -55,7 +55,6 @@ export const BookingsList = ({ userId }: { userId: string }) => {
             filter: `student_id=eq.${userId}`
           },
           (payload) => {
-            console.log('Booking updated via realtime:', payload);
             loadBookings();
           }
         )
@@ -73,7 +72,6 @@ export const BookingsList = ({ userId }: { userId: string }) => {
     if (bookingId && bookings.length > 0 && !paying) {
       const booking = bookings.find(b => b.id === bookingId);
       if (booking && !booking.paid && booking.status === 'confirmed') {
-        console.log('Auto-triggering payment for booking:', bookingId);
         handlePayment(bookingId);
       }
     }
@@ -83,7 +81,6 @@ export const BookingsList = ({ userId }: { userId: string }) => {
   useEffect(() => {
     const paymentStatus = searchParams.get('payment');
     if (paymentStatus === 'success') {
-      console.log('Payment successful, waiting for webhook to update database');
       toast.success('Plačilo uspešno! 🎉', {
         description: 'Rezervacija se posodablja...'
       });
@@ -98,7 +95,6 @@ export const BookingsList = ({ userId }: { userId: string }) => {
       let pollCount = 0;
       const pollInterval = setInterval(async () => {
         pollCount++;
-        console.log(`Fallback polling attempt ${pollCount}/15`);
         await loadBookings();
         
         if (pollCount >= 15) {
@@ -117,7 +113,6 @@ export const BookingsList = ({ userId }: { userId: string }) => {
 
   const loadBookings = async () => {
     try {
-      console.log('Loading bookings for user:', userId);
       const { data: bookingsData, error } = await supabase
         .from('tutor_bookings')
         .select('*')
@@ -129,11 +124,8 @@ export const BookingsList = ({ userId }: { userId: string }) => {
         throw error;
       }
 
-      console.log('Bookings loaded:', bookingsData?.length, bookingsData);
-
       // Get tutor profiles (tutor_id now references profiles.id)
       const tutorIds = [...new Set(bookingsData?.map(b => b.tutor_id) || [])];
-      console.log('Loading profiles for tutor IDs:', tutorIds);
       
       const { data: profiles, error: profileError } = await supabase
         .from('profiles')
@@ -144,8 +136,6 @@ export const BookingsList = ({ userId }: { userId: string }) => {
         console.error('Error loading profiles:', profileError);
       }
 
-      console.log('Profiles loaded:', profiles);
-
       const profilesMap = new Map(profiles?.map(p => [p.id, p.full_name]) || []);
       
       const enrichedBookings = bookingsData?.map(b => ({
@@ -153,7 +143,6 @@ export const BookingsList = ({ userId }: { userId: string }) => {
         tutor_name: profilesMap.get(b.tutor_id) || 'Neznano'
       })) || [];
 
-      console.log('Enriched bookings:', enrichedBookings);
       setBookings(enrichedBookings);
     } catch (error) {
       console.error('Error loading bookings:', error);
@@ -166,23 +155,9 @@ export const BookingsList = ({ userId }: { userId: string }) => {
   const handlePayment = async (bookingId: string) => {
     setPaying(bookingId);
     try {
-      const booking = bookings.find(b => b.id === bookingId);
-      console.log('=== PAYMENT FLOW START ===');
-      console.log('Creating payment for booking:', bookingId);
-      console.log('Booking details:', {
-        id: booking?.id,
-        price_eur: booking?.price_eur,
-        tutor_id: booking?.tutor_id,
-        student_id: booking?.student_id,
-        status: booking?.status,
-        paid: booking?.paid
-      });
-      
       const { data, error } = await supabase.functions.invoke('create-tutoring-payment', {
         body: { bookingId }
       });
-
-      console.log('Payment response:', { data, error });
 
       if (error) {
         console.error('Supabase function error:', error);
@@ -234,15 +209,13 @@ export const BookingsList = ({ userId }: { userId: string }) => {
       }
 
       if (data?.url) {
-        console.log('Redirecting to Stripe Checkout:', data.url);
-        console.log('=== PAYMENT FLOW: Redirecting ===');
         window.location.href = data.url;
       } else {
         console.error('No URL in response:', data);
         throw new Error('Ni dobljen payment URL');
       }
     } catch (error: any) {
-      console.error('=== PAYMENT FLOW ERROR ===', error);
+      console.error('Payment flow error:', error);
       const errorMessage = error.message || 'Napaka pri ustvarjanju plačila';
       toast.error(errorMessage, {
         description: 'Prosim poskusi znova ali kontaktiraj inštruktorja.'
@@ -299,22 +272,6 @@ export const BookingsList = ({ userId }: { userId: string }) => {
     b.status === 'cancelled' || 
     (b.paid && new Date(b.end_time) < now)
   );
-
-  // Debug logs to diagnose tab grouping issues
-  console.log('Booking buckets computed:', {
-    total: bookings.length,
-    awaitingPayment: awaitingPayment.length,
-    upcomingPaid: upcomingBookings.length,
-    past: pastBookings.length,
-    now: now.toISOString()
-  });
-
-  console.log('Awaiting payment (confirmed + unpaid):', awaitingPayment.map(b => ({
-    id: b.id,
-    tutor: b.tutor_name,
-    start: b.start_time,
-    paid: b.paid
-  })));
 
   const getStatusBadge = (booking: Booking) => {
     if (booking.status === 'pending') {

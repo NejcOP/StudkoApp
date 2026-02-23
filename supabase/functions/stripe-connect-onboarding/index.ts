@@ -10,12 +10,6 @@ const corsHeaders = {
 };
 
 Deno.serve(async (req) => {
-  console.log('PURE FETCH STRIPE EDGE FUNCTION STARTED');
-  
-  // DEBUG: Print all env variables
-  console.log('Available env variables:', Object.keys(Deno.env.toObject()));
-  console.log('STRIPE_SECRET_KEY value:', Deno.env.get('STRIPE_SECRET_KEY')?.substring(0, 10) + '...');
-  
   if (req.method === 'OPTIONS') {
     return new Response(null, { 
       status: 200,
@@ -37,7 +31,6 @@ Deno.serve(async (req) => {
     }
     // Read JWT from Authorization header
     const authHeader = req.headers.get('authorization') || req.headers.get('Authorization');
-    console.log('Auth header:', authHeader);
     if (!authHeader) throw new Error('No authorization header');
     const jwt = authHeader.replace('Bearer ', '');
     // Create Supabase client
@@ -47,19 +40,16 @@ Deno.serve(async (req) => {
     );
     // Get user from JWT
     const { data: userData, error: userError } = await supabase.auth.getUser(jwt);
-    console.log('Supabase userData:', userData, 'userError:', userError);
     if (userError || !userData.user) throw new Error('Unauthorized');
     const user = userData.user;
     // Parse body
     const { returnUrl, refreshUrl } = await req.json();
-    console.log('Request body:', { returnUrl, refreshUrl });
     // Check if user already has a Stripe account
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('stripe_connect_account_id, full_name, email')
       .eq('id', user.id)
       .single();
-    console.log('Profile:', profile, 'profileError:', profileError);
     if (profileError) throw new Error('Profile not found');
     let accountId = profile.stripe_connect_account_id;
     if (!accountId) {

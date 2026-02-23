@@ -46,7 +46,7 @@ interface SendEmailRequest {
   data: any;
 }
 
-export default async function handler(
+async function sendEmailHandler(
   req: VercelRequest,
   res: VercelResponse
 ) {
@@ -227,3 +227,9 @@ export default async function handler(
     });
   }
 }
+
+// Wrap handler with authentication to prevent unauthorized email sending
+export default withAuth(sendEmailHandler);
+
+// Wrap handler with authentication
+export default withAuth(sendEmailHandler);

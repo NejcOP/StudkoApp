@@ -7,11 +7,7 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  console.log("=== FUNCTION INVOKED ===");
-  console.log("Request method:", req.method);
-  
   if (req.method === "OPTIONS") {
-    console.log("Handling OPTIONS request");
     return new Response(null, { 
       status: 200,
       headers: corsHeaders 
@@ -19,24 +15,17 @@ serve(async (req) => {
   }
 
   try {
-    console.log("=== START generate-summary function ===");
-    
     // Validate API Keys
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
-    
-    console.log("OPENAI_API_KEY exists:", !!OPENAI_API_KEY);
     
     if (!OPENAI_API_KEY) {
       console.error("Missing API Key");
       throw new Error('API ključ manjka! Dodaj OPENAI_API_KEY v Supabase Secrets.');
     }
-    
-    console.log("Using API: OpenAI GPT-4o-mini");
 
     let requestBody;
     try {
       requestBody = await req.json();
-      console.log("Request body parsed successfully");
     } catch (parseError) {
       console.error("Failed to parse request body:", parseError);
       return new Response(
@@ -53,9 +42,6 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-
-    console.log("Generating summary for text length:", text.length);
-    console.log("Text preview:", text.substring(0, 100));
 
     const aiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -161,8 +147,6 @@ ${text}`
         response_format: { type: "json_object" }
       }),
     });
-
-    console.log("AI Response status:", aiResponse.status);
     
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
@@ -177,16 +161,9 @@ ${text}`
     }
 
     const aiData = await aiResponse.json();
-    console.log("AI response received");
-    
-    console.log("Response structure:", JSON.stringify({
-      hasChoices: !!aiData.choices,
-      choicesLength: aiData.choices?.length
-    }));
     
     let summary;
     if (aiData.choices?.[0]?.message?.content) {
-      console.log("Parsing OpenAI response");
       const responseText = aiData.choices[0].message.content;
       
       // Parse JSON (OpenAI with json_object mode should return valid JSON)
@@ -196,7 +173,6 @@ ${text}`
       throw new Error("Invalid AI response format");
     }
 
-    console.log("Summary generated successfully");
     return new Response(JSON.stringify(summary), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
