@@ -26,8 +26,6 @@ export const StripeConnectButton = ({ hasConnectAccount }: StripeConnectButtonPr
         body: {},
       });
 
-      console.log('[StripeConnectButton] Response:', { data, error });
-
       if (error) {
         console.error('[StripeConnectButton] Supabase function error:', error);
         throw error;
@@ -40,9 +38,6 @@ export const StripeConnectButton = ({ hasConnectAccount }: StripeConnectButtonPr
       }
 
       if (data?.url) {
-        console.log('[StripeConnectButton] Redirecting to:', data.url);
-        console.log('[StripeConnectButton] Account ID:', data.accountId);
-        
         // Open in same window so return URL works properly
         window.location.href = data.url;
         toast.success(hasConnectAccount 

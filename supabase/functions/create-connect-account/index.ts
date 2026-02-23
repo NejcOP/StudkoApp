@@ -68,7 +68,7 @@ serve(async (req) => {
         const accountLink = await stripe.accountLinks.create({
           account: profile.stripe_connect_id,
           refresh_url: `${req.headers.get("origin")}/profile`,
-          return_url: `${req.headers.get("origin")}/profile?stripe=success&account_id=${profile.stripe_connect_id}`,
+          return_url: `${req.headers.get("origin")}/profile`,
           type: "account_onboarding",
         });
 
@@ -133,7 +133,7 @@ serve(async (req) => {
     const accountLink = await stripe.accountLinks.create({
       account: account.id,
       refresh_url: `${req.headers.get("origin")}/profile`,
-      return_url: `${req.headers.get("origin")}/profile?stripe=success&account_id=${account.id}`,
+      return_url: `${req.headers.get("origin")}/profile`,
       type: "account_onboarding",
     });
 
