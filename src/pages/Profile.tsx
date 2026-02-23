@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -113,7 +113,6 @@ const Profile = () => {
     const [trialUsed, setTrialUsed] = useState(false);
     const [totalEarnings, setTotalEarnings] = useState(0);
     const [passwordResetEmailSent, setPasswordResetEmailSent] = useState(false);
-    const stripeSuccessProcessed = useRef(false);
 
     // Move loadProfileData above useEffect hooks
     const loadProfileData = useCallback(async (resetForm: boolean = true) => {
@@ -495,56 +494,71 @@ const Profile = () => {
       }
     }, [mainTab, user, loadProfileData]);
 
-    // Check for Stripe onboarding success
+    // Check for Stripe onboarding success - check account status when window regains focus
     useEffect(() => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const stripe = urlParams.get('stripe');
-      const accountId = urlParams.get('account_id');
-      const proActivated = urlParams.get('pro');
+      if (!user || !profile?.stripe_connect_id) return;
+      
+      // Skip if already marked as complete
+      if (profile.stripe_onboarding_complete) return;
 
-      console.log('[Profile] Stripe check:', { stripe, accountId, hasUser: !!user, search: window.location.search, processed: stripeSuccessProcessed.current });
-
-      if (stripe === 'success' && accountId && user && !stripeSuccessProcessed.current) {
-        stripeSuccessProcessed.current = true;
-        console.log('[Profile] Processing Stripe success for account:', accountId);
+      const checkStripeStatus = async () => {
+        console.log('[Profile] Checking Stripe status for account:', profile.stripe_connect_id);
         
-        // Update profile with Stripe Connect account ID
-        supabase
-          .from('profiles')
-          .update({
-            stripe_connect_id: accountId,
-            stripe_onboarding_complete: true
-          })
-          .eq('id', user.id)
-          .then(async ({ error }) => {
-            if (error) {
-              console.error('[Profile] Error updating profile:', error);
-              toast.error('Napaka pri posodabljanju profila');
-            } else {
-              console.log('[Profile] Profile updated successfully');
+        try {
+          const { data, error } = await supabase.functions.invoke('stripe-connect-status', {
+            body: { accountId: profile.stripe_connect_id }
+          });
+
+          console.log('[Profile] Stripe status response:', { data, error });
+
+          if (!error && data?.detailsSubmitted) {
+            console.log('[Profile] Stripe onboarding complete!');
+            
+            // Update profile to mark onboarding as complete
+            const { error: updateError } = await supabase
+              .from('profiles')
+              .update({ stripe_onboarding_complete: true })
+              .eq('id', user.id);
+
+            if (!updateError) {
+              toast.success('Stripe račun uspešno povezan!');
+              setProfile(prev => prev ? { ...prev, stripe_onboarding_complete: true } : null);
               
-              // Clear cache to force reload
+              // Clear cache
               try {
                 sessionStorage.removeItem(`profile_${user.id}`);
-                sessionStorage.removeItem(`my_notes_${user.id}`);
-                sessionStorage.removeItem(`purchased_notes_${user.id}`);
               } catch (err) {
                 console.error('Error clearing cache:', err);
               }
               
-              toast.success('Stripe račun uspešno povezan!');
-              
-              // Force reload profile data
               await loadProfileData(true);
-              
-              // Update profile state immediately with the new account_id
-              setProfile(prev => prev ? { ...prev, stripe_connect_id: accountId, stripe_onboarding_complete: true } : null);
-              
-              // Clean up URL
-              window.history.replaceState({}, document.title, window.location.pathname);
             }
-          });
-      }
+          }
+        } catch (err) {
+          console.error('[Profile] Error checking Stripe status:', err);
+        }
+      };
+
+      // Check immediately when profile loads
+      checkStripeStatus();
+
+      // Also check when window regains focus (user returns from Stripe)
+      const handleFocus = () => {
+        console.log('[Profile] Window focused, checking Stripe status...');
+        checkStripeStatus();
+      };
+
+      window.addEventListener('focus', handleFocus);
+
+      return () => {
+        window.removeEventListener('focus', handleFocus);
+      };
+    }, [user, profile?.stripe_connect_id, profile?.stripe_onboarding_complete, loadProfileData]);
+
+    // Check for URL params (PRO activation and payment status)
+    useEffect(() => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const proActivated = urlParams.get('pro');
 
       // Check for PRO activation
       if (proActivated === 'activated') {
