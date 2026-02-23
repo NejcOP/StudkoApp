@@ -211,8 +211,9 @@ const AIAssistant = () => {
         toast.success(`Kviz "${title}" naložen! 🎯`);
         
         // Clear URL parameter
-        searchParams.delete('share');
-        setSearchParams(searchParams);
+        const newParams = new URLSearchParams(searchParams);
+        newParams.delete('share');
+        setSearchParams(newParams);
       }
     } catch (error) {
       console.error('Error loading shared quiz:', error);
@@ -355,9 +356,10 @@ const AIAssistant = () => {
         } finally {
           setIsLoading(false);
           // Clear action and noteId params after processing
-          searchParams.delete('action');
-          searchParams.delete('noteId');
-          setSearchParams(searchParams, { replace: true });
+          const newParams = new URLSearchParams(searchParams);
+          newParams.delete('action');
+          newParams.delete('noteId');
+          setSearchParams(newParams, { replace: true });
         }
       };
 
