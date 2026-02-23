@@ -1989,7 +1989,8 @@ const Profile = () => {
               {/* Stripe Connect Setup */}
               <div className="mb-6">
                 <StripeConnectButton 
-                  hasConnectAccount={!!profile?.stripe_connect_id} 
+                  hasConnectAccount={!!profile?.stripe_connect_id}
+                  isOnboardingComplete={profile?.stripe_onboarding_complete || false}
                 />
                 {!profile?.stripe_connect_id && (
                   <p className="text-xs text-muted-foreground mt-2">
