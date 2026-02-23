@@ -210,19 +210,23 @@ const AIAssistant = () => {
         
         toast.success(`Kviz "${title}" naložen! 🎯`);
         
-        // Clear URL parameter
-        const newParams = new URLSearchParams(searchParams);
-        newParams.delete('share');
-        setSearchParams(newParams);
+        // Clear URL parameter using functional update
+        setSearchParams(prev => {
+          const newParams = new URLSearchParams(prev);
+          newParams.delete('share');
+          return newParams;
+        });
       }
     } catch (error) {
       console.error('Error loading shared quiz:', error);
       toast.error('Napaka pri nalaganju kviza');
     }
-  }, [searchParams, setSearchParams]);
+  }, [setSearchParams]);
 
   // Auto-activate tab and auto-generate flashcards from URL params
   useEffect(() => {
+    if (!searchParams) return;
+    
     const tab = searchParams.get('tab');
     const action = searchParams.get('action');
     const noteId = searchParams.get('noteId');
@@ -356,10 +360,12 @@ const AIAssistant = () => {
         } finally {
           setIsLoading(false);
           // Clear action and noteId params after processing
-          const newParams = new URLSearchParams(searchParams);
-          newParams.delete('action');
-          newParams.delete('noteId');
-          setSearchParams(newParams, { replace: true });
+          setSearchParams(prev => {
+            const newParams = new URLSearchParams(prev);
+            newParams.delete('action');
+            newParams.delete('noteId');
+            return newParams;
+          }, { replace: true });
         }
       };
 
