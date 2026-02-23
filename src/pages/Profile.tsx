@@ -501,7 +501,11 @@ const Profile = () => {
       const accountId = urlParams.get('account_id');
       const proActivated = urlParams.get('pro');
 
+      console.log('[Profile] Stripe check:', { stripe, accountId, hasUser: !!user, search: window.location.search });
+
       if (stripe === 'success' && accountId && user) {
+        console.log('[Profile] Processing Stripe success for account:', accountId);
+        
         // Update profile with Stripe Connect account ID
         supabase
           .from('profiles')
@@ -512,9 +516,11 @@ const Profile = () => {
           .eq('id', user.id)
           .then(async ({ error }) => {
             if (error) {
-              console.error('Error updating profile:', error);
+              console.error('[Profile] Error updating profile:', error);
               toast.error('Napaka pri posodabljanju profila');
             } else {
+              console.log('[Profile] Profile updated successfully');
+              
               // Clear cache to force reload
               try {
                 sessionStorage.removeItem(`profile_${user.id}`);
