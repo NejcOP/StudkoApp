@@ -7,11 +7,12 @@ import { useEffect } from "react";
 import { toast } from "sonner";
 
 const Dashboard = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
   useEffect(() => {
-    const sessionId = searchParams?.get("session_id");
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get("session_id");
     if (sessionId) {
       toast.success("Uspeh! Preverjamo tvojo naročnino...");
       // Remove session_id from URL after 3s
@@ -23,7 +24,7 @@ const Dashboard = () => {
         }, { replace: true });
       }, 3000);
     }
-  }, [searchParams, setSearchParams]);
+  }, [setSearchParams]);
   const dashboardCards = [
     {
       title: "Moji zapiski",

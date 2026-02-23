@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,6 @@ import { toast } from "sonner";
 const ConfirmEmail = () => {
   const [status, setStatus] = useState<"pending" | "success" | "error" | "need-email">("pending");
   const [message, setMessage] = useState<string>("");
-  const [searchParams] = useSearchParams();
   const [email, setEmail] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
@@ -24,9 +23,10 @@ const ConfirmEmail = () => {
       const hashType = hashParams.get("type");
       
       // Check query params as fallback
-      const token = searchParams.get("token");
-      const type = searchParams.get("type");
-      const emailFromUrl = searchParams.get("email") || emailParam;
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get("token");
+      const type = urlParams.get("type");
+      const emailFromUrl = urlParams.get("email") || emailParam;
       
       // If we have access token in hash, this is a password recovery flow
       if (accessToken && refreshToken) {
@@ -164,7 +164,8 @@ const ConfirmEmail = () => {
         setTimeout(() => navigate("/login"), 2000);
       }
     };
-    const emailFromUrl = searchParams.get("email");
+    const urlParams = new URLSearchParams(window.location.search);
+    const emailFromUrl = urlParams.get("email");
     if (emailFromUrl) {
       setEmail(emailFromUrl);
       confirm(emailFromUrl);
@@ -179,8 +180,9 @@ const ConfirmEmail = () => {
     setSubmitting(true);
     await new Promise((r) => setTimeout(r, 100)); // UI feedback
     
-    const token = searchParams.get("token");
-    const type = searchParams.get("type");
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get("token");
+    const type = urlParams.get("type");
     
     if (!token || !type || !email) {
       setSubmitting(false);

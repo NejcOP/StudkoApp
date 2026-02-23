@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,7 +8,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const ResetPassword = () => {
-  const [searchParams] = useSearchParams();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -17,12 +16,13 @@ const ResetPassword = () => {
 
   useEffect(() => {
     // Check if we have a token
-    const token = searchParams.get('token');
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
     if (!token) {
       toast.error('Neveljavna povezava za ponastavitev gesla');
       navigate('/forgot-password');
     }
-  }, [searchParams, navigate]);
+  }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

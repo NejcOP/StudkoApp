@@ -85,7 +85,7 @@ type Message = {
 };
 
 const AIAssistant = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const { hasProAccess, checkingAccess } = useProAccess();
   const [mode, setMode] = useState<AIMode>("chat");

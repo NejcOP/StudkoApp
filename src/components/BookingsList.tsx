@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -34,7 +34,6 @@ interface Booking {
 
 export const BookingsList = ({ userId }: { userId: string }) => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState<string | null>(null);
@@ -68,25 +67,27 @@ export const BookingsList = ({ userId }: { userId: string }) => {
 
   // Auto-trigger payment if booking parameter is in URL
   useEffect(() => {
-    const bookingId = searchParams.get('booking');
+    const urlParams = new URLSearchParams(window.location.search);
+    const bookingId = urlParams.get('booking');
     if (bookingId && bookings.length > 0 && !paying) {
       const booking = bookings.find(b => b.id === bookingId);
       if (booking && !booking.paid && booking.status === 'confirmed') {
         handlePayment(bookingId);
       }
     }
-  }, [searchParams, bookings]);
+  }, [bookings, paying]);
 
   // Reload bookings after successful payment
   useEffect(() => {
-    const paymentStatus = searchParams.get('payment');
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentStatus = urlParams.get('payment');
     if (paymentStatus === 'success') {
       toast.success('Plačilo uspešno! 🎉', {
         description: 'Rezervacija se posodablja...'
       });
       
       // Remove payment parameter from URL immediately
-      const newParams = new URLSearchParams(searchParams);
+      const newParams = new URLSearchParams(urlParams);
       newParams.delete('payment');
       newParams.delete('booking');
       navigate(`/profile?tab=bookings${newParams.toString() ? '&' + newParams.toString() : ''}`, { replace: true });
@@ -105,11 +106,11 @@ export const BookingsList = ({ userId }: { userId: string }) => {
       return () => clearInterval(pollInterval);
     } else if (paymentStatus === 'cancelled') {
       toast.error('Plačilo preklicano');
-      const newParams = new URLSearchParams(searchParams);
+      const newParams = new URLSearchParams(urlParams);
       newParams.delete('payment');
       navigate(`/profile?tab=bookings${newParams.toString() ? '&' + newParams.toString() : ''}`, { replace: true });
     }
-  }, [searchParams]);
+  }, [navigate]);
 
   const loadBookings = async () => {
     try {

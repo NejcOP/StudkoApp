@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,8 +19,8 @@ const Register = () => {
   const { signUp, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const referralCode = searchParams.get("ref");
+  const urlParams = new URLSearchParams(window.location.search);
+  const referralCode = urlParams.get("ref");
 
   useEffect(() => {
     if (user) {
