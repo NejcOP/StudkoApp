@@ -86,6 +86,8 @@ type Message = {
 
 const AIAssistant = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  console.log('[AIAssistant] Component rendered, searchParams defined:', typeof searchParams !== 'undefined');
+  console.log('[AIAssistant] searchParams value:', searchParams ? 'exists' : 'null/undefined');
   const { user } = useAuth();
   const { hasProAccess, checkingAccess } = useProAccess();
   const [mode, setMode] = useState<AIMode>("chat");
@@ -189,6 +191,7 @@ const AIAssistant = () => {
 
   // Load shared quiz
   const loadSharedQuiz = useCallback(async (shareCode: string) => {
+    console.log('[loadSharedQuiz] Starting with code:', shareCode);
     try {
       const { data, error } = await supabase
         .from('shared_quizzes')
@@ -199,6 +202,7 @@ const AIAssistant = () => {
       if (error) throw error;
 
       if (data && data.quiz_data) {
+        console.log('[loadSharedQuiz] Quiz data loaded:', data.title);
         // Load quiz questions
         const quizData = data.quiz_data as { questions: Array<{ question: string; options: string[]; correct_answer: string }>; title?: string };
         const questions = quizData.questions;
@@ -211,20 +215,25 @@ const AIAssistant = () => {
         toast.success(`Kviz "${title}" naložen! 🎯`);
         
         // Clear URL parameter using functional update
+        console.log('[loadSharedQuiz] Clearing share parameter from URL');
         setSearchParams(prev => {
+          console.log('[loadSharedQuiz] setSearchParams callback, prev:', prev?.toString());
           const newParams = new URLSearchParams(prev);
           newParams.delete('share');
           return newParams;
         });
       }
     } catch (error) {
-      console.error('Error loading shared quiz:', error);
+      console.error('[loadSharedQuiz] Error loading shared quiz:', error);
       toast.error('Napaka pri nalaganju kviza');
     }
   }, [setSearchParams]);
 
   // Auto-activate tab and auto-generate flashcards from URL params
   useEffect(() => {
+    console.log('[AIAssistant] useEffect triggered');
+    console.log('[AIAssistant] window.location.search:', window.location.search);
+    
     // Read URL params directly from window.location to avoid stale closures
     const urlSearchParams = new URLSearchParams(window.location.search);
     
@@ -232,24 +241,33 @@ const AIAssistant = () => {
     const action = urlSearchParams.get('action');
     const noteId = urlSearchParams.get('noteId');
     const shareCode = urlSearchParams.get('share');
+    
+    console.log('[AIAssistant] URL params:', { tab, action, noteId, shareCode });
+    console.log('[AIAssistant] user?.id:', user?.id);
+    console.log('[AIAssistant] autoGenerating:', autoGenerating);
 
     // Activate tab if specified
     if (tab && ['chat', 'flashcards', 'quiz', 'summary'].includes(tab)) {
+      console.log('[AIAssistant] Setting mode to:', tab);
       setMode(tab as AIMode);
     }
 
     // Load shared quiz
     if (shareCode && tab === 'quiz' && user?.id) {
+      console.log('[AIAssistant] Loading shared quiz:', shareCode);
       loadSharedQuiz(shareCode);
     }
 
     // Auto-generate flashcards if action=generate and noteId present
     if (action === 'generate' && noteId && tab === 'flashcards' && !autoGenerating && user?.id) {
+      console.log('[AIAssistant] Starting auto-generate for noteId:', noteId);
       setAutoGenerating(true);
       
       // Load note content and auto-generate
       const autoGenerate = async () => {
+        console.log('[AIAssistant] autoGenerate async function started');
         try {
+          console.log('[AIAssistant] Fetching note data...');
           // Fetch note content (notes table has: title, description, subject, file_url)
           const { data: noteData, error: noteError } = await supabase
             .from('notes')
@@ -356,12 +374,14 @@ const AIAssistant = () => {
             toast.error("Zapisek nima dovolj vsebine za generiranje kartic.");
           }
         } catch (error) {
-          console.error('Auto-generate error:', error);
+          console.error('[AIAssistant] Auto-generate error:', error);
           toast.error("Napaka pri avtomatskem generiranju kartic.");
         } finally {
+          console.log('[AIAssistant] Auto-generate finally block - clearing URL params');
           setIsLoading(false);
           // Clear action and noteId params after processing
           setSearchParams(prev => {
+            console.log('[AIAssistant] setSearchParams callback called, prev:', prev?.toString());
             const newParams = new URLSearchParams(prev);
             newParams.delete('action');
             newParams.delete('noteId');
@@ -370,8 +390,11 @@ const AIAssistant = () => {
         }
       };
 
+      console.log('[AIAssistant] Calling autoGenerate()');
       autoGenerate();
     }
+    
+    console.log('[AIAssistant] useEffect completed');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setSearchParams, user?.id, autoGenerating, loadSharedQuiz]);
 
