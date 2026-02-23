@@ -110,12 +110,12 @@ const AddNote = () => {
 
         const { data: profile } = await supabase
           .from("profiles")
-          .select("stripe_onboarding_complete")
+          .select("stripe_connect_id")
           .eq("id", user.id)
           .single();
 
-        // User can publish if they have completed Stripe onboarding
-        setHasPayoutSetup(!!profile?.stripe_onboarding_complete);
+        // User can publish if they have Stripe Connect account set up
+        setHasPayoutSetup(!!profile?.stripe_connect_id);
       } catch (error) {
         console.error("Error checking payout setup:", error);
       } finally {
