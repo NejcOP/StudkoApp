@@ -1629,28 +1629,58 @@ const Profile = () => {
                           <CheckCircle2 className="w-4 h-4" />
                           Stripe račun je povezan ✅
                         </p>
-                        <Button 
-                          variant="outline" 
-                          className="w-full text-foreground"
-                          onClick={async () => {
-                            if (!profile?.stripe_connect_id) return;
-                            try {
-                              const { data, error } = await supabase.functions.invoke('stripe-connect-dashboard', {
-                                body: { accountId: profile.stripe_connect_id }
-                              });
-                              if (error || !data?.url) {
+                        <div className="space-y-2">
+                          <Button 
+                            variant="outline" 
+                            className="w-full text-foreground"
+                            onClick={async () => {
+                              if (!profile?.stripe_connect_id) return;
+                              try {
+                                const { data, error } = await supabase.functions.invoke('stripe-connect-dashboard', {
+                                  body: { accountId: profile.stripe_connect_id }
+                                });
+                                if (error || !data?.url) {
+                                  toast.error('Napaka pri odpiranju Stripe dashboarda');
+                                  return;
+                                }
+                                window.open(data.url, '_blank');
+                              } catch (err) {
                                 toast.error('Napaka pri odpiranju Stripe dashboarda');
-                                return;
                               }
-                              window.open(data.url, '_blank');
-                            } catch (err) {
-                              toast.error('Napaka pri odpiranju Stripe dashboarda');
-                            }
-                          }}
-                        >
-                          <Wallet className="w-4 h-4 mr-2" />
-                          Upravljaj Stripe račun
-                        </Button>
+                            }}
+                          >
+                            <Wallet className="w-4 h-4 mr-2" />
+                            Upravljaj Stripe račun
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            className="w-full text-foreground text-sm"
+                            onClick={async () => {
+                              try {
+                                const returnUrl = `${window.location.origin}/profile?stripe_updated=success`;
+                                const refreshUrl = `${window.location.origin}/profile?stripe_updated=refresh`;
+                                
+                                const { data, error } = await supabase.functions.invoke('stripe-connect-update', {
+                                  body: { returnUrl, refreshUrl }
+                                });
+                                
+                                if (error || !data?.url) {
+                                  toast.error('Napaka pri odpiranju Stripe posodobitve');
+                                  return;
+                                }
+                                
+                                window.location.href = data.url;
+                              } catch (err) {
+                                toast.error('Napaka pri odpiranju Stripe posodobitve');
+                              }
+                            }}
+                          >
+                            <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                            Posodobi poslovne podatke
+                          </Button>
+                        </div>
                       </div>
                     ) : (
                       <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-xl p-4 border border-blue-200 dark:border-blue-800">
