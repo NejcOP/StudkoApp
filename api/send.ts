@@ -14,21 +14,15 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { render } from '@react-email/render';
-
-// Import all email templates from emails/index.js
-// @ts-ignore
-
-import {
-  WelcomeEmail,
-  ResetPasswordEmail,
-  ProActivationEmail,
-  PayoutConfirmationEmail,
-  EmailChangeEmail,
-  TikTokApprovedEmail,
-  TikTokRejectedEmail,
-  InstructorApprovedEmail,
-  InstructorRejectedEmail
-} from '../emails/index.js';
+import WelcomeEmail from '../emails/welcome';
+import ResetPasswordEmail from '../emails/reset-password';
+import InstructorApprovedEmail from '../emails/instructor-approved';
+import InstructorRejectedEmail from '../emails/instructor-rejected';
+import TikTokApprovedEmail from '../emails/tiktok-approved';
+import TikTokRejectedEmail from '../emails/tiktok-rejected';
+import EmailChangeEmail from '../emails/email-change';
+import ProActivationEmail from '../emails/pro-activation';
+import PayoutConfirmationEmail from '../emails/payout-confirmation';
 
 
 interface SendEmailRequest {
@@ -46,7 +40,7 @@ interface SendEmailRequest {
   data: any;
 }
 
-async function sendEmailHandler(
+export default async function handler(
   req: VercelRequest,
   res: VercelResponse
 ) {
@@ -227,9 +221,6 @@ async function sendEmailHandler(
     });
   }
 }
-
-// Wrap handler with authentication to prevent unauthorized email sending
-export default withAuth(sendEmailHandler);
 
 // Wrap handler with authentication
 export default withAuth(sendEmailHandler);
