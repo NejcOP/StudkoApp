@@ -454,7 +454,7 @@ export default function TutorApply() {
                         checked={formData.subjects.includes(subject)}
                         onCheckedChange={() => handleSubjectToggle(subject)}
                       />
-                      <label htmlFor={subject} className="text-sm cursor-pointer">
+                      <label onClick={() => handleSubjectToggle(subject)} className="text-sm cursor-pointer">
                         {subject}
                       </label>
                     </div>
@@ -473,7 +473,7 @@ export default function TutorApply() {
                         checked={formData.languages.includes(lang)}
                         onCheckedChange={() => handleLanguageToggle(lang)}
                       />
-                      <label htmlFor={lang} className="text-sm cursor-pointer">{lang}</label>
+                      <label onClick={() => handleLanguageToggle(lang)} className="text-sm cursor-pointer">{lang}</label>
                     </div>
                   ))}
                 </div>
