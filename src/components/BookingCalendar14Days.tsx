@@ -205,6 +205,13 @@ export const BookingCalendar14Days = ({
   const handleBooking = async () => {
     if (!user || !selectedSlot || !selectedDate) return;
 
+    // Check if booking date is in the past
+    if (selectedDate < startOfDay(new Date())) {
+      toast.error('Ne moreš rezervirati terminov v preteklosti');
+      setShowBookingDialog(false);
+      return;
+    }
+
     setBooking(true);
     try {
       const [startHour, startMin] = selectedSlot.start_time.split(':');

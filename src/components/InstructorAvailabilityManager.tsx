@@ -170,6 +170,12 @@ export const InstructorAvailabilityManager = ({ tutorId }: InstructorAvailabilit
       return;
     }
 
+    // Check if selected date is in the past
+    if (selectedDate < startOfDay(new Date())) {
+      toast.error('Ne moreš dodajati razpoložljivosti za pretekle datume');
+      return;
+    }
+
     if (newSlot.start_time >= newSlot.end_time) {
       toast.error('Končni čas mora biti po začetnem');
       return;
@@ -234,7 +240,15 @@ export const InstructorAvailabilityManager = ({ tutorId }: InstructorAvailabilit
   };
 
   const handleDeleteSlot = async (slotId: string) => {
-    try {
+    try {      // Get the slot to check its date
+      const slotToRemove = slots.find(s => s.id === slotId);
+      if (slotToRemove) {
+        const slotDate = new Date(slotToRemove.available_date);
+        if (slotDate < startOfDay(new Date())) {
+          toast.error('Ne moreš odstraniti terminov iz preteklosti');
+          return;
+        }
+      }
       const { error } = await supabase
         .from('tutor_availability_dates')
         .delete()
@@ -253,6 +267,12 @@ export const InstructorAvailabilityManager = ({ tutorId }: InstructorAvailabilit
   const handleCopyPreviousWeek = async () => {
     if (!selectedDate) {
       toast.error('Prosim izberi datum za kopiranje');
+      return;
+    }
+
+    // Check if selected date is in the past
+    if (selectedDate < startOfDay(new Date())) {
+      toast.error('Ne moreš kopirati razpoložljivosti v pretekle datume');
       return;
     }
 
