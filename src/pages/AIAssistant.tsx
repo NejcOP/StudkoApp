@@ -769,6 +769,7 @@ const AIAssistant = () => {
       const decoder = new TextDecoder();
       let aiResponse = "";
 
+      console.log('Starting to read streaming response...');
       setConversation(prev => [...prev, { role: "assistant", content: "" }]);
 
       if (!reader) {
@@ -801,6 +802,7 @@ const AIAssistant = () => {
       while (reader) {
         const { done, value } = await reader.read();
         if (done) {
+          console.log(`Stream done. Total chunks: ${chunkCount}, Response length: ${aiResponse.length}`);
           // Final update
           setConversation(prev => {
             const updated = [...prev];
@@ -812,6 +814,7 @@ const AIAssistant = () => {
 
         chunkCount++;
         const chunk = decoder.decode(value, { stream: true });
+        console.log(`Chunk ${chunkCount}:`, chunk.substring(0, 100));
         const lines = chunk.split("\n");
 
         for (const line of lines) {
@@ -833,6 +836,8 @@ const AIAssistant = () => {
           }
         }
       }
+
+      console.log('Final AI response length:', aiResponse.length);
 
       if (convId && aiResponse) {
         await saveMessage(convId, "ai", aiResponse);
@@ -901,6 +906,7 @@ const AIAssistant = () => {
       }
       
       const functionUrl = `${supabaseUrl}/functions/v1/ai-chat`;
+      console.log('Quick Action AI request to:', functionUrl);
       
       const response = await fetch(functionUrl, {
         method: "POST",
@@ -915,6 +921,8 @@ const AIAssistant = () => {
           lastResponse: lastAiMessage.content,
         }),
       });
+
+      console.log('Quick Action AI response status:', response.status);
 
       if (!response.ok) {
         if (response.status === 404) {
