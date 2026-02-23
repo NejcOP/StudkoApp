@@ -225,13 +225,13 @@ const AIAssistant = () => {
 
   // Auto-activate tab and auto-generate flashcards from URL params
   useEffect(() => {
-    // Safety check - ensure searchParams is available
-    if (!searchParams || typeof searchParams.get !== 'function') return;
+    // Read URL params directly from window.location to avoid stale closures
+    const urlSearchParams = new URLSearchParams(window.location.search);
     
-    const tab = searchParams.get('tab');
-    const action = searchParams.get('action');
-    const noteId = searchParams.get('noteId');
-    const shareCode = searchParams.get('share');
+    const tab = urlSearchParams.get('tab');
+    const action = urlSearchParams.get('action');
+    const noteId = urlSearchParams.get('noteId');
+    const shareCode = urlSearchParams.get('share');
 
     // Activate tab if specified
     if (tab && ['chat', 'flashcards', 'quiz', 'summary'].includes(tab)) {
