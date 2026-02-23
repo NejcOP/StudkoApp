@@ -80,50 +80,11 @@ const Profile = () => {
     const { theme, setTheme } = useTheme();
     const navigate = useNavigate();
     
-    const [profile, setProfile] = useState<Profile | null>(() => {
-      try {
-        const cached = sessionStorage.getItem(`profile_${user?.id}`);
-        if (cached) {
-          const { data, timestamp } = JSON.parse(cached);
-          if (Date.now() - timestamp < 5 * 60 * 1000) {
-            return data;
-          }
-        }
-      } catch (err) {
-        console.error('Error reading cached profile:', err);
-      }
-      return null;
-    });
+    const [profile, setProfile] = useState<Profile | null>(null);
     const [tutorId, setTutorId] = useState<string | null>(null);
     const [isApprovedTutor, setIsApprovedTutor] = useState(false);
-    const [myNotes, setMyNotes] = useState<Note[]>(() => {
-      try {
-        const cached = sessionStorage.getItem(`my_notes_${user?.id}`);
-        if (cached) {
-          const { data, timestamp } = JSON.parse(cached);
-          if (Date.now() - timestamp < 5 * 60 * 1000) {
-            return data;
-          }
-        }
-      } catch (err) {
-        console.error('Error reading cached notes:', err);
-      }
-      return [];
-    });
-    const [purchasedNotes, setPurchasedNotes] = useState<Purchase[]>(() => {
-      try {
-        const cached = sessionStorage.getItem(`purchased_notes_${user?.id}`);
-        if (cached) {
-          const { data, timestamp } = JSON.parse(cached);
-          if (Date.now() - timestamp < 5 * 60 * 1000) {
-            return data;
-          }
-        }
-      } catch (err) {
-        console.error('Error reading cached purchases:', err);
-      }
-      return [];
-    });
+    const [myNotes, setMyNotes] = useState<Note[]>([]);
+    const [purchasedNotes, setPurchasedNotes] = useState<Purchase[]>([]);
     const [loading, setLoading] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -171,6 +132,10 @@ const Profile = () => {
           if (Date.now() - profileCache.timestamp < 5 * 60 * 1000 &&
               Date.now() - notesCache.timestamp < 5 * 60 * 1000 &&
               Date.now() - purchasesCache.timestamp < 5 * 60 * 1000) {
+            // Set state from cache
+            setProfile(profileCache.data);
+            setMyNotes(notesCache.data);
+            setPurchasedNotes(purchasesCache.data);
             // Cache is valid, no need to load
             setProfileLoading(false);
             setNotesLoading(false);
