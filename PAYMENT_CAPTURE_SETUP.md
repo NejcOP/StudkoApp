@@ -22,9 +22,22 @@ A cron job runs every hour to capture payments for completed lessons.
 
 ## Setup Cron Job in Supabase Dashboard
 
+### Step 1: Enable pg_cron Extension
+
 1. Go to **Supabase Dashboard** → Your Project
-2. Navigate to **Database** → **Cron Jobs** (or use pg_cron extension)
-3. Create new cron job:
+2. Navigate to **Database** → **Extensions**
+3. Search for **pg_cron** and click **Enable**
+
+OR run this SQL in **SQL Editor**:
+
+```sql
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+```
+
+### Step 2: Create Cron Job
+
+1. Navigate to **Database** → **SQL Editor**
+2. Create new cron job:
 
 ```sql
 -- Run every hour to capture completed lesson payments
@@ -44,10 +57,13 @@ SELECT cron.schedule(
 );
 ```
 
-4. Verify cron job is created:
+### Step 3: Verify Cron Job
+
 ```sql
 SELECT * FROM cron.job WHERE jobname = 'auto-capture-booking-payments';
 ```
+
+This should return one row with the job details.
 
 ## Manual Capture (if needed)
 
