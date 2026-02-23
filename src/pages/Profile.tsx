@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -113,6 +113,7 @@ const Profile = () => {
     const [trialUsed, setTrialUsed] = useState(false);
     const [totalEarnings, setTotalEarnings] = useState(0);
     const [passwordResetEmailSent, setPasswordResetEmailSent] = useState(false);
+    const stripeSuccessProcessed = useRef(false);
 
     // Move loadProfileData above useEffect hooks
     const loadProfileData = useCallback(async (resetForm: boolean = true) => {
@@ -501,9 +502,10 @@ const Profile = () => {
       const accountId = urlParams.get('account_id');
       const proActivated = urlParams.get('pro');
 
-      console.log('[Profile] Stripe check:', { stripe, accountId, hasUser: !!user, search: window.location.search });
+      console.log('[Profile] Stripe check:', { stripe, accountId, hasUser: !!user, search: window.location.search, processed: stripeSuccessProcessed.current });
 
-      if (stripe === 'success' && accountId && user) {
+      if (stripe === 'success' && accountId && user && !stripeSuccessProcessed.current) {
+        stripeSuccessProcessed.current = true;
         console.log('[Profile] Processing Stripe success for account:', accountId);
         
         // Update profile with Stripe Connect account ID
@@ -566,7 +568,7 @@ const Profile = () => {
         });
         window.history.replaceState({}, document.title, window.location.pathname + window.location.search.replace(/[?&]payment=cancelled/, ''));
       }
-    }, [user, loadProfileData, location.search]);
+    }, [user, location.search]);
 
     // Check for subscription expiry and show notification
     useEffect(() => {
