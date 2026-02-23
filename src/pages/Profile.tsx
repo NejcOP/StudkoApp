@@ -496,10 +496,23 @@ const Profile = () => {
 
     // Check for Stripe onboarding success - check account status when window regains focus
     useEffect(() => {
-      if (!user || !profile?.stripe_connect_id) return;
+      console.log('[Profile] Stripe check useEffect triggered:', {
+        hasUser: !!user,
+        hasProfile: !!profile,
+        stripeConnectId: profile?.stripe_connect_id,
+        onboardingComplete: profile?.stripe_onboarding_complete
+      });
+      
+      if (!user || !profile?.stripe_connect_id) {
+        console.log('[Profile] Skipping Stripe check - no user or stripe_connect_id');
+        return;
+      }
       
       // Skip if already marked as complete
-      if (profile.stripe_onboarding_complete) return;
+      if (profile.stripe_onboarding_complete) {
+        console.log('[Profile] Skipping Stripe check - already marked complete');
+        return;
+      }
 
       const checkStripeStatus = async () => {
         console.log('[Profile] Checking Stripe status for account:', profile.stripe_connect_id);
@@ -511,8 +524,13 @@ const Profile = () => {
 
           console.log('[Profile] Stripe status response:', { data, error });
 
-          if (!error && data?.detailsSubmitted) {
-            console.log('[Profile] Stripe onboarding complete!');
+          if (error) {
+            console.error('[Profile] Error from stripe-connect-status:', error);
+            return;
+          }
+
+          if (data?.detailsSubmitted) {
+            console.log('[Profile] Stripe onboarding complete! Updating profile...');
             
             // Update profile to mark onboarding as complete
             const { error: updateError } = await supabase
@@ -520,7 +538,10 @@ const Profile = () => {
               .update({ stripe_onboarding_complete: true })
               .eq('id', user.id);
 
-            if (!updateError) {
+            if (updateError) {
+              console.error('[Profile] Error updating profile:', updateError);
+            } else {
+              console.log('[Profile] Profile updated successfully, showing toast');
               toast.success('Stripe račun uspešno povezan!');
               setProfile(prev => prev ? { ...prev, stripe_onboarding_complete: true } : null);
               
@@ -533,6 +554,8 @@ const Profile = () => {
               
               await loadProfileData(true);
             }
+          } else {
+            console.log('[Profile] Stripe details not yet submitted. Status:', data);
           }
         } catch (err) {
           console.error('[Profile] Error checking Stripe status:', err);
@@ -540,6 +563,7 @@ const Profile = () => {
       };
 
       // Check immediately when profile loads
+      console.log('[Profile] Starting initial Stripe status check');
       checkStripeStatus();
 
       // Also check when window regains focus (user returns from Stripe)
