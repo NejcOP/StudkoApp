@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -79,6 +79,7 @@ const Profile = () => {
     const { user, loading: authLoading } = useAuth();
     const { theme, setTheme } = useTheme();
     const navigate = useNavigate();
+    const location = useLocation();
     
     const [profile, setProfile] = useState<Profile | null>(null);
     const [tutorId, setTutorId] = useState<string | null>(null);
@@ -559,7 +560,7 @@ const Profile = () => {
         });
         window.history.replaceState({}, document.title, window.location.pathname + window.location.search.replace(/[?&]payment=cancelled/, ''));
       }
-    }, [user, loadProfileData]);
+    }, [user, loadProfileData, location.search]);
 
     // Check for subscription expiry and show notification
     useEffect(() => {

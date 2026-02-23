@@ -38,11 +38,11 @@ export const StripeConnectButton = ({ hasConnectAccount }: StripeConnectButtonPr
       }
 
       if (data?.url) {
-        // Immediately open window without waiting
-        window.open(data.url, '_blank');
+        // Open in same window so return URL works properly
+        window.location.href = data.url;
         toast.success(hasConnectAccount 
-          ? 'Stripe nastavitve odprte!' 
-          : 'Stripe povezava odprta!',
+          ? 'Preusmerjam na Stripe nastavitve...' 
+          : 'Preusmerjam na Stripe povezavo...',
           { id: loadingToast }
         );
       } else {
