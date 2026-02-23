@@ -19,9 +19,10 @@ serve(async (req) => {
   }
 
   try {
+    // Use service role key for database operations that need to bypass RLS
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
     const authHeader = req.headers.get("Authorization");
@@ -88,10 +89,14 @@ serve(async (req) => {
         // If account doesn't exist, clear it from database and create new one
         if (stripeError.type === 'invalid_request_error') {
           console.log("[CREATE-CONNECT-ACCOUNT] Invalid account, clearing from database");
-          await supabaseClient
+          const { error: clearError } = await supabaseClient
             .from("profiles")
             .update({ stripe_connect_id: null })
             .eq("id", user.id);
+          
+          if (clearError) {
+            console.error("[CREATE-CONNECT-ACCOUNT] Failed to clear invalid account ID:", clearError);
+          }
           
           // Fall through to create new account
         } else {
@@ -122,12 +127,30 @@ serve(async (req) => {
     console.log("[CREATE-CONNECT-ACCOUNT] New account created:", account.id);
 
     // Save account ID to profile
-    await supabaseClient
+    const { error: updateError } = await supabaseClient
       .from("profiles")
       .update({ stripe_connect_id: account.id })
       .eq("id", user.id);
 
+    if (updateError) {
+      console.error("[CREATE-CONNECT-ACCOUNT] Failed to save account ID to profile:", updateError);
+      throw new Error("Failed to save Stripe account ID to profile: " + updateError.message);
+    }
+
     console.log("[CREATE-CONNECT-ACCOUNT] Account ID saved to profile");
+
+    // Verify the update was successful
+    const { data: updatedProfile, error: verifyError } = await supabaseClient
+      .from("profiles")
+      .select("stripe_connect_id")
+      .eq("id", user.id)
+      .single();
+
+    console.log("[CREATE-CONNECT-ACCOUNT] Verification - profile updated:", {
+      success: !verifyError,
+      stripeConnectId: updatedProfile?.stripe_connect_id,
+      error: verifyError
+    });
 
     // Create account link for onboarding
     const accountLink = await stripe.accountLinks.create({
