@@ -133,20 +133,6 @@ ${text.substring(0, 12000)}`
         top_p: 0.9,
       }),
     });
-  "bullet_points": ["Key point 1 IN THE SAME LANGUAGE", "Key point 2 IN THE SAME LANGUAGE", ...],
-  "key_definitions": [{"term": "Term", "definition": "Definition IN THE SAME LANGUAGE"}, ...],
-  "glossary": [{"term": "Term", "meaning": "Meaning IN THE SAME LANGUAGE"}, ...]
-}
-
-Text to summarize:
-${text}`
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 2048,
-        response_format: { type: "json_object" }
-      }),
-    });
     
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
