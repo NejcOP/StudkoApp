@@ -225,7 +225,8 @@ const AIAssistant = () => {
 
   // Auto-activate tab and auto-generate flashcards from URL params
   useEffect(() => {
-    if (!searchParams) return;
+    // Safety check - ensure searchParams is available
+    if (!searchParams || typeof searchParams.get !== 'function') return;
     
     const tab = searchParams.get('tab');
     const action = searchParams.get('action');

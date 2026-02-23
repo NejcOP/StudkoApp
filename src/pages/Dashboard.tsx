@@ -11,16 +11,19 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const sessionId = searchParams.get("session_id");
+    const sessionId = searchParams?.get("session_id");
     if (sessionId) {
       toast.success("Uspeh! Preverjamo tvojo naročnino...");
       // Remove session_id from URL after 3s
       setTimeout(() => {
-        searchParams.delete("session_id");
-        navigate({ pathname: window.location.pathname, search: searchParams.toString() }, { replace: true });
+        setSearchParams(prev => {
+          const newParams = new URLSearchParams(prev);
+          newParams.delete("session_id");
+          return newParams;
+        }, { replace: true });
       }, 3000);
     }
-  }, [searchParams, navigate]);
+  }, [searchParams, setSearchParams]);
   const dashboardCards = [
     {
       title: "Moji zapiski",
