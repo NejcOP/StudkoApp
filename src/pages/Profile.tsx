@@ -1992,6 +1992,51 @@ const Profile = () => {
                   hasConnectAccount={!!profile?.stripe_connect_id}
                   isOnboardingComplete={profile?.stripe_onboarding_complete || false}
                 />
+                {profile?.stripe_connect_id && !profile?.stripe_onboarding_complete && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="mt-2 w-full text-xs"
+                    onClick={async () => {
+                      if (!profile?.stripe_connect_id || !user) return;
+                      
+                      console.log('[Profile] Manual check triggered');
+                      toast.loading('Preverjam status Stripe računa...');
+                      
+                      try {
+                        const { data, error } = await supabase.functions.invoke('stripe-connect-status', {
+                          body: { accountId: profile.stripe_connect_id }
+                        });
+
+                        console.log('[Profile] Manual check response:', { data, error });
+
+                        if (error) {
+                          toast.error('Napaka pri preverjanju statusa');
+                          return;
+                        }
+
+                        if (data?.detailsSubmitted) {
+                          const { error: updateError } = await supabase
+                            .from('profiles')
+                            .update({ stripe_onboarding_complete: true })
+                            .eq('id', user.id);
+
+                          if (!updateError) {
+                            toast.success('Stripe račun uspešno povezan!');
+                            await loadProfileData(true);
+                          }
+                        } else {
+                          toast.info('Stripe onboarding še ni zaključen. Prosim zaključi nastavitev.');
+                        }
+                      } catch (err) {
+                        console.error('[Profile] Manual check error:', err);
+                        toast.error('Napaka pri preverjanju statusa');
+                      }
+                    }}
+                  >
+                    🔄 Preveri status Stripe računa
+                  </Button>
+                )}
                 {!profile?.stripe_connect_id && (
                   <p className="text-xs text-muted-foreground mt-2">
                     Nastavi izplačila, da lahko spreješ plačljive rezervacije
