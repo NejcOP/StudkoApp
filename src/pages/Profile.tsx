@@ -580,6 +580,20 @@ const Profile = () => {
           window.history.replaceState({}, document.title, window.location.pathname);
         }, 1500);
       }
+
+      // Check for successful booking payment
+      const paymentStatus = searchParams.get('payment');
+      if (paymentStatus === 'success') {
+        toast.success('Plačilo uspešno! 💳', {
+          description: 'Inštruktor je prejel obvestilo. Počakaj na potrditev rezervacije.'
+        });
+        window.history.replaceState({}, document.title, window.location.pathname + window.location.search.replace(/[?&]payment=success/, ''));
+      } else if (paymentStatus === 'cancelled') {
+        toast.error('Plačilo preklicano', {
+          description: 'Rezervacija ni bila plačana. Poskusi znova.'
+        });
+        window.history.replaceState({}, document.title, window.location.pathname + window.location.search.replace(/[?&]payment=cancelled/, ''));
+      }
     }, [user, loadProfileData]);
 
     // Check for subscription expiry and show notification
