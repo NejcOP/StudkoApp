@@ -503,73 +503,55 @@ const Profile = () => {
         onboardingComplete: profile?.stripe_onboarding_complete
       });
       
-      if (!user || !profile?.stripe_connect_id) {
-        console.log('[Profile] Skipping Stripe check - no user or stripe_connect_id');
-        return;
-      }
-      
-      // Skip if already marked as complete
-      if (profile.stripe_onboarding_complete) {
-        console.log('[Profile] Skipping Stripe check - already marked complete');
-        return;
-      }
-
-      const checkStripeStatus = async () => {
-        console.log('[Profile] Checking Stripe status for account:', profile.stripe_connect_id);
+      // When window regains focus (user returns from Stripe), reload profile to get latest data
+      const handleFocus = async () => {
+        console.log('[Profile] Window focused, reloading profile...');
         
+        if (!user) return;
+        
+        // Clear cache and reload profile
         try {
-          const { data, error } = await supabase.functions.invoke('stripe-connect-status', {
-            body: { accountId: profile.stripe_connect_id }
+          sessionStorage.removeItem(`profile_${user.id}`);
+          sessionStorage.removeItem(`my_notes_${user.id}`);
+          sessionStorage.removeItem(`purchased_notes_${user.id}`);
+        } catch (err) {
+          console.error('Error clearing cache:', err);
+        }
+        
+        await loadProfileData(true);
+        
+        // After reloading, check if we need to verify Stripe status
+        const { data: freshProfile } = await supabase
+          .from('profiles')
+          .select('stripe_connect_id, stripe_onboarding_complete')
+          .eq('id', user.id)
+          .single();
+        
+        console.log('[Profile] Fresh profile after focus:', freshProfile);
+        
+        if (freshProfile?.stripe_connect_id && !freshProfile.stripe_onboarding_complete) {
+          console.log('[Profile] Found stripe_connect_id without completion, checking status...');
+          
+          const { data: statusData, error } = await supabase.functions.invoke('stripe-connect-status', {
+            body: { accountId: freshProfile.stripe_connect_id }
           });
 
-          console.log('[Profile] Stripe status response:', { data, error });
+          console.log('[Profile] Stripe status response:', { statusData, error });
 
-          if (error) {
-            console.error('[Profile] Error from stripe-connect-status:', error);
-            return;
-          }
-
-          if (data?.detailsSubmitted) {
+          if (!error && statusData?.detailsSubmitted) {
             console.log('[Profile] Stripe onboarding complete! Updating profile...');
             
-            // Update profile to mark onboarding as complete
             const { error: updateError } = await supabase
               .from('profiles')
               .update({ stripe_onboarding_complete: true })
               .eq('id', user.id);
 
-            if (updateError) {
-              console.error('[Profile] Error updating profile:', updateError);
-            } else {
-              console.log('[Profile] Profile updated successfully, showing toast');
+            if (!updateError) {
               toast.success('Stripe račun uspešno povezan!');
-              setProfile(prev => prev ? { ...prev, stripe_onboarding_complete: true } : null);
-              
-              // Clear cache
-              try {
-                sessionStorage.removeItem(`profile_${user.id}`);
-              } catch (err) {
-                console.error('Error clearing cache:', err);
-              }
-              
               await loadProfileData(true);
             }
-          } else {
-            console.log('[Profile] Stripe details not yet submitted. Status:', data);
           }
-        } catch (err) {
-          console.error('[Profile] Error checking Stripe status:', err);
         }
-      };
-
-      // Check immediately when profile loads
-      console.log('[Profile] Starting initial Stripe status check');
-      checkStripeStatus();
-
-      // Also check when window regains focus (user returns from Stripe)
-      const handleFocus = () => {
-        console.log('[Profile] Window focused, checking Stripe status...');
-        checkStripeStatus();
       };
 
       window.addEventListener('focus', handleFocus);
@@ -577,7 +559,7 @@ const Profile = () => {
       return () => {
         window.removeEventListener('focus', handleFocus);
       };
-    }, [user, profile?.stripe_connect_id, profile?.stripe_onboarding_complete, loadProfileData]);
+    }, [user, loadProfileData]);
 
     // Check for URL params (PRO activation and payment status)
     useEffect(() => {
