@@ -547,7 +547,8 @@ const Profile = () => {
       }
 
       // Check for successful booking payment
-      const paymentStatus = searchParams.get('payment');
+      const urlParams = new URLSearchParams(window.location.search);
+      const paymentStatus = urlParams.get('payment');
       if (paymentStatus === 'success') {
         toast.success('Plačilo uspešno! 💳', {
           description: 'Inštruktor je prejel obvestilo. Počakaj na potrditev rezervacije.'
