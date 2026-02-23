@@ -80,15 +80,22 @@ export const BookingCalendar14Days = ({
           console.log('Availability changed via realtime:', payload);
           console.log('Event type:', payload.eventType);
           
-          // For UPDATE events, update only the changed slot to avoid race conditions
+          // For UPDATE events, check if slot became booked and remove it
           if (payload.eventType === 'UPDATE' && payload.new) {
-            console.log('Updating specific slot in local state:', payload.new);
-            setAvailability(prev => {
-              const updated = prev.map(slot => 
-                slot.id === payload.new.id ? { ...slot, ...payload.new } : slot
-              );
-              return updated;
-            });
+            console.log('Slot updated:', payload.new);
+            if (payload.new.is_booked) {
+              // Remove booked slot from availability
+              console.log('Removing booked slot from local state:', payload.new.id);
+              setAvailability(prev => prev.filter(slot => slot.id !== payload.new.id));
+            } else {
+              // Update slot if it's still available
+              setAvailability(prev => {
+                const updated = prev.map(slot => 
+                  slot.id === payload.new.id ? { ...slot, ...payload.new } : slot
+                );
+                return updated;
+              });
+            }
           } else {
             // For INSERT/DELETE, reload all data
             console.log('Reloading all availability data');
@@ -110,19 +117,18 @@ export const BookingCalendar14Days = ({
 
       console.log('Loading availability for tutor:', tutorId, 'from', today, 'to', twoWeeksLater);
 
-      // Load availability slots
+      // Load availability slots - only non-booked slots
       const { data: availData, error: availError } = await supabase
         .from('tutor_availability_dates')
         .select('*')
         .eq('tutor_id', tutorId)
+        .eq('is_booked', false)
         .gte('available_date', today)
         .lte('available_date', twoWeeksLater)
         .order('available_date')
         .order('start_time');
 
-      console.log('Availability data loaded:', availData?.length, 'slots');
-      console.log('Booked slots:', availData?.filter(s => s.is_booked).length);
-      console.log('Available slots:', availData?.filter(s => !s.is_booked).length);
+      console.log('Available slots loaded:', availData?.length);
 
       if (availError) throw availError;
       setAvailability(availData || []);
@@ -153,22 +159,19 @@ export const BookingCalendar14Days = ({
       const date = addDays(today, i);
       const dateStr = format(date, 'yyyy-MM-dd');
       
+      // availability array now contains ONLY non-booked slots (is_booked: false)
       const daySlots = availability.filter(s => s.available_date === dateStr);
       const dayBookings = existingBookings.filter(b => {
         const bookingDate = format(new Date(b.start_time), 'yyyy-MM-dd');
         return bookingDate === dateStr;
       });
 
+      // Determine status based on available slots count
       let status: DayData['status'] = 'closed';
       if (daySlots.length > 0) {
-        const availableSlots = daySlots.filter(s => !s.is_booked);
-        if (availableSlots.length === 0) {
-          status = 'booked';
-        } else if (availableSlots.length === daySlots.length) {
-          status = 'open';
-        } else {
-          status = 'partial';
-        }
+        status = 'open'; // All slots in array are available
+      } else if (dayBookings.length > 0) {
+        status = 'booked'; // No available slots but has bookings
       }
 
       days.push({
@@ -184,8 +187,7 @@ export const BookingCalendar14Days = ({
 
   const handleDayClick = (day: DayData) => {
     console.log('Day clicked:', format(day.date, 'yyyy-MM-dd'), 'status:', day.status);
-    console.log('Total slots:', day.slots.length, 'Available:', day.slots.filter(s => !s.is_booked).length);
-    console.log('Slots details:', day.slots.map(s => ({ id: s.id, time: s.start_time, booked: s.is_booked })));
+    console.log('Available slots:', day.slots.length);
     
     if (day.status === 'closed' || day.status === 'booked') return;
     if (!user) {
@@ -264,14 +266,8 @@ export const BookingCalendar14Days = ({
         console.log('Slot marked as booked in database:', selectedSlot.id);
       }
 
-      // Immediately update local state to hide the slot
-      setAvailability(prev => {
-        const updated = prev.map(slot => 
-          slot.id === selectedSlot.id ? { ...slot, is_booked: true } : slot
-        );
-        console.log('Local state updated - slot marked as booked');
-        return updated;
-      });
+      // Immediately update local state to remove the booked slot
+      setAvailability(prev => prev.filter(slot => slot.id !== selectedSlot.id));
 
       // Send notification to tutor
       await sendBookingNotification({
@@ -335,11 +331,6 @@ export const BookingCalendar14Days = ({
       setBookingNotes("");
       setSelectedSlot(null);
       
-      // Reload data in background to sync with database
-      setTimeout(() => {
-        console.log('Background reload triggered');
-        loadData();
-      }, 1000);
     } catch (error) {
       console.error('Error creating booking:', error);
       toast.error('Napaka pri rezervaciji');
