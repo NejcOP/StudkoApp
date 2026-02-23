@@ -372,7 +372,8 @@ const AIAssistant = () => {
 
       autoGenerate();
     }
-  }, [searchParams, setSearchParams, user?.id, autoGenerating, loadSharedQuiz]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setSearchParams, user?.id, autoGenerating, loadSharedQuiz]);
 
   useEffect(() => {
     if (user?.id) {
