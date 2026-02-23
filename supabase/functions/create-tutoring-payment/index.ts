@@ -188,6 +188,7 @@ serve(async (req) => {
       session = await stripe.checkout.sessions.create({
         payment_intent_data: {
           application_fee_amount: applicationFee, // Platform takes 20% fee
+          capture_method: 'manual', // Hold payment until booking is completed
           metadata: {
             booking_id: bookingId,
             tutor_id: booking.tutor_id,

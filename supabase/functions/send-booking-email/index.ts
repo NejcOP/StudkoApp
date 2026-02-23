@@ -223,7 +223,7 @@ serve(async (req) => {
         </div>
 
         <div style="background-color: #d4edda; border-left: 4px solid #28a745; padding: 15px; margin: 20px 0; border-radius: 4px;">
-          <p style="margin: 0; color: #155724;"><strong>✅ Plačilo uspešno:</strong> Po zaključku lekcije bodo sredstva (${Math.round(priceEur * 0.8)} € = 80%) avtomatsko nakazana na tvoj Stripe Connect račun.</p>
+          <p style="margin: 0; color: #155724;"><strong>✅ Plačilo zadržano:</strong> Študent je plačal ${priceEur} €. Sredstva (${Math.round(priceEur * 0.8)} € = 80%) bodo avtomatsko nakazana na tvoj Stripe Connect račun <strong>1 uro po končani lekciji</strong>.</p>
         </div>
 
         <div style="text-align: center; margin: 30px 0;">
