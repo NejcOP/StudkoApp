@@ -1229,58 +1229,58 @@ const Profile = () => {
 
                   {/* Settings Dialog */}
                   <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-                    <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto bg-card">
-                      <DialogHeader>
-                        <DialogTitle className="text-foreground">Nastavitve računa</DialogTitle>
-                        <DialogDescription className="text-muted-foreground">
+                    <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto bg-card w-[95vw] sm:w-full">
+                      <DialogHeader className="space-y-2 pb-2">
+                        <DialogTitle className="text-foreground text-lg sm:text-xl">Nastavitve računa</DialogTitle>
+                        <DialogDescription className="text-muted-foreground text-sm">
                           Uredi svoje osebne podatke, email in geslo
                         </DialogDescription>
                       </DialogHeader>
                       
                       <Tabs value={settingsTab} onValueChange={setSettingsTab} className="w-full">
-                        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-                          <TabsList className="grid w-full grid-cols-5 bg-muted min-w-[500px] sm:min-w-0">
-                            <TabsTrigger value="profile" className="text-foreground data-[state=active]:text-foreground text-xs sm:text-sm px-2">Osebni podatki</TabsTrigger>
-                            <TabsTrigger value="email" className="text-foreground data-[state=active]:text-foreground text-xs sm:text-sm px-2">Email</TabsTrigger>
-                            <TabsTrigger value="password" className="text-foreground data-[state=active]:text-foreground text-xs sm:text-sm px-2">Geslo</TabsTrigger>
-                            <TabsTrigger value="subscription" className="text-foreground data-[state=active]:text-foreground text-xs sm:text-sm px-2">Naročnina</TabsTrigger>
-                            <TabsTrigger value="theme" className="text-foreground data-[state=active]:text-foreground text-xs sm:text-sm px-2">Tema</TabsTrigger>
+                        <div className="overflow-x-auto -mx-2 px-2 sm:mx-0 sm:px-0 pb-1">
+                          <TabsList className="grid w-full grid-cols-5 bg-muted">
+                            <TabsTrigger value="profile" className="text-foreground data-[state=active]:text-foreground text-[10px] sm:text-sm px-1 sm:px-3 py-2">Osebni<br className="sm:hidden" />podatki</TabsTrigger>
+                            <TabsTrigger value="email" className="text-foreground data-[state=active]:text-foreground text-[10px] sm:text-sm px-1 sm:px-3 py-2">Email</TabsTrigger>
+                            <TabsTrigger value="password" className="text-foreground data-[state=active]:text-foreground text-[10px] sm:text-sm px-1 sm:px-3 py-2">Geslo</TabsTrigger>
+                            <TabsTrigger value="subscription" className="text-foreground data-[state=active]:text-foreground text-[10px] sm:text-sm px-1 sm:px-3 py-2">Naročnina</TabsTrigger>
+                            <TabsTrigger value="theme" className="text-foreground data-[state=active]:text-foreground text-[10px] sm:text-sm px-1 sm:px-3 py-2">Tema</TabsTrigger>
                           </TabsList>
                         </div>
 
                         {/* Profile Tab */}
-                        <TabsContent value="profile" className="space-y-4 py-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="settings_full_name" className="text-foreground">Ime in priimek</Label>
+                        <TabsContent value="profile" className="space-y-3 sm:space-y-4 py-3 sm:py-4">
+                          <div className="space-y-1.5 sm:space-y-2">
+                            <Label htmlFor="settings_full_name" className="text-foreground text-sm">Ime in priimek</Label>
                             <Input
                               id="settings_full_name"
                               value={profile?.full_name || ""}
                               readOnly
                               disabled
-                              className="bg-muted text-muted-foreground cursor-not-allowed"
+                              className="bg-muted text-muted-foreground cursor-not-allowed h-10 sm:h-11 text-sm sm:text-base"
                             />
-                            <p className="text-xs text-muted-foreground italic">
+                            <p className="text-xs text-muted-foreground italic leading-relaxed">
                               Ime je trajno in ga ni mogoče spremeniti.
                             </p>
                           </div>
                         </TabsContent>
 
                         {/* Email Tab */}
-                        <TabsContent value="email" className="space-y-4 py-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="new_email" className="text-foreground">Email</Label>
+                        <TabsContent value="email" className="space-y-3 sm:space-y-4 py-3 sm:py-4">
+                          <div className="space-y-1.5 sm:space-y-2">
+                            <Label htmlFor="new_email" className="text-foreground text-sm">Email</Label>
                             <Input
                               id="new_email"
                               type="email"
                               value={emailForm.newEmail}
                               onChange={(e) => setEmailForm({ newEmail: e.target.value })}
                               placeholder={user?.email || "nov@email.com"}
-                              className="bg-input text-foreground placeholder:text-muted-foreground"
+                              className="bg-input text-foreground placeholder:text-muted-foreground h-10 sm:h-11 text-sm sm:text-base"
                               disabled={saving}
                             />
                           </div>
                           <Button
-                            className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-90 text-white"
+                            className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-90 text-white h-10 sm:h-11 text-sm sm:text-base mt-2"
                             onClick={handleUpdateEmail}
                             disabled={saving || !emailForm.newEmail}
                           >
@@ -1293,8 +1293,8 @@ const Profile = () => {
                               "Zamenjaj email"
                             )}
                           </Button>
-                          <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-3 border border-blue-200 dark:border-blue-800">
-                            <p className="text-sm text-blue-700 dark:text-blue-300">
+                          <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-2.5 sm:p-3 border border-blue-200 dark:border-blue-800 mt-3">
+                            <p className="text-xs sm:text-sm text-blue-700 dark:text-blue-300 leading-relaxed">
                               <strong>Pomembno:</strong> Ko klikneš gumb za posodobitev, boš prejel potrditveno povezavo na svoj <strong>trenutni email naslov</strong>. 
                               Šele po potrditvi se bo email spremenil.
                             </p>
@@ -1302,42 +1302,42 @@ const Profile = () => {
                         </TabsContent>
 
                         {/* Password Tab */}
-                        <TabsContent value="password" className="space-y-4 py-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="current_password" className="text-foreground">Trenutno geslo</Label>
+                        <TabsContent value="password" className="space-y-3 sm:space-y-4 py-3 sm:py-4">
+                          <div className="space-y-1.5 sm:space-y-2">
+                            <Label htmlFor="current_password" className="text-foreground text-sm">Trenutno geslo</Label>
                             <Input
                               id="current_password"
                               type="password"
                               value={passwordForm.currentPassword}
                               onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
                               placeholder="Vnesi trenutno geslo"
-                              className="bg-input text-foreground placeholder:text-muted-foreground"
+                              className="bg-input text-foreground placeholder:text-muted-foreground h-10 sm:h-11 text-sm sm:text-base"
                             />
                           </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="new_password" className="text-foreground">Novo geslo</Label>
+                          <div className="space-y-1.5 sm:space-y-2">
+                            <Label htmlFor="new_password" className="text-foreground text-sm">Novo geslo</Label>
                             <Input
                               id="new_password"
                               type="password"
                               value={passwordForm.newPassword}
                               onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
                               placeholder="Najmanj 6 znakov"
-                              className="bg-input text-foreground placeholder:text-muted-foreground"
+                              className="bg-input text-foreground placeholder:text-muted-foreground h-10 sm:h-11 text-sm sm:text-base"
                             />
                           </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="confirm_password" className="text-foreground">Potrdi novo geslo</Label>
+                          <div className="space-y-1.5 sm:space-y-2">
+                            <Label htmlFor="confirm_password" className="text-foreground text-sm">Potrdi novo geslo</Label>
                             <Input
                               id="confirm_password"
                               type="password"
                               value={passwordForm.confirmPassword}
                               onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
                               placeholder="Ponovi geslo"
-                              className="bg-input text-foreground placeholder:text-muted-foreground"
+                              className="bg-input text-foreground placeholder:text-muted-foreground h-10 sm:h-11 text-sm sm:text-base"
                             />
                           </div>
                           <Button
-                            className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-90 text-white"
+                            className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-90 text-white h-10 sm:h-11 text-sm sm:text-base mt-2"
                             onClick={handleUpdatePassword}
                             disabled={saving || !passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword || passwordResetEmailSent}
                           >
@@ -1348,33 +1348,33 @@ const Profile = () => {
                               E-pošto lahko ponovno pošlješ čez 5 minut.
                             </p>
                           )}
-                          <div className="relative my-6">
+                          <div className="relative my-4 sm:my-6">
                             <div className="absolute inset-0 flex items-center">
                               <span className="w-full border-t border-border" />
                             </div>
                             <div className="relative flex justify-center text-xs uppercase">
-                              <span className="bg-background px-2 text-muted-foreground">Ali</span>
+                              <span className="bg-card px-2 text-muted-foreground">Ali</span>
                             </div>
                           </div>
                           <Button
                             variant="outline"
-                            className="w-full"
+                            className="w-full h-10 sm:h-11 text-sm sm:text-base"
                             onClick={handleForgotPassword}
                             disabled={saving || passwordResetEmailSent}
                           >
                             Pozabljeno geslo
                           </Button>
-                          <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-3 border border-blue-200 dark:border-blue-800">
-                            <p className="text-sm text-blue-700 dark:text-blue-300">
+                          <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-2.5 sm:p-3 border border-blue-200 dark:border-blue-800 mt-3">
+                            <p className="text-xs sm:text-sm text-blue-700 dark:text-blue-300 leading-relaxed">
                               <strong>Opomba:</strong> Geslo lahko spremeniš samo enkrat na 30 dni.
                             </p>
                           </div>
                         </TabsContent>
 
                         {/* Subscription Tab */}
-                        <TabsContent value="subscription" className="space-y-4 py-4">
-                          <div className="space-y-4">
-                            <div className="bg-muted rounded-xl p-4 border border-border">
+                        <TabsContent value="subscription" className="space-y-3 sm:space-y-4 py-3 sm:py-4">
+                          <div className="space-y-3 sm:space-y-4">
+                            <div className="bg-muted rounded-xl p-3 sm:p-4 border border-border">
                               <p className="text-xs sm:text-sm text-muted-foreground mb-1">Trenutni paket:</p>
                               <p className={`text-xl sm:text-2xl font-bold ${getSubscriptionDisplay().color} break-words`}>
                                 {getSubscriptionDisplay().text}
@@ -1382,12 +1382,12 @@ const Profile = () => {
                             </div>
 
                             {(!profile?.is_pro || profile?.subscription_status === "none") ? (
-                              <div className="space-y-4">
-                                <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 rounded-xl p-4 sm:p-6 border border-indigo-200 dark:border-indigo-800">
-                                  <h3 className="text-base sm:text-lg font-bold text-foreground mb-3">
+                              <div className="space-y-3 sm:space-y-4">
+                                <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 rounded-xl p-3 sm:p-6 border border-indigo-200 dark:border-indigo-800">
+                                  <h3 className="text-base sm:text-lg font-bold text-foreground mb-2 sm:mb-3">
                                     Nadgradi na Študko PRO
                                   </h3>
-                                  <ul className="space-y-2 mb-4">
+                                  <ul className="space-y-1.5 sm:space-y-2 mb-3 sm:mb-4">
                                     <li className="flex items-start gap-2 text-xs sm:text-sm text-foreground">
                                       <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary mt-0.5 flex-shrink-0" />
                                       <span>Neomejene AI razlage</span>
@@ -1401,13 +1401,13 @@ const Profile = () => {
                                       <span>Prednostna podpora</span>
                                     </li>
                                   </ul>
-                                  <p className="text-xl sm:text-2xl font-bold text-foreground mb-4">
+                                  <p className="text-xl sm:text-2xl font-bold text-foreground mb-3 sm:mb-4">
                                     3,99 €<span className="text-xs sm:text-sm font-normal text-muted-foreground">/mesec</span>
                                   </p>
                                   <Button
                                     onClick={handleUpgradeToPro}
                                     disabled={loadingSubscription}
-                                    className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-90 text-white"
+                                    className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-90 text-white h-10 sm:h-11 text-sm sm:text-base"
                                   >
                                     {loadingSubscription 
                                       ? "Nalagam..." 
@@ -1418,68 +1418,68 @@ const Profile = () => {
                                 </div>
                               </div>
                             ) : (
-                              <div className="space-y-4">
+                              <div className="space-y-3 sm:space-y-4">
                                 {profile?.cancel_at_period_end ? (
                                   <>
-                                    <div className="bg-yellow-50 dark:bg-yellow-950/30 rounded-xl p-4 border border-yellow-200 dark:border-yellow-800">
-                                      <p className="text-sm text-yellow-700 dark:text-yellow-300 flex items-center gap-2 mb-2 font-semibold">
+                                    <div className="bg-yellow-50 dark:bg-yellow-950/30 rounded-xl p-3 sm:p-4 border border-yellow-200 dark:border-yellow-800">
+                                      <p className="text-xs sm:text-sm text-yellow-700 dark:text-yellow-300 flex items-center gap-2 mb-1.5 sm:mb-2 font-semibold">
                                         <MessageSquare className="w-4 h-4" />
                                         Naročnina je preklicana
                                       </p>
-                                      <p className="text-xs text-yellow-600 dark:text-yellow-400">
+                                      <p className="text-xs text-yellow-600 dark:text-yellow-400 leading-relaxed">
                                         Tvoj dostop do PRO funkcij ostaja aktiven do konca plačanega obdobja.
                                         {(profile?.current_period_end || profile?.trial_ends_at) && 
                                           ` Dostop do: ${formatDate(profile.current_period_end || profile.trial_ends_at)}`}
                                       </p>
                                     </div>
-                                    <div className="space-y-3">
+                                    <div className="space-y-2.5 sm:space-y-3">
                                       <Button
                                         variant="outline"
                                         onClick={handleManageSubscription}
                                         disabled={loadingSubscription}
-                                        className="w-full text-foreground"
+                                        className="w-full text-foreground h-10 sm:h-11 text-sm sm:text-base"
                                       >
                                         {loadingSubscription ? "Nalagam..." : "Uredi plačilne podatke"}
                                       </Button>
                                       <Button
                                         onClick={handleUpgradeToPro}
                                         disabled={loadingSubscription}
-                                        className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-90 text-white"
+                                        className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-90 text-white h-10 sm:h-11 text-sm sm:text-base"
                                       >
                                         {loadingSubscription ? "Nalagam..." : "Postani član Študko PRO"}
                                       </Button>
                                     </div>
-                                    <div className="bg-muted rounded-xl p-4 border border-border">
-                                      <p className="text-sm text-muted-foreground">
+                                    <div className="bg-muted rounded-xl p-2.5 sm:p-4 border border-border">
+                                      <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
                                         Ker si že uporabljal PRO, preizkusno obdobje ni več na voljo. Naročnina se bo mesečno obnavljala.
                                       </p>
                                     </div>
                                   </>
                                 ) : (
                                   <>
-                                    <div className="bg-green-50 dark:bg-green-950/30 rounded-xl p-4 border border-green-200 dark:border-green-800">
-                                      <p className="text-sm text-green-700 dark:text-green-300 flex items-center gap-2">
-                                        <CheckCircle2 className="w-4 h-4" />
+                                    <div className="bg-green-50 dark:bg-green-950/30 rounded-xl p-3 sm:p-4 border border-green-200 dark:border-green-800">
+                                      <p className="text-xs sm:text-sm text-green-700 dark:text-green-300 flex items-center gap-2">
+                                        <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
                                         Hvala, ker si del Študko PRO! 
                                       </p>
                                     </div>
-                                    <div className="space-y-3">
+                                    <div className="space-y-2.5 sm:space-y-3">
                                       <Button
                                         variant="outline"
                                         onClick={handleManageSubscription}
                                         disabled={loadingSubscription}
-                                        className="w-full text-foreground"
+                                        className="w-full text-foreground h-10 sm:h-11 text-sm sm:text-base"
                                       >
                                         {loadingSubscription ? "Nalagam..." : "Uredi plačilne podatke"}
                                       </Button>
-                                      <div className="space-y-2">
+                                      <div className="space-y-1.5 sm:space-y-2">
                                         {/* Special case: PRO via referral/challenge (social_claim) */}
                                         {profile?.subscription_status === 'social_claim' ? (
-                                          <div className="w-full bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-700 rounded-lg p-3 text-center mb-2">
-                                            <p className="text-yellow-800 dark:text-yellow-200 font-semibold">
+                                          <div className="w-full bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-700 rounded-lg p-2.5 sm:p-3 text-center mb-2">
+                                            <p className="text-xs sm:text-sm text-yellow-800 dark:text-yellow-200 font-semibold leading-relaxed">
                                               PRO dostop si pridobil preko izziva ali referral sistema in ga ni mogoče preklicati.
                                             </p>
-                                            <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
+                                            <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1 leading-relaxed">
                                               Dostop bo samodejno izklopljen, ko poteče obdobje ali pogoji.
                                             </p>
                                           </div>
@@ -1488,20 +1488,20 @@ const Profile = () => {
                                             variant="outline"
                                             onClick={() => setShowCancelDialog(true)}
                                             disabled={loadingSubscription}
-                                            className="w-full text-red-600 dark:text-red-400 border-red-300 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-950/30 hover:border-red-400 dark:hover:border-red-700"
+                                            className="w-full text-red-600 dark:text-red-400 border-red-300 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-950/30 hover:border-red-400 dark:hover:border-red-700 h-10 sm:h-11 text-sm sm:text-base"
                                           >
                                             Prekliči naročnino
                                           </Button>
                                         )}
                                         {profile?.current_period_end && (
-                                          <p className="text-xs text-center text-muted-foreground">
+                                          <p className="text-xs text-center text-muted-foreground leading-relaxed">
                                             Tvoja naročnina je veljavna do: <span className="font-semibold text-foreground">{formatDate(profile.current_period_end)}</span>
                                           </p>
                                         )}
                                       </div>
                                     </div>
-                                    <div className="bg-muted rounded-xl p-3 border border-border">
-                                      <p className="text-xs text-muted-foreground">
+                                    <div className="bg-muted rounded-xl p-2.5 sm:p-3 border border-border">
+                                      <p className="text-xs text-muted-foreground leading-relaxed">
                                         <strong>Opomba:</strong> Preklic naročnine ne vrača denarja za že plačano obdobje. 
                                         Dostop imaš do konca plačanega meseca.
                                       </p>
@@ -1514,16 +1514,16 @@ const Profile = () => {
                         </TabsContent>
 
                         {/* Theme Tab */}
-                        <TabsContent value="theme" className="space-y-4 py-4">
-                          <div className="space-y-4">
+                        <TabsContent value="theme" className="space-y-3 sm:space-y-4 py-3 sm:py-4">
+                          <div className="space-y-3 sm:space-y-4">
                             <div>
-                              <Label className="text-base text-foreground">Izgled aplikacije</Label>
-                              <p className="text-sm text-muted-foreground mt-1">
+                              <Label className="text-sm sm:text-base text-foreground">Izgled aplikacije</Label>
+                              <p className="text-xs sm:text-sm text-muted-foreground mt-1 leading-relaxed">
                                 Izberi svetlo ali temno temo za vso aplikacijo
                               </p>
                             </div>
                             
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-3 sm:gap-4">
                               <Button
                                 type="button"
                                 variant="outline"
@@ -1532,18 +1532,18 @@ const Profile = () => {
                                   setTheme("light");
                                   toast.success("Svetla tema aktivirana");
                                 }}
-                                className={`relative p-4 h-auto flex-col gap-3 ${
+                                className={`relative p-3 sm:p-4 h-auto flex-col gap-2 sm:gap-3 ${
                                   theme === "light"
                                     ? "border-primary bg-primary/5"
                                     : "border-border hover:border-primary/50"
                                 }`}
                               >
-                                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-center">
-                                  <Sun className="w-6 h-6 text-white" />
+                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-center">
+                                  <Sun className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                                 </div>
                                 <div className="text-center">
-                                  <div className="font-semibold text-foreground">Svetla</div>
-                                  <div className="text-xs text-muted-foreground">Klasična svetla tema</div>
+                                  <div className="font-semibold text-foreground text-sm sm:text-base">Svetla</div>
+                                  <div className="text-[10px] sm:text-xs text-muted-foreground">Klasična svetla tema</div>
                                 </div>
                                 {theme === "light" && (
                                   <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
@@ -1568,12 +1568,12 @@ const Profile = () => {
                                     : "border-border hover:border-primary/50"
                                 }`}
                               >
-                                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-center">
-                                  <Moon className="w-6 h-6 text-white" />
+                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-center">
+                                  <Moon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                                 </div>
                                 <div className="text-center">
-                                  <div className="font-semibold text-foreground">Temna</div>
-                                  <div className="text-xs text-muted-foreground">Prijazna očem ponoči</div>
+                                  <div className="font-semibold text-foreground text-sm sm:text-base">Temna</div>
+                                  <div className="text-[10px] sm:text-xs text-muted-foreground">Prijazna očem ponoči</div>
                                 </div>
                                 {theme === "dark" && (
                                   <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
@@ -1585,7 +1585,7 @@ const Profile = () => {
                               </Button>
                             </div>
 
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-xs text-muted-foreground leading-relaxed">
                               Tvoja izbira teme se bo shranila in uporabila na vseh straneh.
                             </p>
                           </div>
