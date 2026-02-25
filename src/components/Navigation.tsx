@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Brain, User, Menu, LogOut, GraduationCap, Zap, Shield, ChevronDown, Video, FileText, Crown } from "lucide-react";
+import { BookOpen, Brain, User, Menu, LogOut, GraduationCap, Zap, Shield, ChevronDown, Video, FileText, Crown, Users } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -236,6 +236,12 @@ const Navigation = () => {
                         <span>Zapiski</span>
                       </Link>
                     </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin/users" className="flex items-center gap-2 cursor-pointer">
+                        <Users className="w-4 h-4" />
+                        <span>Uporabniki</span>
+                      </Link>
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}
@@ -426,6 +432,20 @@ const Navigation = () => {
                                 <FileText className="w-6 h-6" />
                               </div>
                               <span className="text-base font-medium">Zapiski</span>
+                            </Link>
+                            <Link
+                              to="/admin/users"
+                              onClick={() => setMobileMenuOpen(false)}
+                              className={`flex items-center gap-4 px-5 py-4 rounded-2xl transition-all min-h-[60px] ${
+                                isActive("/admin/users")
+                                  ? "bg-gradient-to-r from-primary/15 to-accent/15 text-primary font-bold shadow-sm border border-primary/20"
+                                  : "text-muted-foreground hover:bg-muted active:bg-muted/80 hover:text-foreground"
+                              }`}
+                            >
+                              <div className={`p-2 rounded-xl ${isActive("/admin/users") ? "bg-primary/20" : "bg-muted"}`}>
+                                <Users className="w-6 h-6" />
+                              </div>
+                              <span className="text-base font-medium">Uporabniki</span>
                             </Link>
                           </>
                         )}

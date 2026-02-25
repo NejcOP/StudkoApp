@@ -25,6 +25,7 @@ import AdminNotes from "./pages/AdminNotes";
 import AdminTutorApplications from "./pages/AdminTutorApplications";
 import AdminTikTokChallenges from "./pages/AdminTikTokChallenges";
 import AdminProSubscriptions from "./pages/AdminProSubscriptions";
+import AdminUsers from "./pages/AdminUsers";
 import Tutors from "./pages/Tutors";
 import TutorDetail from "./pages/TutorDetail";
 import TutorApply from "./pages/TutorApply";
@@ -76,6 +77,7 @@ const App = () => (
               <Route path="/admin/tutor-applications" element={<ProtectedRoute><AdminTutorApplications /></ProtectedRoute>} />
               <Route path="/admin/tiktok-challenges" element={<ProtectedRoute><AdminTikTokChallenges /></ProtectedRoute>} />
               <Route path="/admin/pro-subscriptions" element={<ProtectedRoute><AdminProSubscriptions /></ProtectedRoute>} />
+              <Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
               <Route path="/auth/confirm" element={<ConfirmEmail />} />
               <Route path="/confirm-email" element={<ConfirmEmail />} />
               <Route path="/about" element={<About />} />
