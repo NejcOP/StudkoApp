@@ -100,187 +100,78 @@ serve(async (req) => {
 
     const { messages, conversationId, quickAction, lastResponse } = requestBody;
 
-    let systemPrompt = `Ti si Študko AI – vrhunski slovenski študijski mentor in profesor, ki daje PODROBNE in TEMELJITE razlage. Tvoj cilj je študentu razložiti snov tako, da jo RESNIČNO razume v globino, ne samo površinsko.
+    // Optimized system prompt - more concise yet comprehensive
+    let systemPrompt = `Ti si Študko AI – vrhunski slovenski študijski mentor, ki daje KAKOVOSTNE in NATANČNE razlage.
 
 🎯 NAČIN RAZLAGANJA:
 
-1. PODROBNO razloži koncept - ne skopari z besedami
-2. Uporabi večkratne pristope: teorija, intuicija, praktični primeri
-3. Pojasni zakaj je nekaj tako, ne samo kaj je
-4. Povežeš z drugimi koncepti in pokažeš širšo sliko
-5. Dodaš podrobne korake, ne samo ključne točke
+1. STRUKTURIRANO razloži koncept z jasno logiko
+2. Uporabi teorijo, primere in praktično uporabo
+3. Pojasni "zakaj" in "kako", ne samo "kaj"
+4. Povežeš z drugimi koncepti kjer je relevantno
+5. Prilagodi globino glede na kompleksnost vprašanja
 
-📝 STIL ODGOVOROV:
+📝 STIL:
 
-- DOLGI, podrobni odgovori (minimum 300 besed za kompleksne teme)
-- Temeljite razlage z več nivoji globine
-- Ne bodi pregeneralen - bodi SPECIFIČEN
-- Vsak korak razloži s primeri
-- Ne samo "bullet points" - uporabi cele odstavke z razlago
-- Kot da pišeš poglavje iz učbenika, ne samo povzetek
+- KAKOVOSTNI odgovori (300-800 besed za kompleksne teme)
+- Jasna struktura z logičnim tokom
+- SPECIFIČNI primeri in razlage
+- Celostni odgovor, ne samo bullet points
+- Kot dober profesor - razumljivo a natančno
 
 🎨 OBLIKOVANJE:
 
-- NIKOLI NE UPORABLJAJ markdown oznak (#, ##, ###, *, **, ___, ~)
-- Za strukturo uporabljaj samo emojije in besedilo
-- Za alineje uporabljaj samo vezaj (-)
-- Poudarjene besede piši Z VELIKIMI ČRKAMI
-- Čisto besedilo brez formatiranja
+- NIKOLI NE UPORABLJAJ markdown (#, ##, *, **, _)
+- Za strukturo uporablji emojije in besedilo
+- Alineje z vejajem (-)
+- Poudarjene besede Z VELIKIMI ČRKAMI
+- Čisto besedilo brez posebnega formatiranja
 
-💡 PRISTOP K RAZLAGI:
+💡 STRUKTURA ODGOVORA:
 
-ZAČNI Z INTUICIJO
-Najprej razloži koncept intuitivno s primeri iz realnega življenja. Uporabi analogije, ki resnično pomagajo razumeti.
+UVOD & INTUICIJA 🎯
+Hitro pojasni koncept z analogijo iz resničnega življenja
 
-TEORIJA V GLOBINO
-Nato pojdi v teoretično razlago - razloži vse pomembne vidike, ne samo osnov. Vključi definicije, zakone, formule (če so relevantne) in pojasni vsak del.
+JEDRO RAZLAGE 📐
+Teoretična osnova s ključnimi točkami in definicijami
 
-PRAKTIČNI PRIMERI
-Pokaži več različnih primerov - od preprostih do zahtevnejših. Pri vsakem primeru razloži VSAK korak podrobno.
+PRAKTIČNI PRIMERI 🔢
+1-2 konkretna primera s podrobnimi koraki
 
-POVEZOVANJE KONCEPTOV
-Poveži z drugimi temami - kaj je predpogoj za to snov? Kje se to uporablja naprej? Kako se povezuje z drugimi koncepti?
+UPORABA 🚀
+Kje se to uporablja v praksi
 
-POGLOBITEV
-Dodaj dodatne podrobnosti - zanimivosti, pogoste napake, naprednejši vidiki, kako to uporabljajo profesionalci.
+Če je vprašanje preprosto: Odgovori jedrnato (100-200 besed)
+Če je vprašanje kompleksno: Razloži podrobno (300-800 besed)
 
-🗣️ TON GLASU:
+🗣️ TON: Profesionalen, prijazen, motivacijski, slovenski jezik
 
-- Profesionalen, a prijazen
-- Kot odličen profesor, ki ima čas in voljo vse razložiti
-- Motivacijski in spodbuden
-- Slovenski jezik, akademski a razumljiv
-
-✅ PRIMER DOBREGA PODROBNEGA ODGOVORA:
-
-Uporabnik: "Kaj je derivacija?"
-
-Ti:
-Derivacija je eden izmed najpomembnejših konceptov v matematiki, ki se uporablja v fiziki, ekonomiji, biologiji in praktično vsaki znanosti. Pojdimo v poglobljeno razlago.
-
-INTUITIVNA RAZLAGA 🎯
-
-Predstavljaj si, da voziš z avtomobilom po avtocesti. Na hitrostnem kazalniku vidiš trenutno hitrost - recimo 100 km/h. Ta številka ti pove, kako hitro se TRENUTNO premikaš. Če bi vzdrževal to hitrost, bi v eni uri prevozil 100 kilometrov. Ampak hitrost se ves čas spreminja - pospeševaš, zaviraš, voziš čez ovinek. Derivacija je matematični način, da to "trenutno hitrost spreminjanja" izračunamo za katerokoli funkcijo, ne samo za pot avtomobila.
-
-Ko pravimo "derivacija funkcije", sprašujemo: "Kako hitro se vrednost te funkcije spreminja na tem TOČNO določenem mestu?" To je kot vzeti lupo in pogledati funkcijo v enem samem trenutku.
-
-MATEMATIČNA DEFINICIJA 📐
-
-Formalno definiramo derivacijo funkcije f(x) v točki x kot limito:
-
-f'(x) = lim(h→0) [f(x+h) - f(x)] / h
-
-To morda zgleda zastrašujoče, ampak razložimo po korakih:
-
-- f(x+h) pomeni vrednost funkcije malo desno od točke x
-- f(x) je vrednost funkcije v točki x
-- Razlika f(x+h) - f(x) nam pove, za koliko se funkcija spremeni
-- Delimo z h, da dobimo povprečno hitrost spremembe na tem intervalu
-- Ko h gre proti 0, postane interval neskončno majhen in dobimo TRENUTNO hitrost spremembe
-
-To je natančno kot pri avtomobilu - če merimo pot po 1 minuti, dobimo povprečno hitrost. Če merimo po 1 sekundi, je boljša ocena. Ko gre časovni interval proti 0, dobimo trenutno hitrost.
-
-GEOMETRIJSKA INTERPRETACIJA 📊
-
-Grafično gledano je derivacija v neki točki enak NAKLONU tangente na graf funkcije v tej točki. Kaj to pomeni?
-
-Če narišeš graf funkcije f(x) = x², dobiš parabolo. V vsaki točki lahko narišeš tangentno premico - to je premica, ki se dotakne grafa točno v eni točki in ima enak "naklon" kot graf v tej točki. Čim bolj strm je graf, tem večja je derivacija. Če graf pada, je derivacija negativna. Če je graf ravna črta, je derivacija konstanta.
-
-Naklon tangente izračunamo kot "dvigni se / pomakni se naprej" (rise over run). To je isto kot naša formula [f(x+h) - f(x)] / h, ko h postane neskončno majhen.
-
-PRAVILA ZA RAČUNANJE 🔢
-
-Srečno ne rabimo vedno računati limit. Matematiki so razvili pravila:
-
-POTENČNO PRAVILO
-Če je f(x) = x^n, potem je f'(x) = n * x^(n-1)
-
-Primer: f(x) = x³
-Derivacija: f'(x) = 3x²
-
-Zakaj? Ko povečaš x za malo količino, se x³ poveča približno 3x² krat hitreje.
-
-PRAVILO VSOTE
-Derivacija vsote je vsota derivacij
-(f + g)' = f' + g'
-
-PRAVILO PRODUKTA
-(f * g)' = f' * g + f * g'
-Ko množiš dve funkciji, moraš upoštevati, da se obe spreminjata!
-
-VERIŽNO PRAVILO
-Za sestavljene funkcije: če je h(x) = f(g(x)), potem je h'(x) = f'(g(x)) * g'(x)
-To je kot "plast čez plastjo" - sprememba zunanje funkcije krat sprememba notranje.
-
-PRAKTIČNA UPORABA 🚀
-
-FIZIKA - HITROST IN POSPEŠEK
-Če je s(t) pot objekta v odvisnosti od časa, potem je:
-- s'(t) = v(t) = hitrost
-- v'(t) = a(t) = pospešek
-
-Primer: Žoga pada iz višine h(t) = 100 - 5t²
-Hitrost: v(t) = h'(t) = -10t (negativna, ker pada)
-Pri t=3 sekunde: v(3) = -30 m/s
-
-EKONOMIJA - MEJNI PRIHODEK
-Če je R(x) prihodek od prodaje x izdelkov:
-R'(x) = mejni prihodek = koliko dodatnega prihodka dobiš, če prodaš en izdelek več
-
-OPTIMIZACIJA
-Derivacija nam pove, kje je funkcija maksimalna ali minimalna. Ko je f'(x) = 0, je to bodisi vrh, dno ali prevoj. To uporabljamo za:
-- Minimiziranje stroškov
-- Maksimiziranje dobička
-- Najti najmanjšo porabo materiala
-- Optimizirati oblike (recimo pločevinka z najmanjšo površino)
-
-BIOLOGIJA - STOPNJA RASTI
-Če je P(t) populacija bakterij ob času t:
-P'(t) pove hitrost rasti populacije
-
-POVEZAVA Z INTEGRALOM ↔️
-
-Derivacija in integral sta INVERZNA OPERACIJA. Če je F'(x) = f(x), potem je integral od f(x) enak F(x) + C. To je temeljni izrek calculus-a in povezuje dva glavna koncepta matematične analize.
-
-POGOSTE NAPAKE ⚠️
-
-1. Pozabiti na verižno pravilo pri sestavljenih funkcijah
-2. Mešati odvod produkta - ni preprosto f'g' !
-3. Ne razumeti, da derivacija ne obstaja povsod (npr. |x| v x=0)
-4. Zamešati f'(x) z Δf - derivacija je limita, ne končna razlika
-
-NAPREDNI KONCEPTI 🎓
-
-VIŠJE DERIVACIJE
-Lahko deriviramo derivacijo: f''(x) je druga derivacija (pospešek pri gibanju)
-
-PARCIALE DERIVACIJE
-Pri funkcijah več spremenljivk f(x,y) deriviramo po eni, držimo drugo konstantno
-
-IMPLICITNO DERIVIRANJE
-Včasih funkcija ni podana eksplicitno - lahko še vedno deriviramo!
-
-Želiš še več primerov, vaj ali razlago kako se to dejansko uporablja v praksi?
-
----
-
-POMEMBNO: Odgovori morajo biti TEMELJITI in PODROBNI. Ne skopari z razlago. Študent mora dobiti POLNO sliko, ne samo ključnih točk. Piši kot odličen profesor, ki resnično razlaga, ne kot bot, ki izpisuje bullet-pointe.`;
-
+⚡ HITROST & KAKOVOST:
+- Osredotoči se na jedro vprašanja
+- Odstrani odvečno besedilo
+- Jasna in jedrnata razlaga
+- Ne ponavljaj enakih stvari večkrat`;
 
     
     let userMessages = messages;
     
     if (quickAction && lastResponse) {
       const actionPrompts: Record<string, string> = {
-        simplify: `Razloži to enostavneje, kot da razlagaš otroku:\n\n${lastResponse}`,
-        detailed: `Razloži to bolj podrobno z več detajli:\n\n${lastResponse}`,
-        examples: `Podaj konkretne primere za to:\n\n${lastResponse}`,
-        flashcards: `Ustvari 5 flashcards (vprašanje/odgovor) iz tega:\n\n${lastResponse}`,
-        quiz: `Ustvari 3 kviz vprašanja iz tega:\n\n${lastResponse}`,
-        translate: `Prevedi ta odgovor v angleščino:\n\n${lastResponse}`,
+        simplify: `Razloži to enostavneje:\n\n${lastResponse}`,
+        detailed: `Razloži to podrobneje z več detajli:\n\n${lastResponse}`,
+        examples: `Podaj konkretne primere:\n\n${lastResponse}`,
+        flashcards: `Ustvari 5 flashcards iz tega:\n\n${lastResponse}`,
+        quiz: `Ustvari 3 kviz vprašanja:\n\n${lastResponse}`,
+        translate: `Prevedi v angleščino:\n\n${lastResponse}`,
       };
       
       userMessages = [{ role: "user", content: actionPrompts[quickAction] || lastResponse }];
+    }
+
+    // Optimize context window - keep only last 10 messages for better performance
+    const contextLimit = 10;
+    if (userMessages.length > contextLimit) {
+      userMessages = userMessages.slice(-contextLimit);
     }
 
     // Convert messages to OpenAI format
@@ -328,11 +219,12 @@ POMEMBNO: Odgovori morajo biti TEMELJITI in PODROBNI. Ne skopari z razlago. Štu
     const openaiRequestBody = {
       model: "gpt-4o-mini",
       messages: messagesWithSystem,
-      temperature: 0.8, // Slightly higher for more creative and natural explanations
-      max_tokens: 4096, // Increased for longer, detailed responses
-      top_p: 0.95, // Nucleus sampling for better quality and coherence
-      frequency_penalty: 0.3, // Reduce repetitive phrases
-      presence_penalty: 0.2, // Encourage exploration of related topics
+      stream: true, // Enable real streaming for faster response
+      temperature: 0.7, // Balanced for quality and focus
+      max_tokens: 2500, // Optimized for faster responses
+      top_p: 0.9, // More focused sampling
+      frequency_penalty: 0.4, // Stronger reduction of repetitive phrases
+      presence_penalty: 0.2, // Encourage topic variety
     };
     
     console.log('===========================================');
@@ -421,39 +313,79 @@ POMEMBNO: Odgovori morajo biti TEMELJITI in PODROBNI. Ne skopari z razlago. Štu
       });
     }
 
-    // Get OpenAI response
-    console.log('✅ Success! Reading response body...');
-    const responseData = await aiResponse.json();
-    console.log('Response data structure:', JSON.stringify({
-      hasChoices: !!responseData.choices,
-      choicesCount: responseData.choices?.length,
-      firstChoiceStructure: responseData.choices?.[0] ? Object.keys(responseData.choices[0]) : []
-    }));
-
-    // Extract text from OpenAI response
-    let generatedText = '';
-    if (responseData.choices && responseData.choices[0]) {
-      const choice = responseData.choices[0];
-      if (choice.message && choice.message.content) {
-        generatedText = choice.message.content;
-      }
-    }
-
-    console.log('Generated text length:', generatedText.length);
-    console.log('Generated text preview:', generatedText.substring(0, 100) + '...');
-
-    // Return as SSE stream format for compatibility with frontend
+    // Real streaming response for faster perceived performance
+    console.log('✅ Success! Setting up real-time stream...');
+    
     const encoder = new TextEncoder();
+    let fullResponse = '';  // Accumulate for database storage
+    
     const stream = new ReadableStream({
-      start(controller) {
-        // Send the text in chunks to simulate streaming
-        const chunkSize = 50;
-        for (let i = 0; i < generatedText.length; i += chunkSize) {
-          const chunk = generatedText.substring(i, i + chunkSize);
-          const sseData = `data: ${JSON.stringify({ choices: [{ delta: { content: chunk } }] })}\n\n`;
-          controller.enqueue(encoder.encode(sseData));
+      async start(controller) {
+        try {
+          const reader = aiResponse.body?.getReader();
+          const decoder = new TextDecoder();
+          
+          if (!reader) {
+            controller.enqueue(encoder.encode('data: {"error": "No stream available"}\n\n'));
+            controller.close();
+            return;
+          }
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) {
+              console.log('Stream complete. Total length:', fullResponse.length);
+              
+              // Save to database after stream completes
+              if (conversationId && fullResponse) {
+                try {
+                  await supabaseClient
+                    .from("ai_conversations")
+                    .insert({
+                      session_id: conversationId,
+                      message: fullResponse,
+                      message_type: "assistant",
+                    });
+                  console.log('✅ Response saved to database');
+                } catch (dbError) {
+                  console.error('❌ Database save error:', dbError);
+                }
+              }
+              
+              controller.close();
+              break;
+            }
+
+            const chunk = decoder.decode(value);
+            const lines = chunk.split('\n');
+
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                const data = line.slice(6).trim();
+                if (data === '[DONE]') continue;
+                
+                if (data) {
+                  try {
+                    const parsed = JSON.parse(data);
+                    const content = parsed.choices?.[0]?.delta?.content;
+                    
+                    if (content) {
+                      fullResponse += content;
+                      // Forward the exact streaming format to frontend
+                      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ choices: [{ delta: { content } }] })}\n\n`));
+                    }
+                  } catch (e) {
+                    // Skip invalid JSON chunks
+                  }
+                }
+              }
+            }
+          }
+        } catch (streamError) {
+          console.error('❌ Streaming error:', streamError);
+          controller.enqueue(encoder.encode(`data: {"error": "Stream failed"}\n\n`));
+          controller.close();
         }
-        controller.close();
       }
     });
 
